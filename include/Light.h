@@ -21,7 +21,7 @@ public:
         return m_color;
     }
 
-    const bool get_enabled() const
+    bool get_enabled() const
     {
         return m_enabled;
     }

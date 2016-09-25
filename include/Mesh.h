@@ -38,7 +38,7 @@ public:
     void set_origin(glm::vec3 origin);
     void set_orient(glm::vec3 orient);
 
-    const bool get_visible() const
+    bool get_visible() const
     {
         return m_visible;
     }
