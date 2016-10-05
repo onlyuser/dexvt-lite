@@ -138,5 +138,5 @@ clean_resources :
 #==================
 
 .PHONY : clean
-clean : clean_binaries clean_objects clean_tests clean_resources
+clean : clean_binaries clean_objects clean_tests #clean_resources
 	-rmdir $(BUILD_PATH) $(BIN_PATH)

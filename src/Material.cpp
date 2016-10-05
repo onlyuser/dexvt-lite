@@ -16,36 +16,12 @@ Material::Material(
         std::string name,
         std::string vertex_shader_file,
         std::string fragment_shader_file,
-        bool        use_ambient_color,
-        bool        gen_normal_map,
-        bool        use_phong_shading,
-        bool        use_texture_mapping,
-        bool        use_bump_mapping,
-        bool        use_env_mapping,
-        bool        use_env_mapping_dbl_refract,
-        bool        use_ssao,
-        bool        use_bloom_kernel,
-        bool        use_texture2,
-        bool        use_fragment_world_pos,
-        bool        skybox,
-        bool        overlay)
+        bool use_overlay)
     : NamedObject(name),
       m_program(NULL),
       m_vertex_shader(NULL),
       m_fragment_shader(NULL),
-      m_use_ambient_color(use_ambient_color),
-      m_gen_normal_map(gen_normal_map),
-      m_use_phong_shading(use_phong_shading),
-      m_use_texture_mapping(use_texture_mapping),
-      m_use_bump_mapping(use_bump_mapping),
-      m_use_env_mapping(use_env_mapping),
-      m_use_env_mapping_dbl_refract(use_env_mapping_dbl_refract),
-      m_use_ssao(use_ssao),
-      m_use_bloom_kernel(use_bloom_kernel),
-      m_use_texture2(use_texture2),
-      m_use_fragment_world_pos(use_fragment_world_pos),
-      m_skybox(skybox),
-      m_overlay(overlay)
+      m_use_overlay(use_overlay)
 {
     m_program         = new Program(name);
     m_vertex_shader   = new Shader(vertex_shader_file,   GL_VERTEX_SHADER);

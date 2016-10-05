@@ -3,7 +3,12 @@
 #include <glm/gtx/vector_angle.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <regex.h>
 #include <math.h>
+#include <stdarg.h>
 
 namespace vt {
 
@@ -52,6 +57,90 @@ void mesh_apply_ripple(Mesh* mesh, glm::vec3 origin, float amplitude, float wave
 
     mesh->update_normals_and_tangents();
     mesh->update_bbox();
+}
+
+bool read_file(std::string filename, std::string &s)
+{
+    FILE* file = fopen(filename.c_str(), "rb");
+    if(!file)
+    {
+        std::cerr << "cannot open file" << std::endl;
+        return false;
+    }
+    fseek(file, 0, SEEK_END);
+    long length = ftell(file);
+    rewind(file);
+    if(!length)
+    {
+        std::cerr << "file empty" << std::endl;
+        fclose(file);
+        return false;
+    }
+    char* buffer = new char[length+1];
+    if(!buffer)
+    {
+        std::cerr << "not enough memory" << std::endl;
+        fclose(file);
+        return false;
+    }
+    buffer[length] = '\0';
+    fread(buffer, 1, length, file);
+    fclose(file);
+    s = buffer;
+    delete[] buffer;
+    return true;
+}
+
+bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups, size_t *start_pos)
+{
+    int nmatch = cap_groups.size();
+    if(!nmatch)
+        return false;
+    size_t _start_pos(start_pos ? *start_pos : 0);
+    if(_start_pos >= s.length())
+        return false;
+    std::string rest = s.substr(_start_pos, s.length()-_start_pos);
+    regex_t preg;
+    if(regcomp(&preg, pattern.c_str(), REG_ICASE|REG_EXTENDED))
+        return false;
+    regmatch_t* pmatch = new regmatch_t[nmatch];
+    if(!pmatch)
+        return false;
+    if(regexec(&preg, rest.c_str(), nmatch, pmatch, 0))
+    {
+        delete[] pmatch;
+        regfree(&preg);
+        return false;
+    }
+    regfree(&preg);
+    for(int i = 0; i<nmatch; i++) {
+        if(!cap_groups[i]) {
+            continue;
+        }
+        *(cap_groups[i]) = rest.substr(pmatch[i].rm_so, pmatch[i].rm_eo-pmatch[i].rm_so);
+    }
+    if(start_pos)
+        *start_pos = _start_pos+pmatch[0].rm_so;
+    delete[] pmatch;
+    return true;
+}
+
+bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups)
+{
+    return regexp(s, pattern, cap_groups, NULL);
+}
+
+bool regexp(std::string &s, std::string pattern, int nmatch, ...)
+{
+    if(!nmatch)
+        return false;
+    std::vector<std::string*> args(nmatch);
+    va_list ap;
+    va_start(ap, nmatch);
+    for(int i = 0; i<nmatch; i++)
+        args[i] = va_arg(ap, std::string*);
+    va_end(ap);
+    return regexp(s, pattern, args);
 }
 
 }

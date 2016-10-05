@@ -111,8 +111,7 @@ public:
     void render(
             bool                render_overlay    = false,
             bool                render_skybox     = true,
-            use_material_type_t use_material_type = use_material_type_t::USE_MESH_MATERIAL,
-            bool                skip_ssao_mesh    = false);
+            use_material_type_t use_material_type = use_material_type_t::USE_MESH_MATERIAL);
     void render_lines(bool draw_axis, bool draw_bbox, bool draw_normals) const;
     void render_lights() const;
 
@@ -128,9 +127,6 @@ private:
     Material*   m_wireframe_material;
     Material*   m_ssao_material;
 
-    GLfloat  m_ambient_color[3];
-    GLfloat  m_camera_pos[3];
-    GLfloat  m_camera_dir[3];
     GLfloat  m_viewport_dim[2];
     GLfloat  m_bloom_kernel[7];
     GLfloat  m_glow_cutoff_threshold;

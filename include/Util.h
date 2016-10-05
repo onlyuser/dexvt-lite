@@ -2,6 +2,8 @@
 #define VT_UTIL_H_
 
 #include <glm/glm.hpp>
+#include <vector>
+#include <string>
 
 #define EPSILON 0.0001
 
@@ -40,6 +42,10 @@ class Mesh;
 glm::vec3 orient_to_offset(glm::vec3 orient);
 glm::vec3 offset_to_orient(glm::vec3 offset);
 void mesh_apply_ripple(Mesh* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase);
+bool read_file(std::string filename, std::string &s);
+bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups, size_t *start_pos);
+bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups);
+bool regexp(std::string &s, std::string pattern, int nmatch, ...);
 
 }
 

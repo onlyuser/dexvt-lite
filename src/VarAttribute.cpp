@@ -6,6 +6,7 @@
 namespace vt {
 
 VarAttribute::VarAttribute(const Program* program, const GLchar* name)
+    : m_is_enabled(false)
 {
     m_id = glGetAttribLocation(program->id(), name);
 }

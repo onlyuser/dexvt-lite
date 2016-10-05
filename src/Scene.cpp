@@ -6,6 +6,7 @@
 #include <Mesh.h>
 #include <Material.h>
 #include <Texture.h>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/compatibility.hpp>
 #include <GL/glew.h>
 #include <GL/glut.h>
@@ -30,15 +31,6 @@ Scene::Scene()
       m_wireframe_material(NULL),
       m_ssao_material(NULL)
 {
-    m_ambient_color[0] = 0;
-    m_ambient_color[1] = 0;
-    m_ambient_color[2] = 0;
-    m_camera_pos[0] = 0;
-    m_camera_pos[1] = 0;
-    m_camera_pos[2] = 0;
-    m_camera_dir[0] = 0;
-    m_camera_dir[1] = 0;
-    m_camera_dir[2] = 0;
     m_viewport_dim[0] = 0;
     m_viewport_dim[1] = 0;
     //const int bloom_kernel_row[BLOOM_KERNEL_SIZE] = {1, 4, 6, 4, 1};
@@ -146,43 +138,67 @@ void Scene::use_program()
 void Scene::render(
         bool                render_overlay,
         bool                render_skybox,
-        use_material_type_t use_material_type,
-        bool                skip_ssao_mesh)
+        use_material_type_t use_material_type)
 {
     m_viewport_dim[0] = m_camera->get_width();
     m_viewport_dim[1] = m_camera->get_height();
     if(render_overlay && m_overlay) {
         ShaderContext* shader_context = m_overlay->get_shader_context();
+        if(!shader_context) {
+            return;
+        }
         Material* material = shader_context->get_material();
-        material->get_program()->use();
-        shader_context->set_texture_index(m_overlay->get_texture_index());
-        if(material->use_bloom_kernel()) {
-            shader_context->set_viewport_dim(m_viewport_dim);
+        if(!material) {
+            return;
+        }
+        Program * program = material->get_program();
+        if(!program) {
+            return;
+        }
+        program->use();
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_bloom_kernel)) {
             shader_context->set_bloom_kernel(m_bloom_kernel);
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_glow_cutoff_threshold)) {
             shader_context->set_glow_cutoff_threshold(m_glow_cutoff_threshold);
         }
-        if(material->use_texture2()) {
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_color_texture)) {
+            shader_context->set_texture_index(m_overlay->get_texture_index());
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_color_texture2)) {
             shader_context->set_texture2_index(m_overlay->get_texture2_index());
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_viewport_dim)) {
+            shader_context->set_viewport_dim(m_viewport_dim);
         }
         shader_context->render();
         return;
     }
     if(render_skybox && m_skybox) {
         ShaderContext* shader_context = m_skybox->get_shader_context();
-        shader_context->get_material()->get_program()->use();
-        shader_context->set_env_map_texture_index(0);
-        shader_context->set_inv_normal_xform(glm::inverse(m_camera->get_normal_xform()));
-        shader_context->set_inv_projection_xform(glm::inverse(m_camera->get_projection_xform()));
+        if(!shader_context) {
+            return;
+        }
+        Material* material = shader_context->get_material();
+        if(!material) {
+            return;
+        }
+        Program * program = material->get_program();
+        if(!program) {
+            return;
+        }
+        program->use();
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_env_map_texture)) {
+            shader_context->set_env_map_texture_index(0); // skymap texture index
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_normal_xform)) {
+            shader_context->set_inv_normal_xform(glm::inverse(m_camera->get_normal_xform()));
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_projection_xform)) {
+            shader_context->set_inv_projection_xform(glm::inverse(m_camera->get_projection_xform()));
+        }
         shader_context->render();
     }
-    glm::vec3 camera_pos = m_camera->get_origin();
-    m_camera_pos[0] = camera_pos.x;
-    m_camera_pos[1] = camera_pos.y;
-    m_camera_pos[2] = camera_pos.z;
-    glm::vec3 camera_dir = m_camera->get_dir();
-    m_camera_dir[0] = camera_dir.x;
-    m_camera_dir[1] = camera_dir.y;
-    m_camera_dir[2] = camera_dir.z;
     int i = 0;
     for(lights_t::const_iterator p = m_lights.begin(); p != m_lights.end(); p++) {
         glm::vec3 light_pos = (*p)->get_origin();
@@ -228,70 +244,107 @@ void Scene::render(
             continue;
         }
         Material* material = shader_context->get_material();
-        bool use_ambient_color           = material->use_ambient_color();
-        bool gen_normal_map              = material->gen_normal_map();
-        bool use_phong_shading           = material->use_phong_shading();
-        bool use_texture_mapping         = material->use_texture_mapping();
-        bool use_bump_mapping            = material->use_bump_mapping();
-        bool use_env_mapping             = material->use_env_mapping();
-        bool use_env_mapping_dbl_refract = material->use_env_mapping_dbl_refract();
-        bool use_ssao                    = material->use_ssao();
-        bool use_fragment_world_pos      = material->use_fragment_world_pos();
-        if(skip_ssao_mesh && use_ssao) {
+        if(!material) {
             continue;
         }
-        material->get_program()->use();
+        Program * program = material->get_program();
+        if(!program) {
+            continue;
+        }
+        program->use();
         glm::mat4 vp_xform = m_camera->get_projection_xform()*m_camera->get_xform();
-        shader_context->set_mvp_xform(vp_xform*mesh->get_xform());
-        if(gen_normal_map || use_phong_shading || use_bump_mapping || use_env_mapping || use_ssao) {
-            shader_context->set_normal_xform(mesh->get_normal_xform());
-            if((!gen_normal_map && use_bump_mapping) || use_phong_shading || use_env_mapping) {
-                shader_context->set_model_xform(mesh->get_xform());
-                shader_context->set_camera_pos(m_camera_pos);
-            }
-            if(use_phong_shading) {
-                shader_context->set_light_pos(    NUM_LIGHTS, m_light_pos);
-                shader_context->set_light_color(  NUM_LIGHTS, m_light_color);
-                shader_context->set_light_enabled(NUM_LIGHTS, m_light_enabled);
-                shader_context->set_light_count(m_lights.size());
-            }
-            if(use_bump_mapping) {
-                shader_context->set_bump_texture_index(mesh->get_bump_texture_index());
-            }
-            if(use_env_mapping) {
-                shader_context->set_env_map_texture_index(0); // skymap texture index
-                shader_context->set_reflect_to_refract_ratio(mesh->get_reflect_to_refract_ratio());
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_ambient_color)) {
+            shader_context->set_ambient_color(glm::value_ptr(mesh->get_ambient_color()));
+        }
+        if(use_material_type != use_material_type_t::USE_SSAO_MATERIAL) {
+            if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_backface_depth_overlay_texture)) {
+                shader_context->set_backface_depth_overlay_texture_index(mesh->get_backface_depth_overlay_texture_index());
             }
         }
-        if(use_texture_mapping) {
-            shader_context->set_texture_index(mesh->get_texture_index());
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_backface_normal_overlay_texture)) {
+            shader_context->set_backface_normal_overlay_texture_index(mesh->get_backface_normal_overlay_texture_index());
         }
-        if(use_fragment_world_pos) {
-            shader_context->set_viewport_dim(m_viewport_dim);
-            shader_context->set_camera_near( m_camera->get_near_plane());
-            shader_context->set_camera_far(  m_camera->get_far_plane());
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_bloom_kernel)) {
+            shader_context->set_bloom_kernel(m_bloom_kernel);
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_bump_texture)) {
+            shader_context->set_bump_texture_index(mesh->get_bump_texture_index());
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_camera_dir)) {
+            shader_context->set_camera_dir(glm::value_ptr(m_camera->get_dir()));
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_camera_far)) {
+            shader_context->set_camera_far(m_camera->get_far_plane());
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_camera_near)) {
+            shader_context->set_camera_near(m_camera->get_near_plane());
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_camera_pos)) {
+            shader_context->set_camera_pos(glm::value_ptr(m_camera->get_origin()));
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_env_map_texture)) {
+            shader_context->set_env_map_texture_index(0); // skymap texture index
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_frontface_depth_overlay_texture)) {
+            if(use_material_type == use_material_type_t::USE_SSAO_MATERIAL) {
+                shader_context->set_frontface_depth_overlay_texture_index(material->get_texture_index_by_name("frontface_depth_overlay"));
+            } else {
+                shader_context->set_frontface_depth_overlay_texture_index(mesh->get_frontface_depth_overlay_texture_index());
+            }
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_glow_cutoff_threshold)) {
+            shader_context->set_glow_cutoff_threshold(m_glow_cutoff_threshold);
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_normal_xform)) {
+            shader_context->set_inv_normal_xform(glm::inverse(m_camera->get_normal_xform()));
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_projection_xform)) {
+            shader_context->set_inv_projection_xform(glm::inverse(m_camera->get_projection_xform()));
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_view_proj_xform)) {
             shader_context->set_inv_view_proj_xform(glm::inverse(m_camera->get_xform())*glm::inverse(m_camera->get_projection_xform()));
         }
-        if(use_env_mapping_dbl_refract) {
-            shader_context->set_frontface_depth_overlay_texture_index(mesh->get_frontface_depth_overlay_texture_index());
-            shader_context->set_backface_depth_overlay_texture_index( mesh->get_backface_depth_overlay_texture_index());
-            shader_context->set_backface_normal_overlay_texture_index(mesh->get_backface_normal_overlay_texture_index());
-            shader_context->set_view_proj_xform(vp_xform);
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_light_color)) {
+            shader_context->set_light_color(NUM_LIGHTS, m_light_color);
         }
-        if(use_ssao) {
-            shader_context->set_frontface_depth_overlay_texture_index(material->get_texture_index_by_name("frontface_depth_overlay"));
-            shader_context->set_random_texture_index(                 material->get_texture_index_by_name("random_texture"));
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_light_count)) {
+            shader_context->set_light_count(m_lights.size());
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_light_enabled)) {
+            shader_context->set_light_enabled(NUM_LIGHTS, m_light_enabled);
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_light_pos)) {
+            shader_context->set_light_pos(NUM_LIGHTS, m_light_pos);
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_model_xform)) {
+            shader_context->set_model_xform(mesh->get_xform());
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_mvp_xform)) {
+            shader_context->set_mvp_xform(vp_xform*mesh->get_xform());
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_normal_xform)) {
+            shader_context->set_normal_xform(mesh->get_normal_xform());
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_random_texture)) {
+            shader_context->set_random_texture_index(material->get_texture_index_by_name("random_texture"));
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_reflect_to_refract_ratio)) {
+            shader_context->set_reflect_to_refract_ratio(mesh->get_reflect_to_refract_ratio());
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_ssao_sample_kernel_pos)) {
             shader_context->set_ssao_sample_kernel_pos(NUM_SSAO_SAMPLE_KERNELS, m_ssao_sample_kernel_pos);
-            shader_context->set_view_proj_xform(vp_xform);
-            shader_context->set_camera_pos(m_camera_pos);
-            shader_context->set_camera_dir(m_camera_dir);
         }
-        if(use_ambient_color) {
-            glm::vec3 _ambient_color = mesh->get_ambient_color();
-            m_ambient_color[0] = _ambient_color[0];
-            m_ambient_color[1] = _ambient_color[1];
-            m_ambient_color[2] = _ambient_color[2];
-            shader_context->set_ambient_color(m_ambient_color);
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_color_texture)) {
+            shader_context->set_texture_index(mesh->get_texture_index());
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_color_texture2)) {
+            shader_context->set_texture2_index(m_overlay->get_texture2_index());
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_view_proj_xform)) {
+            shader_context->set_view_proj_xform(vp_xform);
+        }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_viewport_dim)) {
+            shader_context->set_viewport_dim(m_viewport_dim);
         }
         shader_context->render();
     }
@@ -304,7 +357,7 @@ void Scene::render_lines(bool draw_axis, bool draw_bbox, bool draw_normals) cons
 
     glUseProgram(0);
     glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(reinterpret_cast<const GLfloat*>(&m_camera->get_projection_xform()));
+    glLoadMatrixf(glm::value_ptr(m_camera->get_projection_xform()));
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     for(meshes_t::const_iterator q = m_meshes.begin(); q != m_meshes.end(); q++) {
@@ -312,7 +365,7 @@ void Scene::render_lines(bool draw_axis, bool draw_bbox, bool draw_normals) cons
             continue;
         }
         glm::mat4 model_xform = m_camera->get_xform()*(*q)->get_xform();
-        glLoadMatrixf(reinterpret_cast<const GLfloat*>(&model_xform[0]));
+        glLoadMatrixf(glm::value_ptr(model_xform));
         glBegin(GL_LINES);
 
         if(draw_axis) {
@@ -447,13 +500,13 @@ void Scene::render_lights() const
 
     glUseProgram(0);
     glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(reinterpret_cast<const GLfloat*>(&m_camera->get_projection_xform()));
+    glLoadMatrixf(glm::value_ptr(m_camera->get_projection_xform()));
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glColor3f(1, 1, 0);
     for(lights_t::const_iterator p = m_lights.begin(); p != m_lights.end(); p++) {
         glm::mat4 model_xform = m_camera->get_xform()*(*p)->get_xform();
-        glLoadMatrixf((const GLfloat*) &model_xform[0]);
+        glLoadMatrixf(glm::value_ptr(model_xform));
         glutWireSphere(light_radius, 4, 2);
     }
 }
