@@ -2,23 +2,29 @@
 #define VT_TEXTURE_H_
 
 #include <NamedObject.h>
+#include <ViewObject.h>
 #include <IdentObject.h>
 #include <BindableObjectIFace.h>
 #include <GL/glew.h>
 #include <string>
+#include <glm/glm.hpp>
 
-#define DEFAULT_TEXTURE_DIM 256
+#define DEFAULT_TEXTURE_WIDTH  256
+#define DEFAULT_TEXTURE_HEIGHT 256
 
 namespace vt {
 
-class Texture : public NamedObject, public IdentObject, public BindableObjectIFace
+class Texture : public NamedObject,
+                public ViewObject<glm::ivec2, size_t>,
+                public IdentObject,
+                public BindableObjectIFace
 {
 public:
     typedef enum { RGB, DEPTH, STENCIL } type_t;
 
     Texture(std::string          name       = "",
-            size_t               width      = DEFAULT_TEXTURE_DIM,
-            size_t               height     = DEFAULT_TEXTURE_DIM,
+            glm::ivec2           dim        = glm::vec2(DEFAULT_TEXTURE_WIDTH,
+                                                        DEFAULT_TEXTURE_HEIGHT),
             const unsigned char* pixel_data = NULL,
             type_t               type       = Texture::RGB,
             bool                 smooth     = true,
@@ -37,22 +43,12 @@ public:
             std::string png_filename_neg_z);
     virtual ~Texture();
     void bind();
-    size_t get_width() const
-    {
-        return m_width;
-    }
-    size_t get_height() const
-    {
-        return m_height;
-    }
     type_t get_type() const
     {
         return m_type;
     }
 
 private:
-    size_t m_width;
-    size_t m_height;
     bool   m_skybox;
     type_t m_type;
 

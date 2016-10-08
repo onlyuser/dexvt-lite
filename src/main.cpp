@@ -183,7 +183,7 @@ void onDisplay()
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     if(wireframe_mode) {
-        scene->render(false, false, vt::Scene::use_material_type_t::USE_WIREFRAME_MATERIAL);
+        scene->render(true, false, false, vt::Scene::use_material_type_t::USE_WIREFRAME_MATERIAL);
     } else {
         scene->render();
     }
@@ -323,7 +323,7 @@ void onMotion(int x, int y)
 
 void onReshape(int width, int height)
 {
-    camera->resize_viewport(width, height);
+    camera->resize(0, 0, width, height);
 }
 
 int main(int argc, char* argv[])

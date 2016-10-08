@@ -31,8 +31,6 @@ Scene::Scene()
       m_wireframe_material(NULL),
       m_ssao_material(NULL)
 {
-    m_viewport_dim[0] = 0;
-    m_viewport_dim[1] = 0;
     //const int bloom_kernel_row[BLOOM_KERNEL_SIZE] = {1, 4, 6, 4, 1};
     const int bloom_kernel_row[BLOOM_KERNEL_SIZE] = {1, 6, 15, 20, 15, 6, 1};
     for(int i = 0; i < BLOOM_KERNEL_SIZE; i++) {
@@ -136,12 +134,15 @@ void Scene::use_program()
 }
 
 void Scene::render(
-        bool                render_overlay,
+        bool                clear_canvas,
         bool                render_skybox,
+        bool                render_overlay,
         use_material_type_t use_material_type)
 {
-    m_viewport_dim[0] = m_camera->get_width();
-    m_viewport_dim[1] = m_camera->get_height();
+    if(clear_canvas) {
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    }
     if(render_overlay && m_overlay) {
         ShaderContext* shader_context = m_overlay->get_shader_context();
         if(!shader_context) {
@@ -169,7 +170,7 @@ void Scene::render(
             shader_context->set_texture2_index(m_overlay->get_texture2_index());
         }
         if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_viewport_dim)) {
-            shader_context->set_viewport_dim(m_viewport_dim);
+            shader_context->set_viewport_dim(glm::value_ptr(m_camera->get_dim()));
         }
         shader_context->render();
         return;
@@ -213,12 +214,9 @@ void Scene::render(
         i++;
     }
     FrameBuffer* frame_buffer = m_camera->get_frame_buffer();
+    Texture* texture = NULL;
     if(frame_buffer) {
-        Texture* texture = frame_buffer->get_texture();
-        if(texture) {
-            m_viewport_dim[0] = texture->get_width();
-            m_viewport_dim[1] = texture->get_height();
-        }
+        texture = frame_buffer->get_texture();
     }
     for(meshes_t::const_iterator q = m_meshes.begin(); q != m_meshes.end(); q++) {
         Mesh* mesh = (*q);
@@ -344,7 +342,14 @@ void Scene::render(
             shader_context->set_view_proj_xform(vp_xform);
         }
         if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_viewport_dim)) {
-            shader_context->set_viewport_dim(m_viewport_dim);
+            if(texture) {
+                float dim[2];
+                dim[0] = static_cast<float>(texture->get_dim().x);
+                dim[1] = static_cast<float>(texture->get_dim().y);
+                shader_context->set_viewport_dim(dim);
+            } else {
+                shader_context->set_viewport_dim(glm::value_ptr(m_camera->get_dim()));
+            }
         }
         shader_context->render();
     }

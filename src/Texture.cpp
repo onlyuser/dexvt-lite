@@ -1,6 +1,8 @@
 #include <Texture.h>
 #include <NamedObject.h>
+#include <ViewObject.h>
 #include <GL/glew.h>
+#include <glm/glm.hpp>
 #include <png.h>
 #include <cstdio>
 #include <string>
@@ -12,52 +14,50 @@ namespace vt {
 
 Texture::Texture(
         std::string          name,
-        size_t               width,
-        size_t               height,
+        glm::ivec2           dim,
         const unsigned char* pixel_data,
         type_t               type,
         bool                 smooth,
         bool                 random)
     : NamedObject(name),
-      m_width(width),
-      m_height(height),
+      ViewObject(glm::ivec2(0, 0), dim),
       m_skybox(false),
       m_type(type)
 {
     if(pixel_data) {
-        m_id = gen_texture_internal(width, height, pixel_data, type, smooth);
+        m_id = gen_texture_internal(dim.x, dim.y, pixel_data, type, smooth);
     } else {
         if(type == Texture::DEPTH) {
-            float* _pixel_data = new float[width*height*sizeof(float)];
-            memset(_pixel_data, 0, width*height*sizeof(float));
-            for(int i = 0; i < static_cast<int>(std::min(width, height)); i++) {
-                _pixel_data[i*width+i]       = 1;
-                _pixel_data[i*width+width-i] = 1;
+            float* _pixel_data = new float[dim.x*dim.y*sizeof(float)];
+            memset(_pixel_data, 0, dim.x*dim.y*sizeof(float));
+            for(int i = 0; i < static_cast<int>(std::min(dim.x, dim.y)); i++) {
+                _pixel_data[i*dim.x+i]       = 1;
+                _pixel_data[i*dim.x+dim.x-i] = 1;
             }
-            m_id = gen_texture_internal(width, height, _pixel_data, type, smooth);
+            m_id = gen_texture_internal(dim.x, dim.y, _pixel_data, type, smooth);
             delete[] _pixel_data;
         } else {
             if(random) {
                 srand(time(NULL));
-                unsigned char* _pixel_data = new unsigned char[width*height*sizeof(unsigned char)*3];
-                memset(_pixel_data, 0, width*height*sizeof(unsigned char)*3);
-                for(int i = 0; i < static_cast<int>(height); i++) {
-                    for(int j = 0; j < static_cast<int>(width); j++) {
-                        int pixel_offset = (i*width + j)*3;
+                unsigned char* _pixel_data = new unsigned char[dim.x*dim.y*sizeof(unsigned char)*3];
+                memset(_pixel_data, 0, dim.x*dim.y*sizeof(unsigned char)*3);
+                for(int i = 0; i < static_cast<int>(dim.y); i++) {
+                    for(int j = 0; j < static_cast<int>(dim.x); j++) {
+                        int pixel_offset = (i*dim.x + j)*3;
                         _pixel_data[pixel_offset + 0] = rand() % 256;
                         _pixel_data[pixel_offset + 1] = rand() % 256;
                         _pixel_data[pixel_offset + 2] = rand() % 256;
                     }
                 }
-                m_id = gen_texture_internal(width, height, _pixel_data, type, smooth);
+                m_id = gen_texture_internal(dim.x, dim.y, _pixel_data, type, smooth);
                 delete[] _pixel_data;
             } else {
                 // draw big red 'x'
-                unsigned char* _pixel_data = new unsigned char[width*height*sizeof(unsigned char)*3];
-                memset(_pixel_data, 0, width*height*sizeof(unsigned char)*3);
-                for(int i = 0; i < static_cast<int>(std::min(width, height)); i++) {
-                    int pixel_offset_scanline_start = (i*width + i)*3;
-                    int pixel_offset_scanline_end   = (i*width + (width - i))*3;
+                unsigned char* _pixel_data = new unsigned char[dim.x*dim.y*sizeof(unsigned char)*3];
+                memset(_pixel_data, 0, dim.x*dim.y*sizeof(unsigned char)*3);
+                for(int i = 0; i < static_cast<int>(std::min(dim.x, dim.y)); i++) {
+                    int pixel_offset_scanline_start = (i*dim.x + i)*3;
+                    int pixel_offset_scanline_end   = (i*dim.x + (dim.x - i))*3;
                     _pixel_data[pixel_offset_scanline_start + 0] = 255;
                     _pixel_data[pixel_offset_scanline_start + 1] = 0;
                     _pixel_data[pixel_offset_scanline_start + 2] = 0;
@@ -65,7 +65,7 @@ Texture::Texture(
                     _pixel_data[pixel_offset_scanline_end   + 1] = 0;
                     _pixel_data[pixel_offset_scanline_end   + 2] = 0;
                 }
-                m_id = gen_texture_internal(width, height, _pixel_data, type, smooth);
+                m_id = gen_texture_internal(dim.x, dim.y, _pixel_data, type, smooth);
                 delete[] _pixel_data;
             }
         }
@@ -77,8 +77,7 @@ Texture::Texture(
         std::string png_filename,
         bool        smooth)
     : NamedObject(name),
-      m_width(0),
-      m_height(0),
+      ViewObject(glm::ivec2(0, 0), glm::ivec2(0, 0)),
       m_skybox(false),
       m_type(Texture::RGB)
 {
@@ -91,8 +90,8 @@ Texture::Texture(
     if(pixel_data) {
         m_id = gen_texture_internal(width, height, pixel_data, Texture::RGB, smooth);
         delete[] pixel_data;
-        m_width  = width;
-        m_height = height;
+        m_dim.x = width;
+        m_dim.y = height;
     }
 }
 
@@ -105,8 +104,7 @@ Texture::Texture(
         std::string png_filename_pos_z,
         std::string png_filename_neg_z)
     : NamedObject(name),
-      m_width(0),
-      m_height(0),
+      ViewObject(glm::ivec2(0, 0), glm::ivec2(0, 0)),
       m_skybox(true),
       m_type(Texture::RGB)
 {
@@ -159,8 +157,8 @@ Texture::Texture(
                 pixel_data_neg_y,
                 pixel_data_pos_z,
                 pixel_data_neg_z);
-        m_width  = width;
-        m_height = height;
+        m_dim.x = width;
+        m_dim.y = height;
         delete[] pixel_data_pos_x;
         delete[] pixel_data_neg_x;
         delete[] pixel_data_pos_y;

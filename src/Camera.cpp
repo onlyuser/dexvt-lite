@@ -1,5 +1,7 @@
 #include <Camera.h>
 #include <NamedObject.h>
+#include <XformObject.h>
+#include <ViewObject.h>
 #include <Util.h>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -19,25 +21,22 @@ Camera::Camera(
         glm::vec3         origin,
         glm::vec3         target,
         float             fov,
-        size_t            width,
-        size_t            height,
+        glm::vec2         offset,
+        glm::vec2         dim,
         float             near_plane,
         float             far_plane,
-        float             ortho_width,
-        float             ortho_height,
+        glm::vec2         ortho_dim,
         float             zoom,
         projection_mode_t projection_mode)
     : NamedObject(name),
       XformObject(origin),
+      ViewObject(offset, dim),
       m_target(target),
       m_fov(fov),
-      m_width(width),
-      m_height(height),
       m_near_plane(near_plane),
       m_far_plane(far_plane),
       m_need_update_projection_xform(true),
-      m_ortho_width(ortho_width),
-      m_ortho_height(ortho_height),
+      m_ortho_dim(ortho_dim),
       m_zoom(zoom),
       m_frame_buffer(NULL),
       m_projection_mode(projection_mode)
@@ -100,10 +99,9 @@ void Camera::set_fov(float fov)
     set_need_update_xform();
 }
 
-void Camera::resize_viewport(float width, float height)
+void Camera::resize(float left, float bottom, float width, float height)
 {
-    m_width  = width;
-    m_height = height;
+    ViewObject<glm::vec2, float>::resize(left, bottom, width, height);
     m_need_update_projection_xform = true;
     set_need_update_xform();
 }
@@ -131,8 +129,8 @@ void Camera::set_projection_mode(projection_mode_t projection_mode)
 
 void Camera::resize_ortho_viewport(float width, float height)
 {
-    m_ortho_width  = width;
-    m_ortho_height = height;
+    m_ortho_dim.x = width;
+    m_ortho_dim.y = height;
     m_need_update_projection_xform = true;
     set_need_update_xform();
 }
@@ -167,15 +165,15 @@ const glm::mat4 &Camera::get_projection_xform()
 void Camera::update_projection_xform()
 {
     if(m_projection_mode == PROJECTION_MODE_PERSPECTIVE) {
-        m_projection_xform = glm::perspective(m_fov, static_cast<float>(m_width)/m_height, m_near_plane, m_far_plane);
+        m_projection_xform = glm::perspective(m_fov, static_cast<float>(m_dim.x)/m_dim.y, m_near_plane, m_far_plane);
     } else if(m_projection_mode == PROJECTION_MODE_ORTHO) {
-        float aspect_ratio = static_cast<float>(m_width)/m_height;
-        float half_width  = m_ortho_width*0.5*m_zoom;
-        float half_height = m_ortho_width*0.5*m_zoom;
-        if(m_height < m_width) {
+        float aspect_ratio = static_cast<float>(m_dim.x)/m_dim.y;
+        float half_width  = m_ortho_dim.x*0.5*m_zoom;
+        float half_height = m_ortho_dim.x*0.5*m_zoom;
+        if(m_dim.y < m_dim.x) {
             half_width *= aspect_ratio;
         }
-        if(m_width < m_height) {
+        if(m_dim.x < m_dim.y) {
             half_height /= aspect_ratio;
         }
         float left   = -half_width;

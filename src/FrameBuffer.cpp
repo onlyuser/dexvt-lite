@@ -55,7 +55,7 @@ void FrameBuffer::bind()
     glBindFramebuffer(GL_FRAMEBUFFER, m_id);
     assert(!m_camera->get_frame_buffer());
     m_camera->set_frame_buffer(this);
-    glViewport(0, 0, m_texture->get_width(), m_texture->get_height());
+    glViewport(m_texture->get_left(), m_texture->get_bottom(), m_texture->get_width(), m_texture->get_height());
 }
 
 void FrameBuffer::unbind()
@@ -63,7 +63,7 @@ void FrameBuffer::unbind()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     assert(m_camera->get_frame_buffer());
     m_camera->set_frame_buffer(NULL);
-    glViewport(0, 0, m_camera->get_width(), m_camera->get_height());
+    glViewport(m_camera->get_left(), m_camera->get_bottom(), m_camera->get_width(), m_camera->get_height());
 }
 
 }

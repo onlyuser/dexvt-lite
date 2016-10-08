@@ -17,7 +17,10 @@ class Texture;
 class Scene
 {
 public:
-    typedef enum { USE_MESH_MATERIAL, USE_NORMAL_MATERIAL, USE_WIREFRAME_MATERIAL, USE_SSAO_MATERIAL } use_material_type_t;
+    typedef enum { USE_MESH_MATERIAL,
+                   USE_NORMAL_MATERIAL,
+                   USE_WIREFRAME_MATERIAL,
+                   USE_SSAO_MATERIAL } use_material_type_t;
 
     typedef std::vector<Light*>    lights_t;
     typedef std::vector<Mesh*>     meshes_t;
@@ -109,8 +112,9 @@ public:
     void reset();
     void use_program();
     void render(
-            bool                render_overlay    = false,
+            bool                clear_canvas      = true,
             bool                render_skybox     = true,
+            bool                render_overlay    = false,
             use_material_type_t use_material_type = use_material_type_t::USE_MESH_MATERIAL);
     void render_lines(bool draw_axis, bool draw_bbox, bool draw_normals) const;
     void render_lights() const;
@@ -127,7 +131,6 @@ private:
     Material*   m_wireframe_material;
     Material*   m_ssao_material;
 
-    GLfloat  m_viewport_dim[2];
     GLfloat  m_bloom_kernel[7];
     GLfloat  m_glow_cutoff_threshold;
     GLfloat* m_light_pos;

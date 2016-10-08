@@ -126,11 +126,21 @@ $(CUBE_MAP_FILES) :
 	rm $(CUBE_MAP_PATH)/*.jpg
 	rm $(CUBE_MAP_PATH)/*.txt
 
-resources : $(CHESTERFIELD_MAP_FILES) $(CUBE_MAP_FILES)
+3DS_MESH_PATH = $(RESOURCE_PATH)/star_wars
+3DS_MESH_STEMS = TI_Low0
+3DS_MESH_FILES = $(patsubst %, $(3DS_MESH_PATH)/%.3ds, $(3DS_MESH_STEMS))
+$(3DS_MESH_FILES) :
+	mkdir -p $(3DS_MESH_PATH)
+	curl "http://www.jrbassett.com/zips/TI_Low0.Zip" > $(3DS_MESH_PATH)/TI_Low0.Zip
+	unzip $(3DS_MESH_PATH)/TI_Low0.Zip -d $(3DS_MESH_PATH)
+	rm $(3DS_MESH_PATH)/TI_Low0.Zip
+	rm $(3DS_MESH_PATH)/*.txt
+
+resources : $(CHESTERFIELD_MAP_FILES) $(CUBE_MAP_FILES) $(3DS_MESH_FILES)
 
 .PHONY : clean_resources
 clean_resources :
-	-rm $(CHESTERFIELD_MAP_FILES) $(CUBE_MAP_FILES)
+	-rm $(CHESTERFIELD_MAP_FILES) $(CUBE_MAP_FILES) $(3DS_MESH_FILES)
 	-rm -rf $(RESOURCE_PATH)
 
 #==================

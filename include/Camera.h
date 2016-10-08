@@ -3,14 +3,22 @@
 
 #include <NamedObject.h>
 #include <XformObject.h>
+#include <ViewObject.h>
 #include <string>
 #include <glm/glm.hpp>
+
+#define DEFAULT_VIEWPORT_WIDTH        800
+#define DEFAULT_VIEWPORT_HEIGHT       600
+#define DEFAULT_ORTHO_VIEWPORT_WIDTH  1
+#define DEFAULT_ORTHO_VIEWPORT_HEIGHT 1
 
 namespace vt {
 
 class FrameBuffer;
 
-class Camera : public NamedObject, public XformObject
+class Camera : public NamedObject,
+               public XformObject,
+               public ViewObject<glm::vec2, float>
 {
 public:
     enum projection_mode_t {
@@ -23,12 +31,13 @@ public:
             glm::vec3         origin          = glm::vec3(0),
             glm::vec3         target          = glm::vec3(-1),
             float             fov             = 45,
-            size_t            width           = 800,
-            size_t            height          = 600,
+            glm::vec2         offset          = glm::vec2(0, 0),
+            glm::vec2         dim             = glm::vec2(DEFAULT_VIEWPORT_WIDTH,
+                                                          DEFAULT_VIEWPORT_HEIGHT),
             float             near_plane      = 4,
             float             far_plane       = 16,
-            float             ortho_width     = 1,
-            float             ortho_height    = 1,
+            glm::vec2         ortho_dim       = glm::vec2(DEFAULT_ORTHO_VIEWPORT_WIDTH,
+                                                          DEFAULT_ORTHO_VIEWPORT_HEIGHT),
             float             zoom            = 1,
             projection_mode_t projection_mode = PROJECTION_MODE_PERSPECTIVE);
     virtual ~Camera();
@@ -53,15 +62,7 @@ public:
     }
     void set_fov(float fov);
 
-    size_t get_width() const
-    {
-        return m_width;
-    }
-    size_t get_height() const
-    {
-        return m_height;
-    }
-    void resize_viewport(float width, float height);
+    void resize(float left, float bottom, float width, float height);
 
     float get_near_plane() const
     {
@@ -83,11 +84,11 @@ public:
 
     float get_ortho_width() const
     {
-        return m_ortho_width;
+        return m_ortho_dim.x;
     }
     float get_ortho_height() const
     {
-        return m_ortho_height;
+        return m_ortho_dim.y;
     }
     void resize_ortho_viewport(float width, float height);
 
@@ -109,14 +110,11 @@ private:
     std::string       m_name;
     glm::vec3         m_target;
     float             m_fov;
-    size_t            m_width;
-    size_t            m_height;
     float             m_near_plane;
     float             m_far_plane;
     glm::mat4         m_projection_xform;
     bool              m_need_update_projection_xform;
-    float             m_ortho_width;
-    float             m_ortho_height;
+    glm::vec2         m_ortho_dim;
     float             m_zoom;
     FrameBuffer*      m_frame_buffer;
     projection_mode_t m_projection_mode;
