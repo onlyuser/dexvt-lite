@@ -20,9 +20,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <shader_utils.h>
 
-#include "res_texture.c"
-#include "res_texture2.c"
-
 #include <Buffer.h>
 #include <Camera.h>
 #include <FrameBuffer.h>

@@ -135,8 +135,8 @@ void Scene::use_program()
 
 void Scene::render(
         bool                clear_canvas,
-        bool                render_skybox,
         bool                render_overlay,
+        bool                render_skybox,
         use_material_type_t use_material_type)
 {
     if(clear_canvas) {
@@ -152,7 +152,7 @@ void Scene::render(
         if(!material) {
             return;
         }
-        Program * program = material->get_program();
+        Program* program = material->get_program();
         if(!program) {
             return;
         }
@@ -184,7 +184,7 @@ void Scene::render(
         if(!material) {
             return;
         }
-        Program * program = material->get_program();
+        Program* program = material->get_program();
         if(!program) {
             return;
         }
@@ -245,7 +245,7 @@ void Scene::render(
         if(!material) {
             continue;
         }
-        Program * program = material->get_program();
+        Program* program = material->get_program();
         if(!program) {
             continue;
         }
