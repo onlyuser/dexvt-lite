@@ -67,7 +67,7 @@ clean_objects :
 # binaries
 #==================
 
-CPP_STEMS = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light main Material Mesh NamedObject PrimitiveFactory Program res_texture res_texture2 Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light main Material Mesh NamedObject PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 OBJECTS = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS))
 
 $(BIN_PATH)/main : $(OBJECTS)
