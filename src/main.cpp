@@ -45,7 +45,7 @@ const char* DEFAULT_CAPTION = "My Textured Cube";
 
 int init_screen_width = 800, init_screen_height = 600;
 vt::Camera* camera;
-vt::Mesh *mesh_skybox, *mesh_box;
+vt::Mesh *mesh_skybox, *mesh_box, *mesh_box2;
 vt::Light *light, *light2, *light3;
 vt::Texture *texture_box_color, *texture_box_normal, *texture_skybox;
 
@@ -70,9 +70,12 @@ int init_resources()
     mesh_skybox = vt::PrimitiveFactory::create_viewport_quad("grid");
     scene->set_skybox(mesh_skybox);
 
-    scene->add_mesh(mesh_box = vt::PrimitiveFactory::create_box("box"));
+    scene->add_mesh(mesh_box  = vt::PrimitiveFactory::create_box("box"));
+    mesh_box->center_axis();
 
-    mesh_box->set_origin(glm::vec3(-0.5, -0.5, -0.5)); // box
+    scene->add_mesh(mesh_box2 = vt::PrimitiveFactory::create_box("box2"));
+    mesh_box2->center_axis();
+    mesh_box2->set_origin(glm::vec3(1, 0, 0));
 
     vt::Material* bump_mapped_material = new vt::Material(
             "bump_mapped",
@@ -134,6 +137,13 @@ int init_resources()
     mesh_box->set_bump_texture_index(mesh_box->get_material()->get_texture_index_by_name("chesterfield_normal"));
     mesh_box->set_ambient_color(glm::vec3(0, 0, 0));
 
+    // box2
+    mesh_box2->set_material(bump_mapped_material);
+    mesh_box2->set_texture_index(     mesh_box2->get_material()->get_texture_index_by_name("chesterfield_color"));
+    mesh_box2->set_bump_texture_index(mesh_box2->get_material()->get_texture_index_by_name("chesterfield_normal"));
+    mesh_box2->set_ambient_color(glm::vec3(0, 0, 0));
+    mesh_box2->set_parent(mesh_box);
+
     return 1;
 }
 
@@ -169,6 +179,10 @@ void onTick()
         glutSetWindowTitle(ss.str().c_str());
     }
     frames++;
+    static int angle = 0;
+    mesh_box->set_orient(glm::vec3(0, 0, angle));
+    mesh_box2->set_orient(glm::vec3(0, angle, 0));
+    angle = (angle + 1) % 360;
 }
 
 void onDisplay()
@@ -229,9 +243,11 @@ void onKeyboard(unsigned char key, int x, int y)
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
                 mesh_box->set_ambient_color(glm::vec3(1, 1, 1));
+                mesh_box2->set_ambient_color(glm::vec3(1, 1, 1));
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
                 mesh_box->set_ambient_color(glm::vec3(0, 0, 0));
+                mesh_box2->set_ambient_color(glm::vec3(0, 0, 0));
             }
             break;
         case 'x': // axis

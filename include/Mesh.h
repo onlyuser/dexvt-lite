@@ -166,6 +166,9 @@ public:
     glm::vec3 get_ambient_color() const;
     void set_ambient_color(glm::vec3 ambient_color);
 
+    void set_axis(glm::vec3 axis);
+    void center_axis();
+
 private:
     std::string    m_name;
     size_t         m_num_vertex;

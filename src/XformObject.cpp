@@ -8,7 +8,8 @@ XformObject::XformObject(glm::vec3 origin, glm::vec3 orient, glm::vec3 scale)
       m_orient(orient),
       m_scale(scale),
       m_need_update_xform(true),
-      m_need_update_normal_xform(true)
+      m_need_update_normal_xform(true),
+      m_parent(NULL)
 {
 }
 
@@ -20,6 +21,9 @@ const glm::mat4 &XformObject::get_xform()
 {
     if(m_need_update_xform) {
         update_xform();
+        if(m_parent) {
+            m_xform = m_parent->get_xform() * m_xform;
+        }
         m_need_update_xform = false;
     }
     return m_xform;

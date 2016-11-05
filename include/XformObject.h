@@ -41,6 +41,15 @@ public:
     const glm::mat4 &get_xform();
     const glm::mat4 &get_normal_xform();
 
+    XformObject* get_parent() const
+    {
+        return m_parent;
+    }
+    void set_parent(XformObject* parent)
+    {
+        m_parent = parent;
+    }
+
 protected:
     glm::vec3 m_origin;
     glm::vec3 m_orient;
@@ -59,6 +68,7 @@ protected:
 private:
     bool m_need_update_xform;
     bool m_need_update_normal_xform;
+    XformObject* m_parent;
 };
 
 }
