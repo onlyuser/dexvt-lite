@@ -59,6 +59,7 @@ bool show_axis = false;
 bool show_bbox = false;
 bool show_normals = false;
 bool show_lights = false;
+bool do_animation = true;
 
 int texture_id = 0;
 float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
@@ -75,7 +76,8 @@ int init_resources()
 
     scene->add_mesh(mesh_box2 = vt::PrimitiveFactory::create_box("box2"));
     mesh_box2->center_axis();
-    mesh_box2->set_origin(glm::vec3(1, 0, 0));
+    mesh_box2->set_origin(glm::vec3(2, 0, 0));
+    //mesh_box2->set_axis(glm::vec3(1, 0, 0));
 
     vt::Material* bump_mapped_material = new vt::Material(
             "bump_mapped",
@@ -187,7 +189,9 @@ void onTick()
 
 void onDisplay()
 {
-    onTick();
+    if(do_animation) {
+        onTick();
+    }
 
     vt::Scene* scene = vt::Scene::instance();
 
@@ -252,6 +256,9 @@ void onKeyboard(unsigned char key, int x, int y)
             break;
         case 'x': // axis
             show_axis = !show_axis;
+            break;
+        case 32: // space
+            do_animation = !do_animation;
             break;
         case 27: // escape
             exit(0);
