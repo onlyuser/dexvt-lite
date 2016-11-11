@@ -359,7 +359,7 @@ void Mesh::set_ambient_color(glm::vec3 ambient_color)
 
 void Mesh::set_axis(glm::vec3 axis)
 {
-    glm::vec3 offset = axis - glm::vec3(m_xform * glm::vec4(m_origin, 1));
+    glm::vec3 offset = glm::vec3(glm::inverse(m_xform) * glm::vec4(axis, 1));
     for(int i = 0; i < static_cast<int>(m_num_vertex); i++) {
         set_vert_coord(i, glm::vec3(glm::translate(glm::mat4(1), -offset) * glm::vec4(get_vert_coord(i), 1)));
     }
