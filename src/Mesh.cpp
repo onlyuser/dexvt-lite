@@ -359,13 +359,16 @@ void Mesh::set_ambient_color(glm::vec3 ambient_color)
 
 void Mesh::set_axis(glm::vec3 axis)
 {
-    update_xform();
-    glm::vec3 offset = glm::vec3(glm::inverse(m_xform) * glm::vec4(axis, 1));
+    glm::vec3 offset = glm::vec3(glm::inverse(get_xform()) * glm::vec4(axis, 1));
     for(int i = 0; i < static_cast<int>(m_num_vertex); i++) {
         set_vert_coord(i, glm::vec3(glm::translate(glm::mat4(1), -offset) * glm::vec4(get_vert_coord(i), 1)));
     }
     update_bbox();
-    m_origin = offset; // NOTE: something wrong here
+    glm::mat4 inv_parent_xform(1);
+    if(get_parent()) {
+        inv_parent_xform = glm::inverse(get_parent()->get_xform());
+    }
+    m_origin = glm::vec3(inv_parent_xform * glm::vec4(axis, 1));
     update_xform();
 }
 
