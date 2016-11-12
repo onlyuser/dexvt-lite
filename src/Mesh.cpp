@@ -364,11 +364,11 @@ void Mesh::set_axis(glm::vec3 axis)
         set_vert_coord(i, glm::vec3(glm::translate(glm::mat4(1), -offset) * glm::vec4(get_vert_coord(i), 1)));
     }
     update_bbox();
-    glm::mat4 inv_parent_xform(1);
     if(get_parent()) {
-        inv_parent_xform = glm::inverse(get_parent()->get_xform());
+        m_origin = glm::vec3(glm::inverse(get_parent()->get_xform()) * glm::vec4(axis, 1));
+    } else {
+        m_origin = axis;
     }
-    m_origin = glm::vec3(inv_parent_xform * glm::vec4(axis, 1));
     update_xform();
 }
 
