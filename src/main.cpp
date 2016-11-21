@@ -85,7 +85,6 @@ int init_resources()
     mesh_box3->set_parent(mesh_box2);
 
     mesh_box->set_origin(glm::vec3(0, 0, 0));
-    //mesh_box3->set_axis(glm::vec3(0, 0.5, 0.5));
 
     vt::Material* bump_mapped_material = new vt::Material(
             "bump_mapped",
@@ -195,8 +194,8 @@ void onTick()
     }
     frames++;
     static int angle = 0;
-    mesh_box->set_orient(glm::vec3(0, 0, angle));
-    mesh_box2->set_orient(glm::vec3(0, angle, 0));
+    //mesh_box->set_orient(glm::vec3(0, 0, angle));
+    //mesh_box2->set_orient(glm::vec3(0, angle, 0));
     mesh_box3->set_orient(glm::vec3(angle, 0, 0));
     angle = (angle + 1) % 360;
 }
