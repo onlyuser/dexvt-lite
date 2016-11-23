@@ -38,8 +38,8 @@ Camera::Camera(
       m_need_update_projection_xform(true),
       m_ortho_dim(ortho_dim),
       m_zoom(zoom),
-      m_frame_buffer(NULL),
-      m_projection_mode(projection_mode)
+      m_projection_mode(projection_mode),
+      m_frame_buffer(NULL)
 {
     set_need_update_xform();
 }

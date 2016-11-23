@@ -382,4 +382,19 @@ void Mesh::update_xform()
     m_xform = translate_xform * rotate_xform * scale_xform;
 }
 
+MeshIFace* alloc_meshiface(std::string name, size_t num_vertex, size_t num_tri)
+{
+    return new Mesh(name, num_vertex, num_tri);
+}
+
+Mesh* downcast_meshiface_to_mesh(MeshIFace* mesh)
+{
+    return dynamic_cast<Mesh*>(mesh);
+}
+
+MeshIFace* upcast_mesh_to_meshiface(Mesh* mesh)
+{
+    return dynamic_cast<MeshIFace*>(mesh);
+}
+
 }

@@ -25,10 +25,10 @@ void BBoxObject::get_min_max(glm::vec3* min, glm::vec3* max) const
 glm::vec3 BBoxObject::get_center(align_t align) const
 {
     glm::vec3 center = (m_min + m_max) * 0.5f;
-    glm::vec3 half_dim = (m_max - m_min) * 0.5f;
     if(align == ALIGN_CENTER) {
         return center;
     }
+    glm::vec3 half_dim = (m_max - m_min) * 0.5f;
     switch(align) {
         case ALIGN_X_MIN:
             center.x -= half_dim.x;

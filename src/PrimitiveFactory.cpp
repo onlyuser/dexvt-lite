@@ -1,5 +1,5 @@
 #include <PrimitiveFactory.h>
-#include <Mesh.h>
+#include <MeshIFace.h>
 #include <Util.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -7,6 +7,13 @@
 #include <assert.h>
 
 namespace vt {
+
+MeshIFace* alloc_meshiface(std::string name, size_t num_vertex, size_t num_tri);
+
+class Mesh;
+
+Mesh* downcast_meshiface_to_mesh(MeshIFace* mesh);
+MeshIFace* upcast_mesh_to_meshiface(Mesh* mesh);
 
 Mesh* PrimitiveFactory::create_grid(
         std::string name,
@@ -17,9 +24,9 @@ Mesh* PrimitiveFactory::create_grid(
         float       tex_width_scale,
         float       tex_length_scale)
 {
-    int   num_vertex = (rows + 1)*(cols + 1);
-    int   num_tri    = rows*cols*2;
-    Mesh* mesh       = new Mesh(name, num_vertex, num_tri);
+    int        num_vertex = (rows + 1)*(cols + 1);
+    int        num_tri    = rows*cols*2;
+    MeshIFace* mesh       = alloc_meshiface(name, num_vertex, num_tri);
 
     // ==============================
     // init mesh vertex/normal coords
@@ -71,7 +78,7 @@ Mesh* PrimitiveFactory::create_grid(
 
     assert(vert_index == num_vertex);
     assert(tri_index  == num_tri);
-    return mesh;
+    return downcast_meshiface_to_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_sphere(
@@ -80,9 +87,9 @@ Mesh* PrimitiveFactory::create_sphere(
         int         stacks,
         float       radius)
 {
-    int   cols = slices;
-    int   rows = stacks;
-    Mesh* mesh = create_grid(name, cols, rows);
+    int        cols = slices;
+    int        rows = stacks;
+    MeshIFace* mesh = upcast_mesh_to_meshiface(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -108,7 +115,7 @@ Mesh* PrimitiveFactory::create_sphere(
 
     mesh->update_bbox();
 
-    return mesh;
+    return downcast_meshiface_to_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_hemisphere(
@@ -117,9 +124,9 @@ Mesh* PrimitiveFactory::create_hemisphere(
         int         stacks,
         float       radius)
 {
-    int   cols = slices;
-    int   rows = stacks*0.5 + 2;
-    Mesh* mesh = create_grid(name, cols, rows);
+    int        cols = slices;
+    int        rows = stacks*0.5 + 2;
+    MeshIFace* mesh = upcast_mesh_to_meshiface(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -156,7 +163,7 @@ Mesh* PrimitiveFactory::create_hemisphere(
 
     mesh->update_bbox();
 
-    return mesh;
+    return downcast_meshiface_to_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_cylinder(
@@ -165,9 +172,9 @@ Mesh* PrimitiveFactory::create_cylinder(
         float       radius,
         float       height)
 {
-    int   cols = slices;
-    int   rows = 5;
-    Mesh* mesh = create_grid(name, cols, rows);
+    int        cols = slices;
+    int        rows = 5;
+    MeshIFace* mesh = upcast_mesh_to_meshiface(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -222,7 +229,7 @@ Mesh* PrimitiveFactory::create_cylinder(
 
     mesh->update_bbox();
 
-    return mesh;
+    return downcast_meshiface_to_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_cone(
@@ -231,9 +238,9 @@ Mesh* PrimitiveFactory::create_cone(
         float       radius,
         float       height)
 {
-    int   cols = slices;
-    int   rows = 3;
-    Mesh* mesh = create_grid(name, cols, rows);
+    int        cols = slices;
+    int        rows = 3;
+    MeshIFace* mesh = upcast_mesh_to_meshiface(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -283,7 +290,7 @@ Mesh* PrimitiveFactory::create_cone(
 
     mesh->update_bbox();
 
-    return mesh;
+    return downcast_meshiface_to_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_torus(
@@ -293,9 +300,9 @@ Mesh* PrimitiveFactory::create_torus(
         float       radius_major,
         float       radius_minor)
 {
-    int   cols = slices;
-    int   rows = stacks;
-    Mesh* mesh = create_grid(name, cols, rows);
+    int        cols = slices;
+    int        rows = stacks;
+    MeshIFace* mesh = upcast_mesh_to_meshiface(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -324,7 +331,7 @@ Mesh* PrimitiveFactory::create_torus(
 
     mesh->update_bbox();
 
-    return mesh;
+    return downcast_meshiface_to_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_box(
@@ -333,7 +340,7 @@ Mesh* PrimitiveFactory::create_box(
         float       height,
         float       length)
 {
-    Mesh* mesh = new Mesh(name, 24, 12);
+    MeshIFace* mesh = alloc_meshiface(name, 24, 12);
 
     // ==============================
     // init mesh vertex/normal coords
@@ -451,7 +458,7 @@ Mesh* PrimitiveFactory::create_box(
 
     mesh->update_bbox();
 
-    return mesh;
+    return downcast_meshiface_to_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_tetrahedron(
@@ -460,7 +467,7 @@ Mesh* PrimitiveFactory::create_tetrahedron(
         float       height,
         float       length)
 {
-    Mesh* mesh = new Mesh(name, 12, 4);
+    MeshIFace* mesh = alloc_meshiface(name, 12, 4);
 
     // triangle opposite to origin
     mesh->set_vert_coord(0, glm::vec3(1, 0, 0));
@@ -490,7 +497,7 @@ Mesh* PrimitiveFactory::create_tetrahedron(
     mesh->update_normals_and_tangents();
     mesh->update_bbox();
 
-    return mesh;
+    return downcast_meshiface_to_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
@@ -515,9 +522,9 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
     // total (faces):     16*7=112
     // total (vertices):  112*3=336
 
-    int   num_vertex = 336;
-    int   num_tri    = 112;
-    Mesh* mesh       = new Mesh(name, num_vertex, num_tri);
+    int        num_vertex = 336;
+    int        num_tri    = 112;
+    MeshIFace* mesh       = alloc_meshiface(name, num_vertex, num_tri);
 
     float crown_height   = height*crown_height_to_total_height_ratio;
     float pavilion_depth = height-crown_height;
@@ -853,7 +860,7 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
 
     assert(vert_index == num_vertex);
     assert(tri_index  == num_tri);
-    return mesh;
+    return downcast_meshiface_to_mesh(mesh);
 }
 
 }

@@ -6,6 +6,7 @@
 #include <Buffer.h>
 #include <XformObject.h>
 #include <BBoxObject.h>
+#include <MeshIFace.h>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <string>
@@ -16,7 +17,7 @@ namespace vt {
 
 class Material;
 
-class Mesh : public NamedObject, public XformObject, public BBoxObject
+class Mesh : public NamedObject, public XformObject, public BBoxObject, public MeshIFace
 {
 public:
     Mesh(
@@ -202,6 +203,10 @@ private:
 
     void update_xform();
 };
+
+MeshIFace* alloc_meshiface(std::string name, size_t num_vertex, size_t num_tri);
+Mesh* downcast_meshiface_to_mesh(MeshIFace* mesh);
+MeshIFace* upcast_mesh_to_meshiface(Mesh* mesh);
 
 }
 

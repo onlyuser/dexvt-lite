@@ -116,8 +116,8 @@ private:
     bool              m_need_update_projection_xform;
     glm::vec2         m_ortho_dim;
     float             m_zoom;
-    FrameBuffer*      m_frame_buffer;
     projection_mode_t m_projection_mode;
+    FrameBuffer*      m_frame_buffer;
 
     void update_projection_xform();
     void update_xform();
