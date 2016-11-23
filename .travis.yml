@@ -1,0 +1,20 @@
+language: cpp
+compiler:
+    - gcc
+    - clang
+before_script:
+    - sudo apt-get install mesa-common-dev
+    - sudo apt-get install freeglut3-dev
+    - sudo apt-get install libglew-dev
+    - sudo apt-get install libglm-dev
+    - sudo apt-get install libpng-dev
+script: make for_travis
+branches:
+    only:
+        - master
+notifications:
+    recipients:
+        - onlyuser@gmail.com
+    email:
+        on_success: change
+        on_failure: always
