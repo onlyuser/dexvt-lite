@@ -1,4 +1,4 @@
-[![Build Status](https://secure.travis-ci.org/onlyuser/dexvt-test.png)](http://travis-ci.org/onlyuser/dexvt-test)
+[![Build Status](https://secure.travis-ci.org/onlyuser/dexvt-lite.png)](http://travis-ci.org/onlyuser/dexvt-lite)
 
 dexvt-lite
 ==========
