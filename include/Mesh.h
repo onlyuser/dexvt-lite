@@ -60,7 +60,6 @@ public:
 
     void update_bbox();
     void xform_vertices(glm::mat4 xform);
-    void center();
     void update_normals_and_tangents();
 
     void init_buffers();
@@ -167,7 +166,7 @@ public:
     void set_ambient_color(glm::vec3 ambient_color);
 
     void set_axis(glm::vec3 axis);
-    void center_axis();
+    void center_axis(vt::BBoxObject::align_t align = vt::BBoxObject::ALIGN_CENTER);
 
 private:
     std::string    m_name;

@@ -182,13 +182,6 @@ void Mesh::xform_vertices(glm::mat4 xform)
     update_bbox();
 }
 
-void Mesh::center()
-{
-    update_bbox();
-    xform_vertices(glm::translate(glm::mat4(1), -get_center()));
-    update_normals_and_tangents();
-}
-
 void Mesh::update_normals_and_tangents()
 {
     for(int i=0; i<static_cast<int>(m_num_tri); i++) {
@@ -363,6 +356,7 @@ void Mesh::set_axis(glm::vec3 axis)
     for(int i = 0; i < static_cast<int>(m_num_vertex); i++) {
         set_vert_coord(i, get_vert_coord(i) - local_axis);
     }
+    update_normals_and_tangents();
     update_bbox();
     if(get_parent()) {
         m_origin = glm::vec3(glm::inverse(get_parent()->get_xform()) * glm::vec4(axis, 1));
@@ -372,9 +366,9 @@ void Mesh::set_axis(glm::vec3 axis)
     update_xform();
 }
 
-void Mesh::center_axis()
+void Mesh::center_axis(align_t align)
 {
-    set_axis(get_center());
+    set_axis(glm::vec3(get_xform() * glm::vec4(get_center(align), 1)));
 }
 
 void Mesh::update_xform()
