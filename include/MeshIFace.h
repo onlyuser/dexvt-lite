@@ -8,6 +8,7 @@ namespace vt {
 class MeshIFace
 {
 public:
+    virtual ~MeshIFace() {}
     virtual size_t     get_num_vertex() const = 0;
     virtual size_t     get_num_tri() const = 0;
     virtual glm::vec3  get_vert_coord(int index) const = 0;
