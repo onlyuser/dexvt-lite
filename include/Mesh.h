@@ -63,6 +63,9 @@ public:
     void xform_vertices(glm::mat4 xform);
     void update_normals_and_tangents();
 
+    // NOTE: strangely required by pure virtual (already defined in base class!)
+    void get_min_max(glm::vec3* min, glm::vec3* max) const;
+
     void init_buffers();
     void update_buffers() const;
     Buffer* get_vbo_vert_coords();

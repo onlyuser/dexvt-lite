@@ -199,6 +199,12 @@ void Mesh::update_normals_and_tangents()
     }
 }
 
+// NOTE: strangely required by pure virtual (already defined in base class!)
+void Mesh::get_min_max(glm::vec3* min, glm::vec3* max) const
+{
+    BBoxObject::get_min_max(min, max);
+}
+
 void Mesh::init_buffers()
 {
     if(m_buffers_already_init) {
