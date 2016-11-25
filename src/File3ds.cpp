@@ -16,7 +16,6 @@ MeshIFace* alloc_meshiface(std::string name, size_t num_vertex, size_t num_tri);
 class Mesh;
 
 Mesh* downcast_meshiface_to_mesh(MeshIFace* mesh);
-MeshIFace* upcast_mesh_to_meshiface(Mesh* mesh);
 
 static void read_string(FILE* stream, char* buf)
 {
