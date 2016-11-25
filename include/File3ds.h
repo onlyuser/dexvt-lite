@@ -24,11 +24,11 @@ public:
 
 private:
     static bool load3ds_impl(std::string filename, int index, std::vector<MeshIFace*>* meshes);
-	static uint32_t enterChunk(FILE* stream, uint32_t chunkID, uint32_t chunkEnd);
-	static void readVertList(FILE* stream, MeshIFace* mesh);
-	static void readFaceList(FILE* stream, MeshIFace* mesh);
-	static uint16_t readShort(FILE* stream);
-	static uint32_t readLong(FILE* stream);
+	static uint32_t enter_chunk(FILE* stream, uint32_t chunkID, uint32_t chunkEnd);
+	static void read_vertices(FILE* stream, MeshIFace* mesh);
+	static void read_faces(FILE* stream, MeshIFace* mesh);
+	static uint16_t read_short(FILE* stream);
+	static uint32_t read_long(FILE* stream);
 };
 
 }

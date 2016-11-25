@@ -18,7 +18,7 @@ class Mesh;
 Mesh* downcast_meshiface_to_mesh(MeshIFace* mesh);
 MeshIFace* upcast_mesh_to_meshiface(Mesh* mesh);
 
-static void readString(FILE* stream, char* buf)
+static void read_string(FILE* stream, char* buf)
 {
     int i = 0;
     do {
@@ -50,37 +50,37 @@ bool File3ds::load3ds_impl(std::string filename, int index, std::vector<MeshIFac
         fseek(stream, 0, SEEK_END);
         uint32_t size = ftell(stream);
         rewind(stream);
-        uint32_t mainEnd = enterChunk(stream, MAIN3DS, size);
-        uint32_t editEnd = enterChunk(stream, EDIT3DS, mainEnd);
+        uint32_t mainEnd = enter_chunk(stream, MAIN3DS, size);
+        uint32_t editEnd = enter_chunk(stream, EDIT3DS, mainEnd);
         int count = 0;
         while(ftell(stream) < editEnd) {
-            uint32_t objEnd = enterChunk(stream, EDIT_OBJECT, editEnd);
+            uint32_t objEnd = enter_chunk(stream, EDIT_OBJECT, editEnd);
             char buf[80];
-            readString(stream, buf); // read object name
-            int objType = readShort(stream);
+            read_string(stream, buf); // read object name
+            int objType = read_short(stream);
             fseek(stream, -1*  sizeof(uint16_t), SEEK_CUR); // rewind
             if(objType == OBJ_TRIMESH) {
                 if(count == index || index == -1) {
-                    uint32_t meshEnd = enterChunk(stream, OBJ_TRIMESH, objEnd);
+                    uint32_t meshEnd = enter_chunk(stream, OBJ_TRIMESH, objEnd);
                     if(meshEnd) {
                         uint32_t meshBase = ftell(stream);
                         //=========================================================
-                        enterChunk(stream, TRI_VERTEXL, meshEnd);
-                        int vertCnt = readShort(stream);
+                        enter_chunk(stream, TRI_VERTEXL, meshEnd);
+                        int vertCnt = read_short(stream);
                         fseek(stream, meshBase, SEEK_SET);
                         //=========================================================
-                        enterChunk(stream, TRI_FACEL, meshEnd);
-                        int faceCnt = readShort(stream);
+                        enter_chunk(stream, TRI_FACEL, meshEnd);
+                        int faceCnt = read_short(stream);
                         fseek(stream, meshBase, SEEK_SET);
                         //=========================================================
                         MeshIFace* mesh = alloc_meshiface(buf, vertCnt, faceCnt);
                         //=========================================================
-                        enterChunk(stream, TRI_VERTEXL, meshEnd);
-                        readVertList(stream, mesh);
+                        enter_chunk(stream, TRI_VERTEXL, meshEnd);
+                        read_vertices(stream, mesh);
                         fseek(stream, meshBase, SEEK_SET);
                         //=========================================================
-                        enterChunk(stream, TRI_FACEL, meshEnd);
-                        readFaceList(stream, mesh);
+                        enter_chunk(stream, TRI_FACEL, meshEnd);
+                        read_faces(stream, mesh);
                         fseek(stream, meshBase, SEEK_SET);
                         //=========================================================
                         mesh->update_bbox();
@@ -116,12 +116,12 @@ bool File3ds::load3ds_impl(std::string filename, int index, std::vector<MeshIFac
     return true;
 }
 
-uint32_t File3ds::enterChunk(FILE* stream, uint32_t chunkID, uint32_t chunkEnd)
+uint32_t File3ds::enter_chunk(FILE* stream, uint32_t chunkID, uint32_t chunkEnd)
 {
     uint32_t offset = 0;
     while(ftell(stream) < chunkEnd) {
-        uint32_t pChunkID = readShort(stream);
-        uint32_t chunkSize = readLong(stream);
+        uint32_t pChunkID = read_short(stream);
+        uint32_t chunkSize = read_long(stream);
         if(pChunkID == chunkID) {
             offset = -1*  (sizeof(uint16_t)+sizeof(uint32_t))+chunkSize;
             break;
@@ -133,7 +133,7 @@ uint32_t File3ds::enterChunk(FILE* stream, uint32_t chunkID, uint32_t chunkEnd)
     return ftell(stream)+offset;
 }
 
-void File3ds::readVertList(FILE* stream, MeshIFace* mesh)
+void File3ds::read_vertices(FILE* stream, MeshIFace* mesh)
 {
     float* vertex = new float[3];
     fseek(stream, sizeof(uint16_t), SEEK_CUR); // skip list size
@@ -145,7 +145,7 @@ void File3ds::readVertList(FILE* stream, MeshIFace* mesh)
     delete []vertex;
 }
 
-void File3ds::readFaceList(FILE* stream, MeshIFace* mesh)
+void File3ds::read_faces(FILE* stream, MeshIFace* mesh)
 {
     uint16_t* pFace = new uint16_t[3];
     fseek(stream, sizeof(uint16_t), SEEK_CUR); // skip list size
@@ -158,7 +158,7 @@ void File3ds::readFaceList(FILE* stream, MeshIFace* mesh)
     delete []pFace;
 }
 
-uint16_t File3ds::readShort(FILE* stream)
+uint16_t File3ds::read_short(FILE* stream)
 {
     uint8_t loByte;
     uint8_t hiByte;
@@ -167,10 +167,10 @@ uint16_t File3ds::readShort(FILE* stream)
     return MAKEWORD(loByte, hiByte);
 }
 
-uint32_t File3ds::readLong(FILE* stream)
+uint32_t File3ds::read_long(FILE* stream)
 {
-    uint16_t loWord = readShort(stream);
-    uint16_t hiWord = readShort(stream);
+    uint16_t loWord = read_short(stream);
+    uint16_t hiWord = read_short(stream);
     return MAKELONG(loWord, hiWord);
 }
 
