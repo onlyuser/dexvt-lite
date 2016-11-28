@@ -44,89 +44,86 @@ bool File3ds::load3ds_impl(std::string filename, int index, std::vector<MeshIFac
     }
     FILE* stream = fopen(filename.c_str(), "rb");
     if(stream) {
-        glm::vec3 g_min, g_max;
+        glm::vec3 global_min, global_max;
         bool init_global_bbox = false;
         fseek(stream, 0, SEEK_END);
         uint32_t size = ftell(stream);
         rewind(stream);
-        uint32_t mainEnd = enter_chunk(stream, MAIN3DS, size);
-        uint32_t editEnd = enter_chunk(stream, EDIT3DS, mainEnd);
+        uint32_t main_end = enter_chunk(stream, MAIN3DS, size);
+        uint32_t edit_end = enter_chunk(stream, EDIT3DS, main_end);
         int count = 0;
-        while(ftell(stream) < editEnd) {
-            uint32_t objEnd = enter_chunk(stream, EDIT_OBJECT, editEnd);
+        while(ftell(stream) < edit_end) {
+            uint32_t object_end = enter_chunk(stream, EDIT_OBJECT, edit_end);
             char buf[80];
             read_string(stream, buf); // read object name
-            int objType = read_short(stream);
-            fseek(stream, -1*  sizeof(uint16_t), SEEK_CUR); // rewind
-            if(objType == OBJ_TRIMESH) {
+            int object_type = read_short(stream);
+            fseek(stream, -sizeof(uint16_t), SEEK_CUR); // rewind
+            if(object_type == OBJ_TRIMESH) {
                 if(count == index || index == -1) {
-                    uint32_t meshEnd = enter_chunk(stream, OBJ_TRIMESH, objEnd);
-                    if(meshEnd) {
-                        uint32_t meshBase = ftell(stream);
-                        //=========================================================
-                        enter_chunk(stream, TRI_VERTEXL, meshEnd);
-                        int vertCnt = read_short(stream);
-                        fseek(stream, meshBase, SEEK_SET);
-                        //=========================================================
-                        enter_chunk(stream, TRI_FACEL, meshEnd);
-                        int faceCnt = read_short(stream);
-                        fseek(stream, meshBase, SEEK_SET);
-                        //=========================================================
-                        MeshIFace* mesh = alloc_meshiface(buf, vertCnt, faceCnt);
-                        //=========================================================
-                        enter_chunk(stream, TRI_VERTEXL, meshEnd);
+                    uint32_t mesh_end = enter_chunk(stream, OBJ_TRIMESH, object_end);
+                    if(mesh_end) {
+                        uint32_t mesh_base = ftell(stream);
+
+                        enter_chunk(stream, TRI_VERTEXL, mesh_end);
+                        int num_vertex = read_short(stream);
+                        fseek(stream, mesh_base, SEEK_SET);
+
+                        enter_chunk(stream, TRI_FACEL, mesh_end);
+                        int num_tri = read_short(stream);
+                        fseek(stream, mesh_base, SEEK_SET);
+
+                        MeshIFace* mesh = alloc_meshiface(buf, num_vertex, num_tri);
+
+                        enter_chunk(stream, TRI_VERTEXL, mesh_end);
                         read_vertices(stream, mesh);
-                        fseek(stream, meshBase, SEEK_SET);
-                        //=========================================================
-                        enter_chunk(stream, TRI_FACEL, meshEnd);
+                        fseek(stream, mesh_base, SEEK_SET);
+
+                        enter_chunk(stream, TRI_FACEL, mesh_end);
                         read_faces(stream, mesh);
-                        fseek(stream, meshBase, SEEK_SET);
-                        //=========================================================
+                        fseek(stream, mesh_base, SEEK_SET);
+
                         mesh->update_bbox();
-                        glm::vec3 min, max;
-                        mesh->get_min_max(&min, &max);
+                        glm::vec3 local_min, local_max;
+                        mesh->get_min_max(&local_min, &local_max);
                         if(init_global_bbox) {
-                            g_min = glm::min(g_min, min);
-                            g_max = glm::max(g_max, max);
+                            global_min = glm::min(global_min, local_min);
+                            global_max = glm::max(global_max, local_max);
                         } else {
-                            g_min = min;
-                            g_max = max;
+                            global_min = local_min;
+                            global_max = local_max;
                             init_global_bbox = true;
                         }
                         meshes->push_back(mesh);
                     }
-                    fseek(stream, meshEnd, SEEK_SET);
+                    fseek(stream, mesh_end, SEEK_SET);
                 } else {
                     break;
                 }
                 count++;
             }
-            fseek(stream, objEnd, SEEK_SET);
+            fseek(stream, object_end, SEEK_SET);
         }
         fclose(stream);
-        glm::vec3 g_center = g_min;
-        g_center += g_max;
-        g_center *= 0.5;
+        glm::vec3 global_center = (global_min + global_max) * 0.5f;
         for(std::vector<MeshIFace*>::iterator p = meshes->begin(); p != meshes->end(); p++) {
-            (*p)->xform_vertices(glm::translate(glm::mat4(1), -g_center));
-            (*p)->update_normals_and_tangents();
+            (*p)->set_axis(global_center);
         }
     }
     return true;
 }
 
-uint32_t File3ds::enter_chunk(FILE* stream, uint32_t chunkID, uint32_t chunkEnd)
+uint32_t File3ds::enter_chunk(FILE* stream, uint32_t chunk_id, uint32_t chunk_end)
 {
     uint32_t offset = 0;
-    while(ftell(stream) < chunkEnd) {
-        uint32_t pChunkID = read_short(stream);
-        uint32_t chunkSize = read_long(stream);
-        if(pChunkID == chunkID) {
-            offset = -1*  (sizeof(uint16_t)+sizeof(uint32_t))+chunkSize;
+    while(ftell(stream) < chunk_end) {
+        uint32_t _chunk_id = read_short(stream);
+        uint32_t chunk_size = read_long(stream);
+        if(_chunk_id == chunk_id) {
+            offset = -(sizeof(uint16_t)+sizeof(uint32_t))+chunk_size;
             break;
         } else {
-            fseek(stream, -1*  (sizeof(uint16_t)+sizeof(uint32_t)), SEEK_CUR); // rewind
-            fseek(stream, chunkSize, SEEK_CUR); // skip this chunk
+            fseek(stream, -(sizeof(uint16_t)+sizeof(uint32_t)), SEEK_CUR); // rewind
+            fseek(stream, chunk_size, SEEK_CUR); // skip this chunk
         }
     }
     return ftell(stream)+offset;
@@ -134,43 +131,43 @@ uint32_t File3ds::enter_chunk(FILE* stream, uint32_t chunkID, uint32_t chunkEnd)
 
 void File3ds::read_vertices(FILE* stream, MeshIFace* mesh)
 {
-    float* vertex = new float[3];
+    float* vert_coord = new float[3];
     fseek(stream, sizeof(uint16_t), SEEK_CUR); // skip list size
-    size_t vertCnt = mesh->get_num_vertex();
-    for(int i = 0; i < static_cast<int>(vertCnt); i++) {
-        fread(vertex, sizeof(float), 3, stream);
-        mesh->set_vert_coord(i, glm::vec3(vertex[0], vertex[2], vertex[1]));
+    size_t num_vertex = mesh->get_num_vertex();
+    for(int i = 0; i < static_cast<int>(num_vertex); i++) {
+        fread(vert_coord, sizeof(float), 3, stream);
+        mesh->set_vert_coord(i, glm::vec3(vert_coord[0], vert_coord[2], vert_coord[1]));
     }
-    delete []vertex;
+    delete []vert_coord;
 }
 
 void File3ds::read_faces(FILE* stream, MeshIFace* mesh)
 {
-    uint16_t* pFace = new uint16_t[3];
+    uint16_t* tri_indices = new uint16_t[3];
     fseek(stream, sizeof(uint16_t), SEEK_CUR); // skip list size
-    size_t faceCnt = mesh->get_num_tri();
-    for(int i = 0; i < static_cast<int>(faceCnt); i++) {
-        fread(pFace, sizeof(uint16_t), 3, stream);
-        mesh->set_tri_indices(i, glm::uvec3(pFace[0], pFace[2], pFace[1]));
-        fseek(stream, sizeof(uint16_t), SEEK_CUR); // skip face info
+    size_t num_tri = mesh->get_num_tri();
+    for(int i = 0; i < static_cast<int>(num_tri); i++) {
+        fread(tri_indices, sizeof(uint16_t), 3, stream);
+        mesh->set_tri_indices(i, glm::uvec3(tri_indices[0], tri_indices[2], tri_indices[1]));
+        fseek(stream, sizeof(uint16_t), SEEK_CUR); // skip tri_indices info
     }
-    delete []pFace;
+    delete []tri_indices;
 }
 
 uint16_t File3ds::read_short(FILE* stream)
 {
-    uint8_t loByte;
-    uint8_t hiByte;
-    fread(&loByte, sizeof(uint8_t), 1, stream);
-    fread(&hiByte, sizeof(uint8_t), 1, stream);
-    return MAKEWORD(loByte, hiByte);
+    uint8_t lo_byte;
+    uint8_t hi_byte;
+    fread(&lo_byte, sizeof(uint8_t), 1, stream);
+    fread(&hi_byte, sizeof(uint8_t), 1, stream);
+    return MAKEWORD(lo_byte, hi_byte);
 }
 
 uint32_t File3ds::read_long(FILE* stream)
 {
-    uint16_t loWord = read_short(stream);
-    uint16_t hiWord = read_short(stream);
-    return MAKELONG(loWord, hiWord);
+    uint16_t lo_word = read_short(stream);
+    uint16_t hi_word = read_short(stream);
+    return MAKELONG(lo_word, hi_word);
 }
 
 }

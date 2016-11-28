@@ -22,9 +22,9 @@ public:
     virtual glm::uvec3 get_tri_indices(int index) const = 0;
     virtual void       set_tri_indices(int index, glm::uvec3 indices) = 0;
     virtual void       update_bbox() = 0;
-    virtual void       xform_vertices(glm::mat4 xform) = 0;
     virtual void       update_normals_and_tangents() = 0;
     virtual void       get_min_max(glm::vec3* min, glm::vec3* max) const = 0;
+    virtual void       set_axis(glm::vec3 axis) = 0;
 };
 
 }

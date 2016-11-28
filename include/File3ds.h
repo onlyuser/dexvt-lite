@@ -24,7 +24,7 @@ public:
 
 private:
     static bool load3ds_impl(std::string filename, int index, std::vector<MeshIFace*>* meshes);
-	static uint32_t enter_chunk(FILE* stream, uint32_t chunkID, uint32_t chunkEnd);
+	static uint32_t enter_chunk(FILE* stream, uint32_t chunk_id, uint32_t chunk_end);
 	static void read_vertices(FILE* stream, MeshIFace* mesh);
 	static void read_faces(FILE* stream, MeshIFace* mesh);
 	static uint16_t read_short(FILE* stream);
