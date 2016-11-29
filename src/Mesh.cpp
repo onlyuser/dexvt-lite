@@ -369,7 +369,7 @@ void Mesh::set_axis(glm::vec3 axis)
     } else {
         m_origin = axis;
     }
-    update_xform();
+    set_need_update_xform();
 }
 
 void Mesh::center_axis(align_t align)
@@ -377,12 +377,24 @@ void Mesh::center_axis(align_t align)
     set_axis(glm::vec3(get_xform() * glm::vec4(get_center(align), 1)));
 }
 
+void Mesh::point_at(glm::vec3 p)
+{
+    glm::vec3 local_p;
+    if(get_parent()) {
+        local_p = glm::vec3(glm::inverse(get_parent()->get_xform()) * glm::vec4(p, 1));
+    } else {
+        local_p = p;
+    }
+    m_orient = offset_to_orient(local_p - m_origin);
+    set_need_update_xform();
+}
+
 void Mesh::update_xform()
 {
     glm::mat4 translate_xform = glm::translate(glm::mat4(1), m_origin);
     glm::mat4 rotate_xform =
-            GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_PITCH(m_orient)), VEC_LEFT) *   // X axis
             GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_YAW(m_orient)),   VEC_UP) *     // Y axis
+            GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_PITCH(m_orient)), VEC_LEFT) *   // X axis
             GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_ROLL(m_orient)),  VEC_FORWARD); // Z axis
     glm::mat4 scale_xform = glm::scale(glm::mat4(1), m_scale);
     m_xform = translate_xform * rotate_xform * scale_xform;

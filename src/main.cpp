@@ -52,7 +52,7 @@ vt::Texture *texture_box_color, *texture_box_normal, *texture_skybox;
 bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
 glm::vec3 prev_orient, orient, orbit_speed = glm::vec3(0, -0.5, -0.5);
-float prev_orbit_radius = 0, orbit_radius = 8, dolly_speed = 0.1, light_distance = 4;
+float prev_orbit_radius = 0, orbit_radius = 10, dolly_speed = 0.1, light_distance = 4;
 bool wireframe_mode = false;
 bool show_fps = false;
 bool show_axis = false;
@@ -76,12 +76,12 @@ int init_resources()
 
     scene->add_mesh(mesh_box2 = vt::PrimitiveFactory::create_box("box2"));
     mesh_box2->center_axis();
-    mesh_box2->set_origin(glm::vec3(2, 0, 0));
+    mesh_box2->set_origin(glm::vec3(0, 0, 2));
     mesh_box2->set_parent(mesh_box);
 
     scene->add_mesh(mesh_box3 = vt::PrimitiveFactory::create_box("box3"));
     mesh_box3->center_axis();
-    mesh_box3->set_origin(glm::vec3(2, 0, 0));
+    mesh_box3->set_origin(glm::vec3(0, 0, 2));
     mesh_box3->set_parent(mesh_box2);
 
     mesh_box->set_origin(glm::vec3(0, 0, 0));
@@ -195,8 +195,8 @@ void onTick()
     frames++;
     static int angle = 0;
     mesh_box->set_orient(glm::vec3(0, 0, angle));
-    mesh_box2->set_orient(glm::vec3(0, angle, 0));
-    mesh_box3->set_orient(glm::vec3(angle, 0, 0));
+    mesh_box2->set_orient(glm::vec3(angle, 0, 0));
+    mesh_box3->set_orient(glm::vec3(0, angle, 0));
     angle = (angle + 1) % 360;
 }
 
