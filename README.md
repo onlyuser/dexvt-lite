@@ -13,31 +13,6 @@ It features environment-mapped reflection/refraction/double refraction (with Fre
 Platonic primitives supported include sphere, cube, cylinder, cone, grid, tetrahedron, and round brilliant diamond.
 Many features still experimental.
 
-Screenshots
------------
-
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_env_map_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_env_map.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_env_map_reflectance_detail_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_env_map_reflectance_detail.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_env_map_refractance_detail_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_env_map_refractance_detail.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_env_map_fresnel_effect_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_env_map_fresnel_effect.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_env_map_chromatic_dispersion_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_env_map_chromatic_dispersion.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_env_map_wireframe_normals_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_env_map_wireframe_normals.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_cube_double_refraction_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_cube_double_refraction.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_diamond_refraction_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_diamond_refraction.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_diamond_specular_reflection_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_diamond_specular_reflection.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_nine_shape_ground_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_nine_shape_ground.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_nine_shape_horizon_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_nine_shape_horizon.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_nine_shape_sky_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_nine_shape_sky.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_sphere_backface_reflection_halo_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_sphere_backface_reflection_halo.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_sphere_specular_reflection_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_sphere_specular_reflection.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_ripple_refraction_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_ripple_refraction.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_ripple_wireframe_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_ripple_wireframe.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_ripple_wireframe_normals_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_ripple_wireframe_normals.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_nine_shape_bloom_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_nine_shape_bloom.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_cube_bloom_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_cube_bloom.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_ssao_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_ssao.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-test_ssao_angle_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-test_ssao_angle.png)
-
 Requirements
 ------------
 
@@ -71,10 +46,6 @@ Resource files not included:
         <td>data/chesterfield_normal.png</td>
         <td>Normal map texture</td>
     </tr>
-    <tr>
-        <td>data/star_wars/TI_Low0.3ds</td>
-        <td>3D Studio mesh</td>
-    </tr>
 </table>
 
 **Ubuntu packages:**
@@ -105,18 +76,16 @@ Controls
 Keyboard:
 
 <table>
-    <tr><th> key </th><th> purpose                    </th></tr>
-    <tr><td> b   </td><td> toggle bounding-box        </td></tr>
-    <tr><td> d   </td><td> cycle through demos        </td></tr>
-    <tr><td> f   </td><td> toggle frame rate          </td></tr>
-    <tr><td> l   </td><td> toggle lights              </td></tr>
-    <tr><td> n   </td><td> toggle normals             </td></tr>
-    <tr><td> o   </td><td> cycle through render modes </td></tr>
-    <tr><td> p   </td><td> toggle ortho-projection    </td></tr>
-    <tr><td> t   </td><td> toggle texture             </td></tr>
-    <tr><td> w   </td><td> toggle wireframe           </td></tr>
-    <tr><td> x   </td><td> toggle axis                </td></tr>
-    <tr><td> esc </td><td> exit                       </td></tr>
+    <tr><th> key </th><th> purpose                 </th></tr>
+    <tr><td> b   </td><td> toggle bounding-box     </td></tr>
+    <tr><td> f   </td><td> toggle frame rate       </td></tr>
+    <tr><td> l   </td><td> toggle lights           </td></tr>
+    <tr><td> n   </td><td> toggle normals          </td></tr>
+    <tr><td> p   </td><td> toggle ortho-projection </td></tr>
+    <tr><td> t   </td><td> toggle texture          </td></tr>
+    <tr><td> w   </td><td> toggle wireframe        </td></tr>
+    <tr><td> x   </td><td> toggle axis             </td></tr>
+    <tr><td> esc </td><td> exit                    </td></tr>
 </table>
 
 Mouse:
