@@ -59,46 +59,45 @@ bool File3ds::load3ds_impl(std::string filename, int index, std::vector<MeshIFac
             int object_type = read_short(stream);
             fseek(stream, -sizeof(uint16_t), SEEK_CUR); // rewind
             if(object_type == OBJ_TRIMESH) {
-                if(count == index || index == -1) {
-                    uint32_t mesh_end = enter_chunk(stream, OBJ_TRIMESH, object_end);
-                    if(mesh_end) {
-                        uint32_t mesh_base = ftell(stream);
-
-                        enter_chunk(stream, TRI_VERTEXL, mesh_end);
-                        int num_vertex = read_short(stream);
-                        fseek(stream, mesh_base, SEEK_SET);
-
-                        enter_chunk(stream, TRI_FACEL, mesh_end);
-                        int num_tri = read_short(stream);
-                        fseek(stream, mesh_base, SEEK_SET);
-
-                        MeshIFace* mesh = alloc_meshiface(buf, num_vertex, num_tri);
-
-                        enter_chunk(stream, TRI_VERTEXL, mesh_end);
-                        read_vertices(stream, mesh);
-                        fseek(stream, mesh_base, SEEK_SET);
-
-                        enter_chunk(stream, TRI_FACEL, mesh_end);
-                        read_faces(stream, mesh);
-                        fseek(stream, mesh_base, SEEK_SET);
-
-                        mesh->update_bbox();
-                        glm::vec3 local_min, local_max;
-                        mesh->get_min_max(&local_min, &local_max);
-                        if(init_global_bbox) {
-                            global_min = glm::min(global_min, local_min);
-                            global_max = glm::max(global_max, local_max);
-                        } else {
-                            global_min = local_min;
-                            global_max = local_max;
-                            init_global_bbox = true;
-                        }
-                        meshes->push_back(mesh);
-                    }
-                    fseek(stream, mesh_end, SEEK_SET);
-                } else {
+                if(count != index && index != -1) {
                     break;
                 }
+                uint32_t mesh_end = enter_chunk(stream, OBJ_TRIMESH, object_end);
+                if(mesh_end) {
+                    uint32_t mesh_base = ftell(stream);
+
+                    enter_chunk(stream, TRI_VERTEXL, mesh_end);
+                    int num_vertex = read_short(stream);
+                    fseek(stream, mesh_base, SEEK_SET);
+
+                    enter_chunk(stream, TRI_FACEL, mesh_end);
+                    int num_tri = read_short(stream);
+                    fseek(stream, mesh_base, SEEK_SET);
+
+                    MeshIFace* mesh = alloc_meshiface(buf, num_vertex, num_tri);
+
+                    enter_chunk(stream, TRI_VERTEXL, mesh_end);
+                    read_vertices(stream, mesh);
+                    fseek(stream, mesh_base, SEEK_SET);
+
+                    enter_chunk(stream, TRI_FACEL, mesh_end);
+                    read_faces(stream, mesh);
+                    fseek(stream, mesh_base, SEEK_SET);
+
+                    mesh->update_bbox();
+                    glm::vec3 local_min, local_max;
+                    mesh->get_min_max(&local_min, &local_max);
+                    if(init_global_bbox) {
+                        global_min = glm::min(global_min, local_min);
+                        global_max = glm::max(global_max, local_max);
+                    } else {
+                        global_min = local_min;
+                        global_max = local_max;
+                        init_global_bbox = true;
+                    }
+                    meshes->push_back(mesh);
+                }
+                fseek(stream, mesh_end, SEEK_SET);
                 count++;
             }
             fseek(stream, object_end, SEEK_SET);
