@@ -95,7 +95,7 @@ bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_
     if(!nmatch) {
         return false;
     }
-    size_t _start_pos(start_pos ?* start_pos : 0);
+    size_t _start_pos(start_pos ? *start_pos : 0);
     if(_start_pos >= s.length()) {
         return false;
     }
