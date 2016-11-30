@@ -188,6 +188,7 @@ void Mesh::imprint()
     m_origin = glm::vec3(0);
     m_orient = glm::vec3(0);
     mark_dirty_xform();
+    // TODO: review following
     //link_parent(NULL);
     //unlink_children();
 }
