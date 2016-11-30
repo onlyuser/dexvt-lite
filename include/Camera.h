@@ -113,7 +113,7 @@ private:
     float             m_near_plane;
     float             m_far_plane;
     glm::mat4         m_projection_xform;
-    bool              m_need_update_projection_xform;
+    bool              m_is_dirty_projection_xform;
     glm::vec2         m_ortho_dim;
     float             m_zoom;
     projection_mode_t m_projection_mode;

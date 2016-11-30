@@ -35,13 +35,13 @@ Camera::Camera(
       m_fov(fov),
       m_near_plane(near_plane),
       m_far_plane(far_plane),
-      m_need_update_projection_xform(true),
+      m_is_dirty_projection_xform(true),
       m_ortho_dim(ortho_dim),
       m_zoom(zoom),
       m_projection_mode(projection_mode),
       m_frame_buffer(NULL)
 {
-    set_need_update_xform();
+    mark_dirty_xform();
 }
 
 Camera::~Camera()
@@ -51,20 +51,20 @@ Camera::~Camera()
 void Camera::set_origin(glm::vec3 origin)
 {
     m_origin = origin;
-    set_need_update_xform();
+    mark_dirty_xform();
 }
 
 void Camera::set_orient(glm::vec3 orient)
 {
     m_orient = orient;
     m_target = m_origin+orient_to_offset(orient);
-    set_need_update_xform();
+    mark_dirty_xform();
 }
 
 void Camera::set_target(glm::vec3 target)
 {
     m_target = target;
-    set_need_update_xform();
+    mark_dirty_xform();
 }
 
 const glm::vec3 Camera::get_dir() const
@@ -76,7 +76,7 @@ void Camera::move(glm::vec3 origin, glm::vec3 target)
 {
     m_origin = origin;
     m_target = target;
-    set_need_update_xform();
+    mark_dirty_xform();
 }
 
 void Camera::orbit(glm::vec3 &orient, float &radius)
@@ -89,50 +89,50 @@ void Camera::orbit(glm::vec3 &orient, float &radius)
         radius = 0;
     }
     m_origin = m_target+orient_to_offset(orient)*radius;
-    set_need_update_xform();
+    mark_dirty_xform();
 }
 
 void Camera::set_fov(float fov)
 {
     m_fov = fov;
-    m_need_update_projection_xform = true;
-    set_need_update_xform();
+    m_is_dirty_projection_xform = true;
+    mark_dirty_xform();
 }
 
 void Camera::resize(float left, float bottom, float width, float height)
 {
     ViewObject<glm::vec2, float>::resize(left, bottom, width, height);
-    m_need_update_projection_xform = true;
-    set_need_update_xform();
+    m_is_dirty_projection_xform = true;
+    mark_dirty_xform();
 }
 
 void Camera::set_near_plane(float near_plane)
 {
     m_near_plane = near_plane;
-    m_need_update_projection_xform = true;
-    set_need_update_xform();
+    m_is_dirty_projection_xform = true;
+    mark_dirty_xform();
 }
 
 void Camera::set_far_plane(float far_plane)
 {
     m_far_plane = far_plane;
-    m_need_update_projection_xform = true;
-    set_need_update_xform();
+    m_is_dirty_projection_xform = true;
+    mark_dirty_xform();
 }
 
 void Camera::set_projection_mode(projection_mode_t projection_mode)
 {
     m_projection_mode = projection_mode;
-    m_need_update_projection_xform = true;
-    set_need_update_xform();
+    m_is_dirty_projection_xform = true;
+    mark_dirty_xform();
 }
 
 void Camera::resize_ortho_viewport(float width, float height)
 {
     m_ortho_dim.x = width;
     m_ortho_dim.y = height;
-    m_need_update_projection_xform = true;
-    set_need_update_xform();
+    m_is_dirty_projection_xform = true;
+    mark_dirty_xform();
 }
 
 void Camera::set_zoom(float *zoom)
@@ -144,8 +144,8 @@ void Camera::set_zoom(float *zoom)
         *zoom = MIN_ORTHO_SCALE;
     }
     m_zoom = *zoom;
-    m_need_update_projection_xform = true;
-    set_need_update_xform();
+    m_is_dirty_projection_xform = true;
+    mark_dirty_xform();
 }
 
 void Camera::set_frame_buffer(FrameBuffer* frame_buffer)
@@ -155,9 +155,9 @@ void Camera::set_frame_buffer(FrameBuffer* frame_buffer)
 
 const glm::mat4 &Camera::get_projection_xform()
 {
-    if(m_need_update_projection_xform) {
+    if(m_is_dirty_projection_xform) {
         update_projection_xform();
-        m_need_update_projection_xform = false;
+        m_is_dirty_projection_xform = false;
     }
     return m_projection_xform;
 }

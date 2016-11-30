@@ -77,12 +77,12 @@ int init_resources()
     scene->add_mesh(mesh_box2 = vt::PrimitiveFactory::create_box("box2"));
     mesh_box2->center_axis();
     mesh_box2->set_origin(glm::vec3(0, 0, 2));
-    mesh_box2->set_parent(mesh_box);
+    mesh_box2->link_parent(mesh_box);
 
     scene->add_mesh(mesh_box3 = vt::PrimitiveFactory::create_box("box3"));
     mesh_box3->center_axis();
     mesh_box3->set_origin(glm::vec3(0, 0, 2));
-    mesh_box3->set_parent(mesh_box2);
+    mesh_box3->link_parent(mesh_box2);
 
     mesh_box->set_origin(glm::vec3(0, 0, 0));
 

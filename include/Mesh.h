@@ -61,6 +61,7 @@ public:
 
     void update_bbox();
     void xform_vertices(glm::mat4 xform);
+    void imprint();
     void update_normals_and_tangents();
 
     // NOTE: strangely required by pure virtual (already defined in base class!)
@@ -209,8 +210,8 @@ private:
 };
 
 MeshIFace* alloc_meshiface(std::string name, size_t num_vertex, size_t num_tri);
-Mesh* downcast_meshiface_to_mesh(MeshIFace* mesh);
-MeshIFace* upcast_mesh_to_meshiface(Mesh* mesh);
+Mesh* _mesh(MeshIFace* mesh);
+MeshIFace* _meshiface(Mesh* mesh);
 
 }
 

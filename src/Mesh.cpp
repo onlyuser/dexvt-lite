@@ -72,13 +72,13 @@ Mesh::~Mesh()
 void Mesh::set_origin(glm::vec3 origin)
 {
     m_origin = origin;
-    set_need_update_xform();
+    mark_dirty_xform();
 }
 
 void Mesh::set_orient(glm::vec3 orient)
 {
     m_orient = orient;
-    set_need_update_xform();
+    mark_dirty_xform();
 }
 
 glm::vec3 Mesh::get_vert_coord(int index) const
@@ -180,6 +180,16 @@ void Mesh::xform_vertices(glm::mat4 xform)
         set_vert_coord(i, glm::vec3(xform*glm::vec4(get_vert_coord(i), 1)));
     }
     update_bbox();
+}
+
+void Mesh::imprint()
+{
+    xform_vertices(get_xform());
+    m_origin = glm::vec3(0);
+    m_orient = glm::vec3(0);
+    mark_dirty_xform();
+    //link_parent(NULL);
+    //unlink_children();
 }
 
 void Mesh::update_normals_and_tangents()
@@ -364,12 +374,12 @@ void Mesh::set_axis(glm::vec3 axis)
     }
     update_normals_and_tangents();
     update_bbox();
-    if(get_parent()) {
-        m_origin = glm::vec3(glm::inverse(get_parent()->get_xform()) * glm::vec4(axis, 1));
+    if(m_parent) {
+        m_origin = glm::vec3(glm::inverse(m_parent->get_xform()) * glm::vec4(axis, 1));
     } else {
         m_origin = axis;
     }
-    set_need_update_xform();
+    mark_dirty_xform();
 }
 
 void Mesh::center_axis(align_t align)
@@ -380,13 +390,13 @@ void Mesh::center_axis(align_t align)
 void Mesh::point_at(glm::vec3 p)
 {
     glm::vec3 local_p;
-    if(get_parent()) {
-        local_p = glm::vec3(glm::inverse(get_parent()->get_xform()) * glm::vec4(p, 1));
+    if(m_parent) {
+        local_p = glm::vec3(glm::inverse(m_parent->get_xform()) * glm::vec4(p, 1));
     } else {
         local_p = p;
     }
     m_orient = offset_to_orient(local_p - m_origin);
-    set_need_update_xform();
+    mark_dirty_xform();
 }
 
 void Mesh::update_xform()
@@ -405,12 +415,12 @@ MeshIFace* alloc_meshiface(std::string name, size_t num_vertex, size_t num_tri)
     return new Mesh(name, num_vertex, num_tri);
 }
 
-Mesh* downcast_meshiface_to_mesh(MeshIFace* mesh)
+Mesh* _mesh(MeshIFace* mesh)
 {
     return dynamic_cast<Mesh*>(mesh);
 }
 
-MeshIFace* upcast_mesh_to_meshiface(Mesh* mesh)
+MeshIFace* _meshiface(Mesh* mesh)
 {
     return dynamic_cast<MeshIFace*>(mesh);
 }

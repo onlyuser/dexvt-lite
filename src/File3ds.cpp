@@ -15,7 +15,7 @@ MeshIFace* alloc_meshiface(std::string name, size_t num_vertex, size_t num_tri);
 
 class Mesh;
 
-Mesh* downcast_meshiface_to_mesh(MeshIFace* mesh);
+Mesh* _mesh(MeshIFace* mesh);
 
 static void read_string(FILE* stream, char* buf)
 {
@@ -32,7 +32,7 @@ bool File3ds::load3ds(std::string filename, int index, std::vector<Mesh*>* meshe
         return false;
     }
     for(std::vector<MeshIFace*>::iterator p = meshes_iface.begin(); p != meshes_iface.end(); p++) {
-        meshes->push_back(downcast_meshiface_to_mesh(*p));
+        meshes->push_back(_mesh(*p));
     }
     return true;
 }

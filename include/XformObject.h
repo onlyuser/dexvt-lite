@@ -2,6 +2,7 @@
 #define VT_XFORM_OBJECT_H_
 
 #include <glm/glm.hpp>
+#include <set>
 
 namespace vt {
 
@@ -38,17 +39,29 @@ public:
         m_scale = scale;
     }
 
-    const glm::mat4 &get_xform();
-    const glm::mat4 &get_normal_xform();
+    const glm::mat4 &get_xform(bool trace_down = true);
+    const glm::mat4 &get_normal_xform(bool trace_down = true);
 
     XformObject* get_parent() const
     {
         return m_parent;
     }
-    void set_parent(XformObject* parent)
+    std::set<XformObject*> &get_children()
     {
-        m_parent = parent;
+        return m_children;
     }
+    void link_parent(XformObject* parent);
+    void unlink_children();
+    bool is_root() const
+    {
+        return !m_parent;
+    }
+    bool is_leaf() const
+    {
+        return m_children.empty();
+    }
+    void update_xform_hier();
+    void update_normal_xform_hier();
 
 protected:
     glm::vec3 m_origin;
@@ -56,19 +69,27 @@ protected:
     glm::vec3 m_scale;
     glm::mat4 m_xform;
     glm::mat4 m_normal_xform;
+    XformObject* m_parent;
+    std::set<XformObject*> m_children;
 
-    void set_need_update_xform()
+    void mark_dirty_xform()
     {
-        m_need_update_xform        = true;
-        m_need_update_normal_xform = true;
+        m_is_dirty_xform        = true;
+        m_is_dirty_normal_xform = true;
     }
     virtual void update_xform() = 0;
     virtual void update_normal_xform();
+    // TODO: review following
+    //virtual void imprint()
+    //{
+    //}
+    //virtual void xform_vertices(glm::mat4 xform)
+    //{
+    //}
 
 private:
-    bool m_need_update_xform;
-    bool m_need_update_normal_xform;
-    XformObject* m_parent;
+    bool m_is_dirty_xform;
+    bool m_is_dirty_normal_xform;
 };
 
 }
