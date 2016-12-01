@@ -174,25 +174,6 @@ void Mesh::update_bbox()
     }
 }
 
-void Mesh::xform_vertices(glm::mat4 xform)
-{
-    for(int i = 0; i < static_cast<int>(m_num_vertex); i++) {
-        set_vert_coord(i, glm::vec3(xform*glm::vec4(get_vert_coord(i), 1)));
-    }
-    update_bbox();
-}
-
-void Mesh::imprint()
-{
-    xform_vertices(get_xform());
-    m_origin = glm::vec3(0);
-    m_orient = glm::vec3(0);
-    mark_dirty_xform();
-    // TODO: review following
-    //link_parent(NULL);
-    //unlink_children();
-}
-
 void Mesh::update_normals_and_tangents()
 {
     for(int i=0; i<static_cast<int>(m_num_tri); i++) {
@@ -367,14 +348,32 @@ void Mesh::set_ambient_color(glm::vec3 ambient_color)
     m_ambient_color[2] = ambient_color.b;
 }
 
-void Mesh::set_axis(glm::vec3 axis)
+void Mesh::xform_vertices(glm::mat4 xform)
 {
-    glm::vec3 local_axis = glm::vec3(glm::inverse(get_xform()) * glm::vec4(axis, 1));
     for(int i = 0; i < static_cast<int>(m_num_vertex); i++) {
-        set_vert_coord(i, get_vert_coord(i) - local_axis);
+        set_vert_coord(i, glm::vec3(xform*glm::vec4(get_vert_coord(i), 1)));
     }
     update_normals_and_tangents();
     update_bbox();
+}
+
+void Mesh::imprint(bool do_not_relink_parent)
+{
+    xform_vertices(get_xform());
+    m_origin = glm::vec3(0);
+    m_orient = glm::vec3(0);
+    m_scale = glm::vec3(1);
+    mark_dirty_xform();
+    if(!do_not_relink_parent) {
+        link_parent(NULL);
+    }
+    unlink_children();
+}
+
+void Mesh::set_axis(glm::vec3 axis)
+{
+    glm::vec3 local_axis = glm::vec3(glm::inverse(get_xform()) * glm::vec4(axis, 1));
+    xform_vertices(glm::translate(glm::mat4(1), -local_axis));
     if(m_parent) {
         m_origin = glm::vec3(glm::inverse(m_parent->get_xform()) * glm::vec4(axis, 1));
     } else {
@@ -388,15 +387,15 @@ void Mesh::center_axis(align_t align)
     set_axis(glm::vec3(get_xform() * glm::vec4(get_center(align), 1)));
 }
 
-void Mesh::point_at(glm::vec3 p)
+void Mesh::point_at(glm::vec3 target)
 {
-    glm::vec3 local_p;
+    glm::vec3 local_target;
     if(m_parent) {
-        local_p = glm::vec3(glm::inverse(m_parent->get_xform()) * glm::vec4(p, 1));
+        local_target = glm::vec3(glm::inverse(m_parent->get_xform()) * glm::vec4(target, 1));
     } else {
-        local_p = p;
+        local_target = target;
     }
-    m_orient = offset_to_orient(local_p - m_origin);
+    m_orient = offset_to_orient(local_target - m_origin);
     mark_dirty_xform();
 }
 

@@ -52,18 +52,20 @@ const glm::mat4 &XformObject::get_normal_xform(bool trace_down)
 
 void XformObject::link_parent(XformObject* parent)
 {
+    glm::vec3 axis = glm::vec3(get_xform() * glm::vec4(glm::vec3(0), 1));
     if(parent) {
+        imprint();
+        xform_vertices(glm::inverse(parent->get_xform()));
         parent->get_children().insert(this);
-        // TODO: review following
-        //imprint();
-        //xform_vertices(glm::inverse(parent->get_xform()));
-    } else if (!is_root()) {
+    } else if(!is_root()) {
+        imprint(true);
         std::set<XformObject*>::iterator p = m_parent->get_children().find(this);
         if(p != m_parent->get_children().end()) {
             m_parent->get_children().erase(p);
         }
     }
     m_parent = parent;
+    set_axis(axis);
 }
 
 void XformObject::unlink_children()

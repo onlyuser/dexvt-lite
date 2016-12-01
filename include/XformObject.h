@@ -79,13 +79,9 @@ protected:
     }
     virtual void update_xform() = 0;
     virtual void update_normal_xform();
-    // TODO: review following
-    //virtual void imprint()
-    //{
-    //}
-    //virtual void xform_vertices(glm::mat4 xform)
-    //{
-    //}
+    virtual void xform_vertices(glm::mat4 xform) {}
+    virtual void imprint(bool do_not_relink_parent = false) {} // TODO: review this
+    virtual void set_axis(glm::vec3 axis) {}
 
 private:
     bool m_is_dirty_xform;
