@@ -55,10 +55,14 @@ void XformObject::link_parent(XformObject* parent)
     glm::vec3 axis = glm::vec3(get_xform() * glm::vec4(glm::vec3(0), 1));
     if(parent) {
         imprint();
+        link_parent(NULL);
+        unlink_children();
         xform_vertices(glm::inverse(parent->get_xform()));
         parent->get_children().insert(this);
     } else if(!is_root()) {
-        imprint(true);
+        imprint();
+        //link_parent(NULL); // infinite recursion
+        unlink_children();
         std::set<XformObject*>::iterator p = m_parent->get_children().find(this);
         if(p != m_parent->get_children().end()) {
             m_parent->get_children().erase(p);
@@ -70,13 +74,8 @@ void XformObject::link_parent(XformObject* parent)
 
 void XformObject::unlink_children()
 {
-    // cache container contents in case link_parent alters container being iterated
-    std::set<XformObject*> cached_container;
     for(std::set<XformObject*>::iterator p = m_children.begin(); p != m_children.end(); p++) {
-        cached_container.insert(*p);
-    }
-    for(std::set<XformObject*>::iterator q = cached_container.begin(); q != cached_container.end(); q++) {
-        (*q)->link_parent(NULL);
+        (*p)->link_parent(NULL);
     }
 }
 
@@ -87,7 +86,7 @@ void XformObject::update_xform_hier()
         (*p)->update_xform_hier();
     }
     if(is_leaf()) {
-        get_xform(false); // update entire leaf-root lineage for all leaf nodes
+        get_xform(false); // update entire leaf-to-root lineage for all leaf nodes
     }
 }
 
@@ -98,7 +97,7 @@ void XformObject::update_normal_xform_hier()
         (*p)->update_normal_xform_hier();
     }
     if(is_leaf()) {
-        get_normal_xform(false); // update entire leaf-root lineage for all leaf nodes
+        get_normal_xform(false); // update entire leaf-to-root lineage for all leaf nodes
     }
 }
 

@@ -80,7 +80,7 @@ protected:
     virtual void update_xform() = 0;
     virtual void update_normal_xform();
     virtual void xform_vertices(glm::mat4 xform) {}
-    virtual void imprint(bool dont_unlink_parent = false) {} // TODO: review this
+    virtual void imprint() {}
     virtual void set_axis(glm::vec3 axis) {}
 
 private:
