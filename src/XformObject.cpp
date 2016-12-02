@@ -52,17 +52,28 @@ const glm::mat4 &XformObject::get_normal_xform(bool trace_down)
 
 void XformObject::link_parent(XformObject* parent)
 {
-    glm::vec3 axis = glm::vec3(get_xform() * glm::vec4(glm::vec3(0), 1));
+    glm::vec3 local_axis = glm::vec3(0);
+    glm::vec3 axis = glm::vec3(get_xform() * glm::vec4(local_axis, 1));
     if(parent) {
+        // unproject to global space
         imprint();
+        // reproject to parent space
+        xform_vertices(glm::inverse(parent->get_xform()));
+
+        // break all connections -- TODO: review this
         link_parent(NULL);
         unlink_children();
-        xform_vertices(glm::inverse(parent->get_xform()));
+
+        // make new parent remember you
         parent->get_children().insert(this);
     } else if(!is_root()) {
+        // unproject to global space
         imprint();
+
         //link_parent(NULL); // infinite recursion
         unlink_children();
+
+        // make parent disown you
         std::set<XformObject*>::iterator p = m_parent->get_children().find(this);
         if(p != m_parent->get_children().end()) {
             m_parent->get_children().erase(p);
