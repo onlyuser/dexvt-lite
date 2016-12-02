@@ -169,7 +169,7 @@ public:
     void set_ambient_color(glm::vec3 ambient_color);
 
     void xform_vertices(glm::mat4 xform);
-    void imprint(bool do_not_relink_parent = false); // TODO: review this
+    void imprint(bool dont_unlink_parent = false); // TODO: review this
     void set_axis(glm::vec3 axis);
     void center_axis(vt::BBoxObject::align_t align = vt::BBoxObject::ALIGN_CENTER);
     void point_at(glm::vec3 p);

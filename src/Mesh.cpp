@@ -357,14 +357,14 @@ void Mesh::xform_vertices(glm::mat4 xform)
     update_bbox();
 }
 
-void Mesh::imprint(bool do_not_relink_parent)
+void Mesh::imprint(bool dont_unlink_parent)
 {
     xform_vertices(get_xform());
     m_origin = glm::vec3(0);
     m_orient = glm::vec3(0);
     m_scale = glm::vec3(1);
     mark_dirty_xform();
-    if(!do_not_relink_parent) {
+    if(!dont_unlink_parent) {
         link_parent(NULL);
     }
     unlink_children();
