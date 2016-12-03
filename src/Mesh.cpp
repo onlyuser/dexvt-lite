@@ -357,9 +357,13 @@ void Mesh::xform_vertices(glm::mat4 xform)
     update_bbox();
 }
 
-void Mesh::imprint()
+void Mesh::rebase(glm::mat4* basis)
 {
-    xform_vertices(get_xform());
+    if(basis) {
+        xform_vertices((*basis) * get_xform());
+    } else {
+        xform_vertices(get_xform());
+    }
     m_origin = glm::vec3(0);
     m_orient = glm::vec3(0);
     m_scale = glm::vec3(1);
