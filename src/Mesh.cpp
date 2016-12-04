@@ -364,10 +364,7 @@ void Mesh::rebase(glm::mat4* basis)
     } else {
         xform_vertices(get_xform());
     }
-    m_origin = glm::vec3(0);
-    m_orient = glm::vec3(0);
-    m_scale = glm::vec3(1);
-    mark_dirty_xform();
+    reset_xform();
 }
 
 void Mesh::set_axis(glm::vec3 axis)

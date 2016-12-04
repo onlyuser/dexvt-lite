@@ -50,6 +50,14 @@ const glm::mat4 &XformObject::get_normal_xform(bool trace_down)
     return m_normal_xform;
 }
 
+void XformObject::reset_xform()
+{
+    m_origin = glm::vec3(0);
+    m_orient = glm::vec3(0);
+    m_scale = glm::vec3(1);
+    mark_dirty_xform();
+}
+
 void XformObject::link_parent(XformObject* parent, bool keep_xform)
 {
     glm::vec3 axis;
@@ -91,10 +99,7 @@ void XformObject::link_parent(XformObject* parent, bool keep_xform)
     if(keep_xform) {
         set_axis(axis);
     } else {
-        m_origin = glm::vec3(0);
-        m_orient = glm::vec3(0);
-        m_scale = glm::vec3(1);
-        mark_dirty_xform();
+        reset_xform();
     }
 }
 

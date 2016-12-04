@@ -50,16 +50,9 @@ public:
     {
         return m_children;
     }
+    void reset_xform();
     void link_parent(XformObject* parent, bool keep_xform = false);
     void unlink_children();
-    bool is_root() const
-    {
-        return !m_parent;
-    }
-    bool is_leaf() const
-    {
-        return m_children.empty();
-    }
     void update_xform_hier();
     void update_normal_xform_hier();
 
@@ -79,13 +72,14 @@ protected:
     }
     virtual void update_xform() = 0;
     virtual void update_normal_xform();
-    virtual void xform_vertices(glm::mat4 xform) {}
-    virtual void rebase(glm::mat4* basis = NULL) {}
-    virtual void set_axis(glm::vec3 axis) {}
 
 private:
     bool m_is_dirty_xform;
     bool m_is_dirty_normal_xform;
+
+    virtual void xform_vertices(glm::mat4 xform) {}
+    virtual void rebase(glm::mat4* basis = NULL) {}
+    virtual void set_axis(glm::vec3 axis) {}
 };
 
 }
