@@ -260,7 +260,7 @@ void Mesh::set_material(Material* material)
     }
     std::string texture_name;
     if(m_material) {
-        vt::Texture* texture = m_material->get_texture_by_index(m_texture_index);
+        Texture* texture = m_material->get_texture_by_index(m_texture_index);
         if(texture) {
             texture_name = texture->name();
         }

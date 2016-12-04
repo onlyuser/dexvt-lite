@@ -106,7 +106,7 @@ bool Program::auto_add_shader_vars()
             {
                 //std::cout << "VAR ATTRIBUTE TYPE: " << type_name << std::endl;
                 //std::cout << "VAR ATTRIBUTE NAME: " << var_name << std::endl;
-                add_var(vt::Program::VAR_TYPE_ATTRIBUTE, var_name);
+                add_var(Program::VAR_TYPE_ATTRIBUTE, var_name);
             }
             if(regexp(line, "uniform[ ]+([^ ]+)[ ]+([^ ;\[]+)[;\[]", 3,
                     NULL,
@@ -115,7 +115,7 @@ bool Program::auto_add_shader_vars()
             {
                 //std::cout << "VAR UNIFORM TYPE: " << type_name << std::endl;
                 //std::cout << "VAR UNIFORM NAME: " << var_name << std::endl;
-                add_var(vt::Program::VAR_TYPE_UNIFORM, var_name);
+                add_var(Program::VAR_TYPE_UNIFORM, var_name);
             }
         }
     }

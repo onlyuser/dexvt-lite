@@ -171,7 +171,7 @@ public:
     void xform_vertices(glm::mat4 xform);
     void rebase(glm::mat4* basis = NULL);
     void set_axis(glm::vec3 axis);
-    void center_axis(vt::BBoxObject::align_t align = vt::BBoxObject::ALIGN_CENTER);
+    void center_axis(BBoxObject::align_t align = BBoxObject::ALIGN_CENTER);
     void point_at(glm::vec3 p);
 
 private:

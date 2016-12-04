@@ -46,7 +46,7 @@ public:
     }
 
     Texture* get_texture_by_index(int index) const;
-    int get_texture_index(vt::Texture* texture) const;
+    int get_texture_index(Texture* texture) const;
     Texture* get_texture_by_name(std::string name) const;
     int get_texture_index_by_name(std::string name) const;
 
