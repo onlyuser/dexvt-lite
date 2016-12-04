@@ -50,36 +50,52 @@ const glm::mat4 &XformObject::get_normal_xform(bool trace_down)
     return m_normal_xform;
 }
 
-void XformObject::link_parent(XformObject* parent)
+void XformObject::link_parent(XformObject* parent, bool keep_xform)
 {
-    glm::vec3 local_axis = glm::vec3(0);
-    glm::vec3 axis = glm::vec3(get_xform() * glm::vec4(local_axis, 1));
+    glm::vec3 axis;
+    if(keep_xform) {
+        glm::vec3 local_axis = glm::vec3(0);
+        axis = glm::vec3(get_xform() * glm::vec4(local_axis, 1));
+    }
     if(parent) {
-        // unproject to global space and reproject to parent space
-        glm::mat4 basis = glm::inverse(parent->get_xform());
-        rebase(&basis);
+        if(keep_xform) {
+            // unproject to global space and reproject to parent space
+            glm::mat4 basis = glm::inverse(parent->get_xform());
+            rebase(&basis);
 
-        // break all connections -- TODO: review this
-        link_parent(NULL);
-        unlink_children();
+            // break all connections -- TODO: review this
+            link_parent(NULL);
+            unlink_children();
+        }
 
         // make new parent remember you
         parent->get_children().insert(this);
-    } else if(m_parent) {
-        // unproject to global space
-        rebase();
+    } else {
+        if(keep_xform) {
+            // unproject to global space
+            rebase();
 
-        //link_parent(NULL); // infinite recursion
-        unlink_children();
+            //link_parent(NULL); // infinite recursion
+            unlink_children();
+        }
 
-        // make parent disown you
-        std::set<XformObject*>::iterator p = m_parent->get_children().find(this);
-        if(p != m_parent->get_children().end()) {
-            m_parent->get_children().erase(p);
+        if(m_parent) {
+            // make parent disown you
+            std::set<XformObject*>::iterator p = m_parent->get_children().find(this);
+            if(p != m_parent->get_children().end()) {
+                m_parent->get_children().erase(p);
+            }
         }
     }
     m_parent = parent;
-    set_axis(axis);
+    if(keep_xform) {
+        set_axis(axis);
+    } else {
+        m_origin = glm::vec3(0);
+        m_orient = glm::vec3(0);
+        m_scale = glm::vec3(1);
+        mark_dirty_xform();
+    }
 }
 
 void XformObject::unlink_children()

@@ -50,7 +50,7 @@ public:
     {
         return m_children;
     }
-    void link_parent(XformObject* parent);
+    void link_parent(XformObject* parent, bool keep_xform = false);
     void unlink_children();
     bool is_root() const
     {

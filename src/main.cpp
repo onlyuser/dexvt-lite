@@ -78,12 +78,12 @@ int init_resources()
     scene->add_mesh(mesh_box2 = vt::PrimitiveFactory::create_box("box2"));
     mesh_box2->center_axis();
     mesh_box2->set_origin(glm::vec3(0, 0, 2));
-    mesh_box2->link_parent(mesh_box);
+    mesh_box2->link_parent(mesh_box, true);
 
     scene->add_mesh(mesh_box3 = vt::PrimitiveFactory::create_box("box3"));
     mesh_box3->center_axis();
     mesh_box3->set_origin(glm::vec3(0, 0, 4));
-    mesh_box3->link_parent(mesh_box2);
+    mesh_box3->link_parent(mesh_box2, true);
 
     vt::Material* bump_mapped_material = new vt::Material(
             "bump_mapped",
