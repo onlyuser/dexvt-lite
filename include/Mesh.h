@@ -30,14 +30,10 @@ public:
     {
         return m_num_vertex;
     }
-
     size_t get_num_tri() const
     {
         return m_num_tri;
     }
-
-    void set_origin(glm::vec3 origin);
-    void set_orient(glm::vec3 orient);
 
     bool get_visible() const
     {

@@ -69,18 +69,6 @@ Mesh::~Mesh()
     if(m_ssao_shader_context)      { delete m_ssao_shader_context; }
 }
 
-void Mesh::set_origin(glm::vec3 origin)
-{
-    m_origin = origin;
-    mark_dirty_xform();
-}
-
-void Mesh::set_orient(glm::vec3 orient)
-{
-    m_orient = orient;
-    mark_dirty_xform();
-}
-
 glm::vec3 Mesh::get_vert_coord(int index) const
 {
     int offset = index*3;

@@ -19,6 +19,7 @@ public:
     void set_origin(glm::vec3 origin)
     {
         m_origin = origin;
+        mark_dirty_xform();
     }
 
     const glm::vec3 &get_orient() const
@@ -28,6 +29,7 @@ public:
     void set_orient(glm::vec3 orient)
     {
         m_orient = orient;
+        mark_dirty_xform();
     }
 
     const glm::vec3 &get_scale() const
@@ -37,6 +39,7 @@ public:
     void set_scale(glm::vec3 scale)
     {
         m_scale = scale;
+        mark_dirty_xform();
     }
 
     const glm::mat4 &get_xform(bool trace_down = true);
