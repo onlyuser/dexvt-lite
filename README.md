@@ -153,9 +153,12 @@ References
 
     <dt>"Missing gtc/constants.hpp #12"</dt>
     <dd>https://github.com/g-truc/glm/issues/12</dd>
+
+    <dt>"Kinematics (Advanced Methods in Computer Graphics) Part 4"</dt>
+    <dd>http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/</dd>
 </dl>
 
 Keywords
 --------
 
-    OpenGL, glsl shader, glm, environment map, cube map, normal map, bitangent, tbn matrix, ssao, screen space ambient occlusion, backface refraction, double refraction, second refraction, backface sampling, Fresnel effect, chromatic dispersion, chromatic aberration, Bloom filter, Beer's law, Snell's law, Newton's method, 3ds file import, round brilliant diamond rendering, gemstone rendering
+    OpenGL, glsl shader, glm, environment map, cube map, normal map, bitangent, tbn matrix, ssao, screen space ambient occlusion, backface refraction, double refraction, second refraction, backface sampling, Fresnel effect, chromatic dispersion, chromatic aberration, Bloom filter, Beer's law, Snell's law, Newton's method, 3ds file import, round brilliant diamond rendering, gemstone rendering, hierarchy linkages, Inverse Kinematics (Cyclic Coordinate Descent)
