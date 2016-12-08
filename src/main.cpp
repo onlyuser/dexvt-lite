@@ -18,6 +18,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <shader_utils.h>
 
 #include <Buffer.h>
@@ -45,17 +46,18 @@ const char* DEFAULT_CAPTION = "My Textured Cube";
 
 int init_screen_width = 800, init_screen_height = 600;
 vt::Camera* camera;
-vt::Mesh *mesh_skybox, *mesh_box, *mesh_box2, *mesh_box3;
+vt::Mesh *mesh_skybox, *mesh_box, *mesh_box2, *mesh_box3, *mesh_box4, *mesh_box5, *mesh_box6;
 vt::Light *light, *light2, *light3;
 vt::Texture *texture_box_color, *texture_box_normal, *texture_skybox;
 
 bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
 glm::vec3 prev_orient, orient, orbit_speed = glm::vec3(0, -0.5, -0.5);
-float prev_orbit_radius = 0, orbit_radius = 10, dolly_speed = 0.1, light_distance = 4;
+float prev_orbit_radius = 0, orbit_radius = 8, dolly_speed = 0.1, light_distance = 4;
 bool wireframe_mode = false;
 bool show_fps = false;
 bool show_axis = false;
+bool show_axis_labels = false;
 bool show_bbox = false;
 bool show_normals = false;
 bool show_lights = false;
@@ -63,6 +65,12 @@ bool do_animation = true;
 
 int texture_id = 0;
 float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
+
+int target_index = 0;
+glm::vec3 targets[] = {glm::vec3( 1, 1,  1),
+                       glm::vec3( 1, 1, -1),
+                       glm::vec3(-1, 1, -1),
+                       glm::vec3(-1, 1,  1)};
 
 int init_resources()
 {
@@ -74,25 +82,51 @@ int init_resources()
     scene->add_mesh(mesh_box  = vt::PrimitiveFactory::create_box("box"));
     mesh_box->center_axis();
     mesh_box->set_origin(glm::vec3(0, 0, 0));
-    mesh_box->set_scale(glm::vec3(0.5, 0.5, 2));
+    mesh_box->set_scale(glm::vec3(0.25, 0.25, 1));
     mesh_box->rebase();
     mesh_box->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
 
     scene->add_mesh(mesh_box2 = vt::PrimitiveFactory::create_box("box2"));
     mesh_box2->center_axis();
-    mesh_box2->set_origin(glm::vec3(0, 0, 2));
-    mesh_box2->set_scale(glm::vec3(0.5, 0.5, 2));
+    mesh_box2->set_origin(glm::vec3(0, 0, 1));
+    mesh_box2->set_scale(glm::vec3(0.25, 0.25, 1));
     mesh_box2->rebase();
     mesh_box2->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
     mesh_box2->link_parent(mesh_box, true);
 
     scene->add_mesh(mesh_box3 = vt::PrimitiveFactory::create_box("box3"));
     mesh_box3->center_axis();
-    mesh_box3->set_origin(glm::vec3(0, 0, 4));
-    mesh_box3->set_scale(glm::vec3(0.5, 0.5, 2));
+    mesh_box3->set_origin(glm::vec3(0, 0, 2));
+    mesh_box3->set_scale(glm::vec3(0.25, 0.25, 1));
     mesh_box3->rebase();
     mesh_box3->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
     mesh_box3->link_parent(mesh_box2, true);
+
+    scene->add_mesh(mesh_box4 = vt::PrimitiveFactory::create_box("box4"));
+    mesh_box4->center_axis();
+    mesh_box4->set_origin(glm::vec3(0, 0, 3));
+    mesh_box4->set_scale(glm::vec3(0.25, 0.25, 1));
+    mesh_box4->rebase();
+    mesh_box4->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
+    mesh_box4->link_parent(mesh_box3, true);
+
+    scene->add_mesh(mesh_box5 = vt::PrimitiveFactory::create_box("box5"));
+    mesh_box5->center_axis();
+    mesh_box5->set_origin(glm::vec3(0, 0, 4));
+    mesh_box5->set_scale(glm::vec3(0.25, 0.25, 1));
+    mesh_box5->rebase();
+    mesh_box5->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
+    mesh_box5->link_parent(mesh_box4, true);
+
+    scene->add_mesh(mesh_box6 = vt::PrimitiveFactory::create_box("box6"));
+    mesh_box6->center_axis();
+    mesh_box6->set_origin(glm::vec3(0, 0, 5));
+    mesh_box6->set_scale(glm::vec3(0.25, 0.25, 1));
+    mesh_box6->rebase();
+    mesh_box6->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
+    mesh_box6->link_parent(mesh_box5, true);
+
+    mesh_box->set_origin(glm::vec3(0, 0, 0));
 
     vt::Material* bump_mapped_material = new vt::Material(
             "bump_mapped",
@@ -166,6 +200,24 @@ int init_resources()
     mesh_box3->set_bump_texture_index(mesh_box3->get_material()->get_texture_index_by_name("chesterfield_normal"));
     mesh_box3->set_ambient_color(glm::vec3(0, 0, 0));
 
+    // box4
+    mesh_box4->set_material(bump_mapped_material);
+    mesh_box4->set_texture_index(     mesh_box4->get_material()->get_texture_index_by_name("chesterfield_color"));
+    mesh_box4->set_bump_texture_index(mesh_box4->get_material()->get_texture_index_by_name("chesterfield_normal"));
+    mesh_box4->set_ambient_color(glm::vec3(0, 0, 0));
+
+    // box5
+    mesh_box5->set_material(bump_mapped_material);
+    mesh_box5->set_texture_index(     mesh_box5->get_material()->get_texture_index_by_name("chesterfield_color"));
+    mesh_box5->set_bump_texture_index(mesh_box5->get_material()->get_texture_index_by_name("chesterfield_normal"));
+    mesh_box5->set_ambient_color(glm::vec3(0, 0, 0));
+
+    // box6
+    mesh_box6->set_material(bump_mapped_material);
+    mesh_box6->set_texture_index(     mesh_box6->get_material()->get_texture_index_by_name("chesterfield_color"));
+    mesh_box6->set_bump_texture_index(mesh_box6->get_material()->get_texture_index_by_name("chesterfield_normal"));
+    mesh_box6->set_ambient_color(glm::vec3(0, 0, 0));
+
     return 1;
 }
 
@@ -203,8 +255,10 @@ void onTick()
     frames++;
     static int angle = 0;
     mesh_box->set_orient(glm::vec3(0, 0, angle));
-    mesh_box2->set_orient(glm::vec3(angle, 0, 0));
-    mesh_box3->set_orient(glm::vec3(0, angle, 0));
+    //mesh_box2->set_orient(glm::vec3(angle, 0, 0));
+    //mesh_box3->set_orient(glm::vec3(0, angle, 0));
+    //mesh_box->point_at(targets[target_index]);
+    mesh_box6->solve_ik_ccd(mesh_box2, glm::vec3(0, 0, 1), targets[target_index], 10);
     angle = (angle + 1) % 360;
 }
 
@@ -224,8 +278,8 @@ void onDisplay()
         scene->render();
     }
 
-    if(show_axis || show_bbox || show_normals) {
-        scene->render_lines(show_axis, show_bbox, show_normals);
+    if(show_axis || show_axis_labels || show_bbox || show_normals) {
+        scene->render_lines(show_axis, show_axis_labels, show_bbox, show_normals);
     }
     if(show_lights) {
         scene->render_lights();
@@ -263,6 +317,13 @@ void onKeyboard(unsigned char key, int x, int y)
                 camera->set_projection_mode(vt::Camera::PROJECTION_MODE_PERSPECTIVE);
             }
             break;
+        case 't': // target
+            {
+                size_t target_count = sizeof(targets)/sizeof(targets[0]);
+                target_index = (target_index + 1) % target_count;
+                std::cout << "target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
+            }
+            break;
         case 'w': // wireframe
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
@@ -270,15 +331,24 @@ void onKeyboard(unsigned char key, int x, int y)
                 mesh_box->set_ambient_color(glm::vec3(1, 1, 1));
                 mesh_box2->set_ambient_color(glm::vec3(1, 1, 1));
                 mesh_box3->set_ambient_color(glm::vec3(1, 1, 1));
+                mesh_box4->set_ambient_color(glm::vec3(1, 1, 1));
+                mesh_box5->set_ambient_color(glm::vec3(1, 1, 1));
+                mesh_box6->set_ambient_color(glm::vec3(1, 1, 1));
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
                 mesh_box->set_ambient_color(glm::vec3(0, 0, 0));
                 mesh_box2->set_ambient_color(glm::vec3(0, 0, 0));
                 mesh_box3->set_ambient_color(glm::vec3(0, 0, 0));
+                mesh_box4->set_ambient_color(glm::vec3(0, 0, 0));
+                mesh_box5->set_ambient_color(glm::vec3(0, 0, 0));
+                mesh_box6->set_ambient_color(glm::vec3(0, 0, 0));
             }
             break;
         case 'x': // axis
             show_axis = !show_axis;
+            break;
+        case 'z': // axis_labels
+            show_axis_labels = !show_axis_labels;
             break;
         case 32: // space
             do_animation = !do_animation;

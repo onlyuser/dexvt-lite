@@ -45,7 +45,7 @@ Material::~Material()
 void Material::add_texture(Texture* texture)
 {
     m_textures.push_back(texture);
-    m_texture_lookup_table[texture->name()] = texture;
+    m_texture_lookup_table[texture->get_name()] = texture;
 }
 
 void Material::clear_textures()

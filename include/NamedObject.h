@@ -8,9 +8,13 @@ namespace vt {
 class NamedObject
 {
 public:
-    const std::string name() const
+    const std::string get_name() const
     {
         return m_name;
+    }
+    void set_name(std::string name)
+    {
+        m_name = name;
     }
 
 protected:

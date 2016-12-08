@@ -116,7 +116,7 @@ public:
             bool                render_overlay    = false,
             bool                render_skybox     = true,
             use_material_type_t use_material_type = use_material_type_t::USE_MESH_MATERIAL);
-    void render_lines(bool draw_axis, bool draw_bbox, bool draw_normals) const;
+    void render_lines(bool draw_axis, bool draw_axis_labels, bool draw_bbox, bool draw_normals) const;
     void render_lights() const;
 
 private:

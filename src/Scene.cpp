@@ -6,8 +6,10 @@
 #include <Mesh.h>
 #include <Material.h>
 #include <Texture.h>
+#include <Util.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/compatibility.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <GL/glew.h>
 #include <GL/glut.h>
 #include <vector>
@@ -355,7 +357,7 @@ void Scene::render(
     }
 }
 
-void Scene::render_lines(bool draw_axis, bool draw_bbox, bool draw_normals) const
+void Scene::render_lines(bool draw_axis, bool draw_axis_labels, bool draw_bbox, bool draw_normals) const
 {
     const float axis_surface_distance = 0.05;
     const float axis_arm_length       = 0.1;
@@ -365,11 +367,11 @@ void Scene::render_lines(bool draw_axis, bool draw_bbox, bool draw_normals) cons
     glLoadMatrixf(glm::value_ptr(m_camera->get_projection_xform()));
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-    for(meshes_t::const_iterator q = m_meshes.begin(); q != m_meshes.end(); q++) {
-        if(!(*q)->get_visible()) {
+    for(meshes_t::const_iterator p = m_meshes.begin(); p != m_meshes.end(); p++) {
+        if(!(*p)->get_visible()) {
             continue;
         }
-        glm::mat4 model_xform = m_camera->get_xform()*(*q)->get_xform();
+        glm::mat4 model_xform = m_camera->get_xform()*(*p)->get_xform();
         glLoadMatrixf(glm::value_ptr(model_xform));
         glBegin(GL_LINES);
 
@@ -404,7 +406,7 @@ void Scene::render_lines(bool draw_axis, bool draw_bbox, bool draw_normals) cons
 
         if(draw_bbox) {
             glm::vec3 min, max;
-            (*q)->get_min_max(&min, &max);
+            (*p)->get_min_max(&min, &max);
             min -= glm::vec3(axis_surface_distance);
             max += glm::vec3(axis_surface_distance);
             glColor3f(1, 0, 0);
@@ -419,7 +421,6 @@ void Scene::render_lines(bool draw_axis, bool draw_bbox, bool draw_normals) cons
             glm::vec3 ulf(min.x, max.y, max.z);
 
             // back quad
-
             glVertex3fv(&llb.x);
             glVertex3fv(&lrb.x);
 
@@ -433,7 +434,6 @@ void Scene::render_lines(bool draw_axis, bool draw_bbox, bool draw_normals) cons
             glVertex3fv(&llb.x);
 
             // front quad
-
             glVertex3fv(&llf.x);
             glVertex3fv(&lrf.x);
 
@@ -447,7 +447,6 @@ void Scene::render_lines(bool draw_axis, bool draw_bbox, bool draw_normals) cons
             glVertex3fv(&llf.x);
 
             // back to front segments
-
             glVertex3fv(&llb.x);
             glVertex3fv(&llf.x);
 
@@ -464,37 +463,56 @@ void Scene::render_lines(bool draw_axis, bool draw_bbox, bool draw_normals) cons
         if(draw_normals) {
             // normal
             glColor3f(0, 0, 1);
-            for (int i = 0; i < static_cast<int>((*q)->get_num_vertex()); i++){
-                glm::vec3 v = (*q)->get_vert_coord(i);
-                v += (*q)->get_vert_normal(i)*axis_surface_distance;
+            for (int i = 0; i < static_cast<int>((*p)->get_num_vertex()); i++){
+                glm::vec3 v = (*p)->get_vert_coord(i);
+                v += (*p)->get_vert_normal(i)*axis_surface_distance;
                 glVertex3fv(&v.x);
-                v += (*q)->get_vert_normal(i)*axis_arm_length;
+                v += (*p)->get_vert_normal(i)*axis_arm_length;
                 glVertex3fv(&v.x);
             }
 
             // tangent
             glColor3f(1, 0, 0);
-            for (int i = 0; i < static_cast<int>((*q)->get_num_vertex()); i++){
-                glm::vec3 v = (*q)->get_vert_coord(i);
-                v += (*q)->get_vert_normal(i)*axis_surface_distance;
+            for (int i = 0; i < static_cast<int>((*p)->get_num_vertex()); i++){
+                glm::vec3 v = (*p)->get_vert_coord(i);
+                v += (*p)->get_vert_normal(i)*axis_surface_distance;
                 glVertex3fv(&v.x);
-                v += (*q)->get_vert_tangent(i)*axis_arm_length;
+                v += (*p)->get_vert_tangent(i)*axis_arm_length;
                 glVertex3fv(&v.x);
             }
 
             // bitangent
             glColor3f(0, 1, 0);
-            for (int i = 0; i < static_cast<int>((*q)->get_num_vertex()); i++){
-                glm::vec3 v = (*q)->get_vert_coord(i);
-                v += (*q)->get_vert_normal(i)*axis_surface_distance;
+            for (int i = 0; i < static_cast<int>((*p)->get_num_vertex()); i++){
+                glm::vec3 v = (*p)->get_vert_coord(i);
+                v += (*p)->get_vert_normal(i)*axis_surface_distance;
                 glVertex3fv(&v.x);
-                glm::vec3 bitangent = glm::normalize(glm::cross((*q)->get_vert_normal(i), (*q)->get_vert_tangent(i)));
+                glm::vec3 bitangent = glm::normalize(glm::cross((*p)->get_vert_normal(i), (*p)->get_vert_tangent(i)));
                 v += bitangent*axis_arm_length;
                 glVertex3fv(&v.x);
             }
         }
 
         glEnd();
+
+        if(draw_axis_labels) {
+            std::string axis_label;
+#if 1
+            axis_label = (*p)->get_name();
+#else
+            glm::vec3 abs_origin;
+            XformObject* parent = (*p)->get_parent();
+            if(parent) {
+                abs_origin = glm::vec3(parent->get_xform() * glm::vec4((*p)->get_origin(), 1));
+            } else {
+                abs_origin = (*p)->get_origin();
+            }
+            axis_label = (*p)->get_name() + ": " + glm::to_string(abs_origin);
+#endif
+            glColor3f(1, 1, 1);
+            glRasterPos2f(0, 0);
+            print_bitmap_string(GLUT_BITMAP_TIMES_ROMAN_10, axis_label.c_str());
+        }
     }
     glPopMatrix();
 }

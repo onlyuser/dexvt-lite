@@ -250,7 +250,7 @@ void Mesh::set_material(Material* material)
     if(m_material) {
         Texture* texture = m_material->get_texture_by_index(m_texture_index);
         if(texture) {
-            texture_name = texture->name();
+            texture_name = texture->get_name();
         }
     }
     if(m_shader_context) {
@@ -382,6 +382,22 @@ void Mesh::point_at(glm::vec3 target)
     }
     m_orient = offset_to_orient(local_target - m_origin);
     mark_dirty_xform();
+}
+
+// http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/
+void Mesh::solve_ik_ccd(XformObject* base, glm::vec3 end_effector_tip_local_offset, glm::vec3 target, int iters)
+{
+    XformObject* end_effector = this;
+    for(int i = 0; i < iters; i++) {
+        for(XformObject* p = end_effector; p && p != base->get_parent(); p = p->get_parent()) {
+            glm::vec3 end_effector_tip = glm::vec3(end_effector->get_xform() * glm::vec4(end_effector_tip_local_offset, 1));
+            glm::mat4 inverse_xform = glm::inverse(p->get_xform());
+            glm::vec3 local_target_orient           = offset_to_orient(glm::vec3(inverse_xform * glm::vec4(target, 1)));
+            glm::vec3 local_end_effector_tip_orient = offset_to_orient(glm::vec3(inverse_xform * glm::vec4(end_effector_tip, 1)));
+            glm::vec3 orient_corrective_delta = local_target_orient - local_end_effector_tip_orient;
+            p->set_orient(p->get_orient() + orient_corrective_delta);
+        }
+    }
 }
 
 void Mesh::update_xform()

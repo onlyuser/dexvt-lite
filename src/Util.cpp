@@ -9,8 +9,19 @@
 #include <regex.h>
 #include <math.h>
 #include <stdarg.h>
+#include <GL/glut.h>
 
 namespace vt {
+
+void print_bitmap_string(void* font, const char* s)
+{
+    if(s && *s != '\0') {
+        while(*s) {
+            glutBitmapCharacter(font, *s);
+            s++;
+        }
+    }
+}
 
 glm::vec3 orient_to_offset(glm::vec3 orient)
 {
