@@ -16,7 +16,7 @@ Many features still experimental.
 Screenshots
 -----------
 
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_ik_ccd_thumb.gif?attredirects=0)](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_ik_ccd_thumb.gif?attredirects=0)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_ik_ccd_thumb.gif?attredirects=0)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_ik_ccd.gif?attredirects=0)
 
 Requirements
 ------------
