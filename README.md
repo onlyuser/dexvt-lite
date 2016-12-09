@@ -9,7 +9,7 @@ About
 -----
 
 dexvt-lite is a c++/glsl/glm-based 3d engine.
-It features environment-mapped reflection/refraction/double refraction (with Fresnel effect, chromatic dispersion, and Beer's law), screen space ambient occlusion, bump mapping, Phong shading, Bloom filter, 3ds mesh import, hierarchy linkages, inverse kinematics (ccd), and platonic primitives generation.
+It features environment-mapped reflection/refraction/double refraction (with Fresnel effect, chromatic dispersion, and Beer's law), screen space ambient occlusion, bump mapping, Phong shading, Bloom filter, 3ds mesh import, hierarchy linkages, Inverse Kinematics (CCD), and platonic primitives generation.
 Platonic primitives supported include sphere, cube, cylinder, cone, grid, tetrahedron, and round brilliant diamond.
 Many features still experimental.
 
