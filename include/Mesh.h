@@ -169,7 +169,12 @@ public:
     void set_axis(glm::vec3 axis);
     void center_axis(BBoxObject::align_t align = BBoxObject::ALIGN_CENTER);
     void point_at(glm::vec3 p);
-    void solve_ik_ccd(XformObject* base, glm::vec3 end_effector_tip_local_offset, glm::vec3 target, int iters);
+    bool solve_ik_ccd(
+        XformObject* base,
+        glm::vec3    end_effector_tip_local_offset,
+        glm::vec3    target,
+        int          iters,
+        float        accept_distance);
 
 private:
     std::string    m_name;

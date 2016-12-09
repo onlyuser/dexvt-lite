@@ -258,7 +258,7 @@ void onTick()
     //mesh_box2->set_orient(glm::vec3(angle, 0, 0));
     //mesh_box3->set_orient(glm::vec3(0, angle, 0));
     //mesh_box->point_at(targets[target_index]);
-    mesh_box6->solve_ik_ccd(mesh_box2, glm::vec3(0, 0, 1), targets[target_index], 10);
+    mesh_box6->solve_ik_ccd(mesh_box2, glm::vec3(0, 0, 1), targets[target_index], 10, 0.01);
     angle = (angle + 1) % 360;
 }
 

@@ -385,19 +385,29 @@ void Mesh::point_at(glm::vec3 target)
 }
 
 // http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/
-void Mesh::solve_ik_ccd(XformObject* base, glm::vec3 end_effector_tip_local_offset, glm::vec3 target, int iters)
+bool Mesh::solve_ik_ccd(
+    XformObject* base,
+    glm::vec3    end_effector_tip_local_offset,
+    glm::vec3    target,
+    int          iters,
+    float        accept_distance)
 {
     XformObject* end_effector = this;
     for(int i = 0; i < iters; i++) {
         for(XformObject* p = end_effector; p && p != base->get_parent(); p = p->get_parent()) {
+            XformObject* current_segment = p;
             glm::vec3 end_effector_tip = glm::vec3(end_effector->get_xform() * glm::vec4(end_effector_tip_local_offset, 1));
-            glm::mat4 inverse_xform = glm::inverse(p->get_xform());
-            glm::vec3 local_target_orient           = offset_to_orient(glm::vec3(inverse_xform * glm::vec4(target, 1)));
-            glm::vec3 local_end_effector_tip_orient = offset_to_orient(glm::vec3(inverse_xform * glm::vec4(end_effector_tip, 1)));
-            glm::vec3 orient_corrective_delta = local_target_orient - local_end_effector_tip_orient;
-            p->set_orient(p->get_orient() + orient_corrective_delta);
+            if(glm::distance(end_effector_tip, target) < accept_distance) {
+                return true;
+            }
+            glm::mat4 current_segment_inverse_xform = glm::inverse(current_segment->get_xform());
+            glm::vec3 local_target_orient           = offset_to_orient(glm::vec3(current_segment_inverse_xform * glm::vec4(target, 1)));
+            glm::vec3 local_end_effector_tip_orient = offset_to_orient(glm::vec3(current_segment_inverse_xform * glm::vec4(end_effector_tip, 1)));
+            glm::vec3 delta_orient = local_target_orient - local_end_effector_tip_orient;
+            current_segment->set_orient(current_segment->get_orient() + delta_orient);
         }
     }
+    return false;
 }
 
 void Mesh::update_xform()
