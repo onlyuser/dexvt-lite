@@ -13,6 +13,11 @@ It features environment-mapped reflection/refraction/double refraction (with Fre
 Platonic primitives supported include sphere, cube, cylinder, cone, grid, tetrahedron, and round brilliant diamond.
 Many features still experimental.
 
+Screenshots
+-----------
+
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_ik_ccd.gif?attredirects=0)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_ik_ccd.gif?attredirects=0)
+
 Requirements
 ------------
 
