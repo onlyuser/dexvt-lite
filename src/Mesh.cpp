@@ -385,6 +385,20 @@ void Mesh::point_at(glm::vec3 target)
     mark_dirty_xform();
 }
 
+void Mesh::rotate(glm::vec3 pivot, float angle)
+{
+    glm::vec3 local_pivot;
+    if(m_parent) {
+        // TODO: review this
+        local_pivot = glm::vec3(glm::inverse(m_parent->get_normal_xform()) * glm::vec4(pivot, 1));
+    } else {
+        local_pivot = pivot;
+    }
+    glm::vec3 offset = vt::orient_to_offset(get_orient());
+    glm::vec3 new_offset = glm::vec3(GLM_ROTATE(glm::mat4(1), angle, local_pivot) * glm::vec4(offset, 1));
+    set_orient(vt::offset_to_orient(new_offset));
+}
+
 // http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/
 bool Mesh::solve_ik_ccd(
     XformObject* base,

@@ -36,38 +36,6 @@ void XformObject::set_scale(glm::vec3 scale)
     mark_dirty_xform();
 }
 
-const glm::mat4 &XformObject::get_xform(bool trace_down)
-{
-    if(trace_down) {
-        update_xform_hier();
-        return m_xform;
-    }
-    if(m_is_dirty_xform) {
-        update_xform();
-        if(m_parent) {
-            m_xform = m_parent->get_xform(false) * m_xform;
-        }
-        m_is_dirty_xform = false;
-    }
-    return m_xform;
-}
-
-const glm::mat4 &XformObject::get_normal_xform(bool trace_down)
-{
-    if(trace_down) {
-        update_normal_xform_hier();
-        return m_normal_xform;
-    }
-    if(m_is_dirty_normal_xform) {
-        update_normal_xform();
-        if(m_parent) {
-            m_normal_xform = m_parent->get_normal_xform(false) * m_normal_xform;
-        }
-        m_is_dirty_normal_xform = false;
-    }
-    return m_normal_xform;
-}
-
 void XformObject::reset_xform()
 {
     m_origin = glm::vec3(0);
@@ -126,6 +94,38 @@ void XformObject::unlink_children()
     for(std::set<XformObject*>::iterator p = m_children.begin(); p != m_children.end(); p++) {
         (*p)->link_parent(NULL);
     }
+}
+
+const glm::mat4 &XformObject::get_xform(bool trace_down)
+{
+    if(trace_down) {
+        update_xform_hier();
+        return m_xform;
+    }
+    if(m_is_dirty_xform) {
+        update_xform();
+        if(m_parent) {
+            m_xform = m_parent->get_xform(false) * m_xform;
+        }
+        m_is_dirty_xform = false;
+    }
+    return m_xform;
+}
+
+const glm::mat4 &XformObject::get_normal_xform(bool trace_down)
+{
+    if(trace_down) {
+        update_normal_xform_hier();
+        return m_normal_xform;
+    }
+    if(m_is_dirty_normal_xform) {
+        update_normal_xform();
+        if(m_parent) {
+            m_normal_xform = m_parent->get_normal_xform(false) * m_normal_xform;
+        }
+        m_is_dirty_normal_xform = false;
+    }
+    return m_normal_xform;
 }
 
 void XformObject::update_xform_hier()

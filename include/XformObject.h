@@ -30,9 +30,6 @@ public:
     }
     void set_scale(glm::vec3 scale);
 
-    const glm::mat4 &get_xform(bool trace_down = true);
-    const glm::mat4 &get_normal_xform(bool trace_down = true);
-
     XformObject* get_parent() const
     {
         return m_parent;
@@ -44,6 +41,8 @@ public:
     void reset_xform();
     void link_parent(XformObject* parent, bool keep_xform = false);
     void unlink_children();
+    const glm::mat4 &get_xform(bool trace_down = true);
+    const glm::mat4 &get_normal_xform(bool trace_down = true);
     void update_xform_hier();
     void update_normal_xform_hier();
 
