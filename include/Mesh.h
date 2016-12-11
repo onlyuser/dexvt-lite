@@ -175,7 +175,7 @@ public:
         glm::vec3    target,
         int          iters,
         float        accept_distance);
-    void rotate(glm::vec3 pivot, float angle);
+    void rotate(float angle_delta, glm::vec3 pivot);
 
 private:
     std::string    m_name;
