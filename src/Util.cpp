@@ -27,13 +27,13 @@ void print_bitmap_string(void* font, const char* s)
 
 glm::vec3 orient_to_offset(glm::vec3 orient)
 {
-    glm::mat4 pitch = GLM_ROTATE(
-            glm::mat4(1),
-            ORIENT_PITCH(orient), VEC_LEFT);
-    glm::mat4 yaw = GLM_ROTATE(
-            glm::mat4(1),
-            ORIENT_YAW(orient), VEC_UP);
-    return glm::vec3(yaw*pitch*glm::vec4(VEC_FORWARD, 1));
+    glm::mat4 pitch = GLM_ROTATE(glm::mat4(1),
+                                 ORIENT_PITCH(orient),
+                                 VEC_LEFT);
+    glm::mat4 yaw = GLM_ROTATE(glm::mat4(1),
+                               ORIENT_YAW(orient),
+                               VEC_UP);
+    return glm::vec3(yaw * pitch * glm::vec4(VEC_FORWARD, 1));
 }
 
 glm::vec3 offset_to_orient(glm::vec3 offset)
@@ -41,12 +41,11 @@ glm::vec3 offset_to_orient(glm::vec3 offset)
     offset = glm::normalize(offset);
     glm::vec3 t(offset.x, 0, offset.z); // flattened offset
     t = glm::normalize(t);
-    glm::vec3 r(
-        0,
-        glm::angle(t, offset),
-        glm::angle(t, VEC_FORWARD));
+    glm::vec3 r(0,
+                glm::angle(t, offset),
+                glm::angle(t, VEC_FORWARD));
     if(static_cast<float>(fabs(offset.x)) < EPSILON && static_cast<float>(fabs(offset.z)) < EPSILON) {
-        ORIENT_PITCH(r) = glm::degrees(-SIGN(offset.y)*glm::radians(90.0f));
+        ORIENT_PITCH(r) = glm::degrees(-SIGN(offset.y) * glm::radians(90.0f));
         ORIENT_YAW(r) = 0; // undefined
         return r;
     }

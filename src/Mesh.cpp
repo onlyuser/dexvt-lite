@@ -387,7 +387,7 @@ void Mesh::point_at(glm::vec3 target)
 
 // http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/
 bool Mesh::solve_ik_ccd(
-    XformObject* base,
+    XformObject* root,
     glm::vec3    end_effector_tip_local_offset,
     glm::vec3    target,
     int          iters,
@@ -395,7 +395,7 @@ bool Mesh::solve_ik_ccd(
 {
     for(int i = 0; i < iters; i++) {
         for(XformObject* current_segment = this;
-            current_segment && current_segment != base->get_parent();
+            current_segment && current_segment != root->get_parent();
             current_segment = current_segment->get_parent())
         {
             glm::vec3 end_effector_tip = glm::vec3(get_xform() * glm::vec4(end_effector_tip_local_offset, 1));
