@@ -16,31 +16,19 @@ public:
     {
         return m_origin;
     }
-    void set_origin(glm::vec3 origin)
-    {
-        m_origin = origin;
-        mark_dirty_xform();
-    }
+    void set_origin(glm::vec3 origin);
 
     const glm::vec3 &get_orient() const
     {
         return m_orient;
     }
-    void set_orient(glm::vec3 orient)
-    {
-        m_orient = orient;
-        mark_dirty_xform();
-    }
+    void set_orient(glm::vec3 orient);
 
     const glm::vec3 &get_scale() const
     {
         return m_scale;
     }
-    void set_scale(glm::vec3 scale)
-    {
-        m_scale = scale;
-        mark_dirty_xform();
-    }
+    void set_scale(glm::vec3 scale);
 
     const glm::mat4 &get_xform(bool trace_down = true);
     const glm::mat4 &get_normal_xform(bool trace_down = true);

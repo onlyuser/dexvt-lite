@@ -403,8 +403,8 @@ bool Mesh::solve_ik_ccd(
             glm::mat4 current_segment_inverse_xform = glm::inverse(current_segment->get_xform());
             glm::vec3 local_target_orient           = offset_to_orient(glm::vec3(current_segment_inverse_xform * glm::vec4(target, 1)));
             glm::vec3 local_end_effector_tip_orient = offset_to_orient(glm::vec3(current_segment_inverse_xform * glm::vec4(end_effector_tip, 1)));
-            glm::vec3 delta_orient = local_target_orient - local_end_effector_tip_orient;
-            current_segment->set_orient(current_segment->get_orient() + delta_orient);
+            glm::vec3 orient_delta = orient_diff(local_target_orient, local_end_effector_tip_orient);
+            current_segment->set_orient(orient_sum(current_segment->get_orient(), orient_delta));
         }
     }
     return false;

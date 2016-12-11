@@ -18,6 +18,24 @@ XformObject::~XformObject()
 {
 }
 
+void XformObject::set_origin(glm::vec3 origin)
+{
+    m_origin = origin;
+    mark_dirty_xform();
+}
+
+void XformObject::set_orient(glm::vec3 orient)
+{
+    m_orient = orient;
+    mark_dirty_xform();
+}
+
+void XformObject::set_scale(glm::vec3 scale)
+{
+    m_scale = scale;
+    mark_dirty_xform();
+}
+
 const glm::mat4 &XformObject::get_xform(bool trace_down)
 {
     if(trace_down) {

@@ -11,6 +11,8 @@
 #include <stdarg.h>
 #include <GL/glut.h>
 
+#define SIGN(x) (!(x) ? 0 : (((x) > 0) ? 1 : -1))
+
 namespace vt {
 
 void print_bitmap_string(void* font, const char* s)
@@ -56,15 +58,42 @@ glm::vec3 offset_to_orient(glm::vec3 offset)
     return r;
 }
 
+glm::vec3 orient_modulo(glm::vec3 orient)
+{
+    float yaw   = ORIENT_YAW(orient);
+    float pitch = ORIENT_PITCH(orient);
+    if(fabs(yaw) >= 180) {
+        yaw = -SIGN(yaw) * (360 - fabs(yaw));
+    }
+    if(fabs(pitch) >= 90) {
+        pitch = -SIGN(pitch) * (180 - fabs(pitch));
+        yaw = -SIGN(yaw) * (180 - fabs(yaw));
+    }
+    return glm::vec3(0, pitch, yaw);
+}
+
+glm::vec3 orient_diff(glm::vec3 a, glm::vec3 b)
+{
+    float yaw_diff   = ORIENT_YAW(a) - ORIENT_YAW(b);
+    float pitch_diff = ORIENT_PITCH(a) - ORIENT_PITCH(b);
+    return orient_modulo(glm::vec3(0, pitch_diff, yaw_diff));
+}
+
+glm::vec3 orient_sum(glm::vec3 a, glm::vec3 b)
+{
+    float yaw_sum   = ORIENT_YAW(a) + ORIENT_YAW(b);
+    float pitch_sum = ORIENT_PITCH(a) + ORIENT_PITCH(b);
+    return orient_modulo(glm::vec3(0, pitch_sum, yaw_sum));
+}
+
 void mesh_apply_ripple(Mesh* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase)
 {
     for(int i = 0; i < static_cast<int>(mesh->get_num_vertex()); i++) {
         glm::vec3 pos = mesh->get_vert_coord(i);
         glm::vec3 new_pos = pos;
         new_pos.y = origin.y +
-                static_cast<float>(sin(glm::distance(
-                        glm::vec2(origin.x, origin.z),
-                        glm::vec2(pos.x, pos.z))/(wavelength/(PI*2)) + phase))*amplitude;
+                    static_cast<float>(sin(glm::distance(glm::vec2(origin.x, origin.z),
+                                                         glm::vec2(pos.x, pos.z))/(wavelength/(PI*2)) + phase))*amplitude;
         mesh->set_vert_coord(i, new_pos);
     }
     mesh->update_normals_and_tangents();
