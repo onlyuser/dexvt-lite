@@ -42,11 +42,15 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
+#define SEGMENT_COUNT   6
+#define IK_ITERS        10
+#define ACCEPT_DISTANCE 0.1
+
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
 int init_screen_width = 800, init_screen_height = 600;
 vt::Camera* camera;
-vt::Mesh *mesh_skybox, *mesh_box, *mesh_box2, *mesh_box3, *mesh_box4, *mesh_box5, *mesh_box6;
+vt::Mesh *mesh_skybox;
 vt::Light *light, *light2, *light3;
 vt::Texture *texture_box_color, *texture_box_normal, *texture_skybox;
 
@@ -66,11 +70,40 @@ bool do_animation = true;
 int texture_id = 0;
 float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 
+std::vector<vt::Mesh*> meshes;
+
 int target_index = 0;
 glm::vec3 targets[] = {glm::vec3( 1, 1,  1),
                        glm::vec3( 1, 1, -1),
                        glm::vec3(-1, 1, -1),
                        glm::vec3(-1, 1,  1)};
+
+static void create_linked_boxes(vt::Scene* scene, std::vector<vt::Mesh*>* meshes, int segment_count, std::string name, glm::vec3 box_dim)
+{
+    if(!scene || !meshes) {
+        return;
+    }
+    float z_offset = 0;
+    vt::Mesh* prev_mesh = NULL;
+    for(int i = 0; i < segment_count; i++) {
+        std::stringstream ss;
+        ss << name << "_" << i;
+        vt::Mesh* mesh = vt::PrimitiveFactory::create_box(ss.str());
+        scene->add_mesh(mesh);
+        mesh->center_axis();
+        mesh->set_origin(glm::vec3(0, 0, z_offset));
+        mesh->set_scale(box_dim);
+        mesh->rebase();
+        mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
+        mesh->link_parent(prev_mesh, true);
+        meshes->push_back(mesh);
+        prev_mesh = mesh;
+        z_offset += box_dim.z;
+    }
+    if(!meshes->empty()) {
+        (*meshes)[0]->set_origin(glm::vec3(0, 0, 0));
+    }
+}
 
 int init_resources()
 {
@@ -79,54 +112,7 @@ int init_resources()
     mesh_skybox = vt::PrimitiveFactory::create_viewport_quad("grid");
     scene->set_skybox(mesh_skybox);
 
-    scene->add_mesh(mesh_box  = vt::PrimitiveFactory::create_box("box"));
-    mesh_box->center_axis();
-    mesh_box->set_origin(glm::vec3(0, 0, 0));
-    mesh_box->set_scale(glm::vec3(0.25, 0.25, 1));
-    mesh_box->rebase();
-    mesh_box->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
-
-    scene->add_mesh(mesh_box2 = vt::PrimitiveFactory::create_box("box2"));
-    mesh_box2->center_axis();
-    mesh_box2->set_origin(glm::vec3(0, 0, 1));
-    mesh_box2->set_scale(glm::vec3(0.25, 0.25, 1));
-    mesh_box2->rebase();
-    mesh_box2->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
-    mesh_box2->link_parent(mesh_box, true);
-
-    scene->add_mesh(mesh_box3 = vt::PrimitiveFactory::create_box("box3"));
-    mesh_box3->center_axis();
-    mesh_box3->set_origin(glm::vec3(0, 0, 2));
-    mesh_box3->set_scale(glm::vec3(0.25, 0.25, 1));
-    mesh_box3->rebase();
-    mesh_box3->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
-    mesh_box3->link_parent(mesh_box2, true);
-
-    scene->add_mesh(mesh_box4 = vt::PrimitiveFactory::create_box("box4"));
-    mesh_box4->center_axis();
-    mesh_box4->set_origin(glm::vec3(0, 0, 3));
-    mesh_box4->set_scale(glm::vec3(0.25, 0.25, 1));
-    mesh_box4->rebase();
-    mesh_box4->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
-    mesh_box4->link_parent(mesh_box3, true);
-
-    scene->add_mesh(mesh_box5 = vt::PrimitiveFactory::create_box("box5"));
-    mesh_box5->center_axis();
-    mesh_box5->set_origin(glm::vec3(0, 0, 4));
-    mesh_box5->set_scale(glm::vec3(0.25, 0.25, 1));
-    mesh_box5->rebase();
-    mesh_box5->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
-    mesh_box5->link_parent(mesh_box4, true);
-
-    scene->add_mesh(mesh_box6 = vt::PrimitiveFactory::create_box("box6"));
-    mesh_box6->center_axis();
-    mesh_box6->set_origin(glm::vec3(0, 0, 5));
-    mesh_box6->set_scale(glm::vec3(0.25, 0.25, 1));
-    mesh_box6->rebase();
-    mesh_box6->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
-    mesh_box6->link_parent(mesh_box5, true);
-
-    mesh_box->set_origin(glm::vec3(0, 0, 0));
+    create_linked_boxes(scene, &meshes, SEGMENT_COUNT, "box", glm::vec3(0.25, 0.25, 1));
 
     vt::Material* bump_mapped_material = new vt::Material(
             "bump_mapped",
@@ -182,41 +168,12 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    // box
-    mesh_box->set_material(bump_mapped_material);
-    mesh_box->set_texture_index(     mesh_box->get_material()->get_texture_index_by_name("chesterfield_color"));
-    mesh_box->set_bump_texture_index(mesh_box->get_material()->get_texture_index_by_name("chesterfield_normal"));
-    mesh_box->set_ambient_color(glm::vec3(0, 0, 0));
-
-    // box2
-    mesh_box2->set_material(bump_mapped_material);
-    mesh_box2->set_texture_index(     mesh_box2->get_material()->get_texture_index_by_name("chesterfield_color"));
-    mesh_box2->set_bump_texture_index(mesh_box2->get_material()->get_texture_index_by_name("chesterfield_normal"));
-    mesh_box2->set_ambient_color(glm::vec3(0, 0, 0));
-
-    // box3
-    mesh_box3->set_material(bump_mapped_material);
-    mesh_box3->set_texture_index(     mesh_box3->get_material()->get_texture_index_by_name("chesterfield_color"));
-    mesh_box3->set_bump_texture_index(mesh_box3->get_material()->get_texture_index_by_name("chesterfield_normal"));
-    mesh_box3->set_ambient_color(glm::vec3(0, 0, 0));
-
-    // box4
-    mesh_box4->set_material(bump_mapped_material);
-    mesh_box4->set_texture_index(     mesh_box4->get_material()->get_texture_index_by_name("chesterfield_color"));
-    mesh_box4->set_bump_texture_index(mesh_box4->get_material()->get_texture_index_by_name("chesterfield_normal"));
-    mesh_box4->set_ambient_color(glm::vec3(0, 0, 0));
-
-    // box5
-    mesh_box5->set_material(bump_mapped_material);
-    mesh_box5->set_texture_index(     mesh_box5->get_material()->get_texture_index_by_name("chesterfield_color"));
-    mesh_box5->set_bump_texture_index(mesh_box5->get_material()->get_texture_index_by_name("chesterfield_normal"));
-    mesh_box5->set_ambient_color(glm::vec3(0, 0, 0));
-
-    // box6
-    mesh_box6->set_material(bump_mapped_material);
-    mesh_box6->set_texture_index(     mesh_box6->get_material()->get_texture_index_by_name("chesterfield_color"));
-    mesh_box6->set_bump_texture_index(mesh_box6->get_material()->get_texture_index_by_name("chesterfield_normal"));
-    mesh_box6->set_ambient_color(glm::vec3(0, 0, 0));
+    for(std::vector<vt::Mesh*>::iterator p = meshes.begin(); p != meshes.end(); p++) {
+        (*p)->set_material(bump_mapped_material);
+        (*p)->set_texture_index(     (*p)->get_material()->get_texture_index_by_name("chesterfield_color"));
+        (*p)->set_bump_texture_index((*p)->get_material()->get_texture_index_by_name("chesterfield_normal"));
+        (*p)->set_ambient_color(glm::vec3(0, 0, 0));
+    }
 
     return 1;
 }
@@ -254,12 +211,8 @@ void onTick()
     }
     frames++;
     static int angle = 0;
-    mesh_box->set_orient(glm::vec3(0, 0, angle));
-    //mesh_box2->set_orient(glm::vec3(angle, 0, 0));
-    //mesh_box3->set_orient(glm::vec3(0, angle, 0));
-    //mesh_box->point_at(targets[target_index]);
-    mesh_box6->solve_ik_ccd(mesh_box2, glm::vec3(0, 0, 1), targets[target_index], 10, 0.01);
-    //mesh_box->rotate(glm::vec3(1, 1, 0), 1);
+    meshes[0]->set_orient(glm::vec3(0, 0, angle));
+    meshes[SEGMENT_COUNT - 1]->solve_ik_ccd(meshes[1], glm::vec3(0, 0, 1), targets[target_index], IK_ITERS, ACCEPT_DISTANCE);
     angle = (angle + 1) % 360;
 }
 
@@ -286,11 +239,6 @@ void onDisplay()
         scene->render_lights();
     }
     glutSwapBuffers();
-}
-
-void set_mesh_visibility(bool visible)
-{
-    mesh_box->set_visible(visible); // box
 }
 
 void onKeyboard(unsigned char key, int x, int y)
@@ -329,20 +277,14 @@ void onKeyboard(unsigned char key, int x, int y)
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
-                mesh_box->set_ambient_color(glm::vec3(1, 1, 1));
-                mesh_box2->set_ambient_color(glm::vec3(1, 1, 1));
-                mesh_box3->set_ambient_color(glm::vec3(1, 1, 1));
-                mesh_box4->set_ambient_color(glm::vec3(1, 1, 1));
-                mesh_box5->set_ambient_color(glm::vec3(1, 1, 1));
-                mesh_box6->set_ambient_color(glm::vec3(1, 1, 1));
+                for(std::vector<vt::Mesh*>::iterator p = meshes.begin(); p != meshes.end(); p++) {
+                    (*p)->set_ambient_color(glm::vec3(1, 1, 1));
+                }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
-                mesh_box->set_ambient_color(glm::vec3(0, 0, 0));
-                mesh_box2->set_ambient_color(glm::vec3(0, 0, 0));
-                mesh_box3->set_ambient_color(glm::vec3(0, 0, 0));
-                mesh_box4->set_ambient_color(glm::vec3(0, 0, 0));
-                mesh_box5->set_ambient_color(glm::vec3(0, 0, 0));
-                mesh_box6->set_ambient_color(glm::vec3(0, 0, 0));
+                for(std::vector<vt::Mesh*>::iterator p = meshes.begin(); p != meshes.end(); p++) {
+                    (*p)->set_ambient_color(glm::vec3(0, 0, 0));
+                }
             }
             break;
         case 'x': // axis
