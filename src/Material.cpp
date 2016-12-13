@@ -60,7 +60,7 @@ Texture* Material::get_texture_by_index(int index) const
     return m_textures[index];
 }
 
-int Material::get_texture_index(vt::Texture* texture) const
+int Material::get_texture_index(Texture* texture) const
 {
     textures_t::const_iterator p = std::find(m_textures.begin(), m_textures.end(), texture);
     if(p == m_textures.end()) {
