@@ -340,7 +340,7 @@ void Mesh::set_ambient_color(glm::vec3 ambient_color)
 void Mesh::xform_vertices(glm::mat4 xform)
 {
     for(int i = 0; i < static_cast<int>(m_num_vertex); i++) {
-        set_vert_coord(i, glm::vec3(xform*glm::vec4(get_vert_coord(i), 1)));
+        set_vert_coord(i, glm::vec3(xform * glm::vec4(get_vert_coord(i), 1)));
     }
     update_normals_and_tangents();
     update_bbox();
@@ -436,8 +436,9 @@ void Mesh::rotate(float angle_delta, glm::vec3 pivot)
 {
     glm::vec3 local_pivot;
     if(m_parent) {
-        local_pivot = glm::vec3(glm::inverse(m_parent->get_xform()) * glm::vec4(pivot, 1)) -
-                      glm::vec3(glm::inverse(m_parent->get_xform()) * glm::vec4(glm::vec3(0), 1));
+        glm::mat4 inv_parent_xform = glm::inverse(m_parent->get_xform());
+        local_pivot = glm::vec3(inv_parent_xform * glm::vec4(pivot, 1)) -
+                      glm::vec3(inv_parent_xform * glm::vec4(glm::vec3(0), 1));
     } else {
         local_pivot = pivot;
     }
