@@ -9,7 +9,9 @@ namespace vt {
 class XformObject
 {
 public:
-    XformObject(glm::vec3 origin = glm::vec3(0), glm::vec3 orient = glm::vec3(0), glm::vec3 scale = glm::vec3(1));
+    XformObject(glm::vec3 origin = glm::vec3(0),
+                glm::vec3 orient = glm::vec3(0),
+                glm::vec3 scale  = glm::vec3(1));
     virtual ~XformObject();
 
     const glm::vec3 &get_origin() const

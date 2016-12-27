@@ -415,7 +415,7 @@ bool Mesh::solve_ik_ccd(
             glm::vec3 new_heading                   = glm::vec3(GLM_ROTATE(glm::mat4(1), -angle_delta, local_pivot) * glm::vec4(heading, 1));
             current_segment->set_orient(offset_to_orient(new_heading));
 #elif 0
-            // attempt #2 -- do rotations in Euler coordinates with special care taken to handle angle loop-around
+            // attempt #2 -- do rotations in Euler coordinates with special handling for angle loop-around
             glm::vec3 local_target_orient           = offset_to_orient(glm::vec3(current_segment_inverse_xform * glm::vec4(target, 1)));
             glm::vec3 local_end_effector_tip_orient = offset_to_orient(glm::vec3(current_segment_inverse_xform * glm::vec4(end_effector_tip, 1)));
             glm::vec3 orient_delta                  = orient_diff(local_target_orient, local_end_effector_tip_orient);

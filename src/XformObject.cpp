@@ -4,7 +4,10 @@
 
 namespace vt {
 
-XformObject::XformObject(glm::vec3 origin, glm::vec3 orient, glm::vec3 scale)
+XformObject::XformObject(
+        glm::vec3 origin,
+        glm::vec3 orient,
+        glm::vec3 scale)
     : m_origin(origin),
       m_orient(orient),
       m_scale(scale),

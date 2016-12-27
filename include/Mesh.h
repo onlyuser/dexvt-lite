@@ -17,7 +17,10 @@ namespace vt {
 
 class Material;
 
-class Mesh : public NamedObject, public XformObject, public BBoxObject, public MeshIFace
+class Mesh : public NamedObject,
+             public XformObject,
+             public BBoxObject,
+             public MeshIFace
 {
 public:
     Mesh(
