@@ -1,6 +1,7 @@
 #ifndef VT_UTIL_H_
 #define VT_UTIL_H_
 
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <vector>
 #include <string>

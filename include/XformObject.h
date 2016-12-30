@@ -43,6 +43,17 @@ public:
     void reset_xform();
     void link_parent(XformObject* parent, bool keep_xform = false);
     void unlink_children();
+
+    void point_at(glm::vec3 p);
+    void rotate(float angle_delta, glm::vec3 pivot);
+    void renormalize_up_vector();
+    bool solve_ik_ccd(
+        XformObject* root,
+        glm::vec3    end_effector_tip_local_offset,
+        glm::vec3    target,
+        int          iters,
+        float        accept_distance);
+
     const glm::mat4 &get_xform(bool trace_down = true);
     const glm::mat4 &get_normal_xform(bool trace_down = true);
     void update_xform_hier();

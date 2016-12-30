@@ -171,14 +171,6 @@ public:
     void rebase(glm::mat4* basis = NULL);
     void set_axis(glm::vec3 axis);
     void center_axis(BBoxObject::align_t align = BBoxObject::ALIGN_CENTER);
-    void point_at(glm::vec3 p);
-    bool solve_ik_ccd(
-        XformObject* root,
-        glm::vec3    end_effector_tip_local_offset,
-        glm::vec3    target,
-        int          iters,
-        float        accept_distance);
-    void rotate(float angle_delta, glm::vec3 pivot);
 
 private:
     std::string    m_name;
