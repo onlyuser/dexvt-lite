@@ -129,19 +129,16 @@ void XformObject::rotate(float angle_delta, glm::vec3 pivot)
     glm::mat4 rotate_xform = GLM_ROTATE(glm::mat4(1), angle_delta, local_pivot);
     glm::vec3 new_heading  = glm::vec3(rotate_xform * glm::vec4(heading, 1));
 #if 1
-    glm::vec3 new_orient   = offset_to_orient(new_heading);
+    glm::vec3 new_orient = offset_to_orient(new_heading);
 #else
-    glm::vec3 new_up       = glm::vec3(rotate_xform * glm::vec4(m_up, 1));
-    glm::vec3 new_orient   = offset_to_orient(new_heading, &new_up);
+    glm::vec3 new_up = glm::vec3(rotate_xform * glm::vec4(m_up, 1));
+    if(fabs(glm::angle(glm::normalize(new_up), glm::normalize(new_heading))) - HALF_PI >= EPSILON) {
+        new_up = renormalize_up_vector(new_heading, new_up);
+    }
+    m_up = new_up;
+    glm::vec3 new_orient = offset_to_orient(new_heading, &new_up);
 #endif
     set_orient(new_orient);
-}
-
-void XformObject::renormalize_up_vector()
-{
-    glm::vec3 heading = orient_to_offset(m_orient);
-    glm::vec3 sideways = glm::cross(heading, m_up);
-    m_up = glm::cross(heading, sideways);
 }
 
 // http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/

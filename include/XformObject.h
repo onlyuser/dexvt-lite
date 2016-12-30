@@ -46,7 +46,6 @@ public:
 
     void point_at(glm::vec3 p);
     void rotate(float angle_delta, glm::vec3 pivot);
-    void renormalize_up_vector();
     bool solve_ik_ccd(
         XformObject* root,
         glm::vec3    end_effector_tip_local_offset,
