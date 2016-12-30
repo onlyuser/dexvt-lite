@@ -36,7 +36,7 @@ glm::vec3 orient_to_offset(glm::vec3 orient)
     return glm::vec3(yaw * pitch * glm::vec4(VEC_FORWARD, 1));
 }
 
-glm::vec3 offset_to_orient(glm::vec3 offset)
+glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up)
 {
     offset = glm::normalize(offset);
     glm::vec3 t(offset.x, 0, offset.z); // flattened offset
@@ -51,10 +51,23 @@ glm::vec3 offset_to_orient(glm::vec3 offset)
     }
     if(offset.x < 0) ORIENT_YAW(r)   *= -1;
     if(offset.y > 0) ORIENT_PITCH(r) *= -1;
-    ORIENT_ROLL(r)  = glm::degrees(ORIENT_ROLL(r));
     ORIENT_PITCH(r) = glm::degrees(ORIENT_PITCH(r));
     ORIENT_YAW(r)   = glm::degrees(ORIENT_YAW(r));
+    if(up) {
+        assert(fabs(glm::angle(*up, offset)) - HALF_PI < EPSILON);
+        glm::mat4 new_rotate_xform =
+                GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_YAW(r)),   VEC_UP) *     // Y axis
+                GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_PITCH(r)), VEC_LEFT) *   // X axis
+                GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_ROLL(r)),  VEC_FORWARD); // Z axis
+        glm::vec3 local_up = glm::vec3(glm::inverse(new_rotate_xform) * glm::vec4(*up, 1));
+        ORIENT_ROLL(r) = glm::degrees(glm::angle(local_up, VEC_UP));
+    }
     return r;
+}
+
+glm::vec3 offset_to_orient(glm::vec3 offset)
+{
+    return offset_to_orient(offset, NULL);
 }
 
 glm::vec3 orient_modulo(glm::vec3 orient)

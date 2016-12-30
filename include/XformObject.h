@@ -51,6 +51,7 @@ public:
 protected:
     glm::vec3 m_origin;
     glm::vec3 m_orient;
+    glm::vec3 m_up;
     glm::vec3 m_scale;
     glm::mat4 m_xform;
     glm::mat4 m_normal_xform;

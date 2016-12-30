@@ -1,4 +1,5 @@
 #include <XformObject.h>
+#include <Util.h>
 #include <glm/glm.hpp>
 #include <set>
 
@@ -10,6 +11,7 @@ XformObject::XformObject(
         glm::vec3 scale)
     : m_origin(origin),
       m_orient(orient),
+      m_up(VEC_UP),
       m_scale(scale),
       m_parent(NULL),
       m_is_dirty_xform(true),

@@ -442,9 +442,16 @@ void Mesh::rotate(float angle_delta, glm::vec3 pivot)
     } else {
         local_pivot = pivot;
     }
-    glm::vec3 heading = orient_to_offset(get_orient());
-    glm::vec3 new_heading = glm::vec3(GLM_ROTATE(glm::mat4(1), angle_delta, local_pivot) * glm::vec4(heading, 1));
-    set_orient(offset_to_orient(new_heading));
+    glm::vec3 heading      = orient_to_offset(get_orient());
+    glm::mat4 rotate_xform = GLM_ROTATE(glm::mat4(1), angle_delta, local_pivot);
+    glm::vec3 new_heading  = glm::vec3(rotate_xform * glm::vec4(heading, 1));
+#if 1
+    glm::vec3 new_orient   = offset_to_orient(new_heading, NULL);
+#else
+    glm::vec3 new_up       = glm::vec3(rotate_xform * glm::vec4(m_up, 1));
+    glm::vec3 new_orient   = offset_to_orient(new_heading, &new_up);
+#endif
+    set_orient(new_orient);
 }
 
 void Mesh::update_xform()
