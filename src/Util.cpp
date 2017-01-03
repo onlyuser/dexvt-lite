@@ -57,7 +57,10 @@ glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up)
                 GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_YAW(orient)),   VEC_UP) *  // Y axis
                 GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_PITCH(orient)), VEC_LEFT); // X axis
         glm::vec3 local_up = glm::vec3(glm::inverse(rotate_xform) * glm::vec4(*up, 1));
-        ORIENT_ROLL(orient) = glm::degrees(glm::angle(glm::normalize(local_up), VEC_UP));
+        glm::vec3 normal = glm::cross(glm::normalize(local_up), VEC_UP);
+        float offset_projection = glm::dot(offset, normal);
+        float roll_sign = -SIGN(offset_projection);
+        ORIENT_ROLL(orient) = glm::degrees(glm::angle(glm::normalize(local_up), VEC_UP)) * roll_sign;
     }
     return orient;
 }

@@ -360,7 +360,8 @@ void Scene::render(
 void Scene::render_lines(bool draw_axis, bool draw_axis_labels, bool draw_bbox, bool draw_normals) const
 {
     const float axis_surface_distance = 0.05;
-    const float axis_arm_length       = 0.1;
+    const float axis_arm_length       = 0.25;
+    const float up_arm_length         = 0.5;
 
     glUseProgram(0);
     glMatrixMode(GL_PROJECTION);
@@ -371,7 +372,25 @@ void Scene::render_lines(bool draw_axis, bool draw_axis_labels, bool draw_bbox, 
         if(!(*p)->get_visible()) {
             continue;
         }
-        glm::mat4 model_xform = m_camera->get_xform()*(*p)->get_xform();
+
+        glm::mat4 model_xform2 = m_camera->get_xform();
+        glLoadMatrixf(glm::value_ptr(model_xform2));
+        glBegin(GL_LINES);
+
+        if(draw_axis) {
+            {
+                glm::mat4 translate_xform = glm::translate(glm::mat4(1), glm::vec3((*p)->get_xform() * glm::vec4(glm::vec3(0), 1)));
+                glColor3f(1, 1, 1);
+                glm::vec3 p1 = glm::vec3(translate_xform * glm::vec4(glm::vec3(0), 1));
+                glVertex3fv(&p1.x);
+                glm::vec3 p2 = glm::vec3(translate_xform * glm::vec4((*p)->get_up() * up_arm_length, 1));
+                glVertex3fv(&p2.x);
+            }
+        }
+
+        glEnd();
+
+        glm::mat4 model_xform = m_camera->get_xform() * (*p)->get_xform();
         glLoadMatrixf(glm::value_ptr(model_xform));
         glBegin(GL_LINES);
 

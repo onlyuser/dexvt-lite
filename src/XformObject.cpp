@@ -37,6 +37,20 @@ void XformObject::set_orient(glm::vec3 orient)
     mark_dirty_xform();
 }
 
+void XformObject::set_up(glm::vec3 up, glm::vec3* heading)
+{
+    glm::vec3 _heading;
+    if(heading) {
+        _heading = *heading;
+    } else {
+        _heading = orient_to_offset(m_orient);
+    }
+    if(fabs(glm::angle(glm::normalize(up), glm::normalize(_heading))) - HALF_PI >= EPSILON) {
+        up = renormalize_up_vector(_heading, up);
+    }
+    m_up = up;
+}
+
 void XformObject::set_scale(glm::vec3 scale)
 {
     m_scale = scale;
@@ -128,17 +142,9 @@ void XformObject::rotate(float angle_delta, glm::vec3 pivot)
     glm::vec3 heading      = orient_to_offset(m_orient);
     glm::mat4 rotate_xform = GLM_ROTATE(glm::mat4(1), angle_delta, local_pivot);
     glm::vec3 new_heading  = glm::vec3(rotate_xform * glm::vec4(heading, 1));
-#if 1
-    glm::vec3 new_orient = offset_to_orient(new_heading);
-#else
     glm::vec3 new_up = glm::vec3(rotate_xform * glm::vec4(m_up, 1));
-    if(fabs(glm::angle(glm::normalize(new_up), glm::normalize(new_heading))) - HALF_PI >= EPSILON) {
-        new_up = renormalize_up_vector(new_heading, new_up);
-    }
-    m_up = new_up;
-    glm::vec3 new_orient = offset_to_orient(new_heading, &new_up);
-#endif
-    set_orient(new_orient);
+    set_up(new_up, &new_heading);
+    set_orient(offset_to_orient(new_heading, &new_up));
 }
 
 // http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/
@@ -204,17 +210,10 @@ const glm::mat4 &XformObject::get_xform(bool trace_down)
     return m_xform;
 }
 
-const glm::mat4 &XformObject::get_normal_xform(bool trace_down)
+const glm::mat4 &XformObject::get_normal_xform()
 {
-    if(trace_down) {
-        update_normal_xform_hier();
-        return m_normal_xform;
-    }
     if(m_is_dirty_normal_xform) {
         update_normal_xform();
-        if(m_parent) {
-            m_normal_xform = m_parent->get_normal_xform(false) * m_normal_xform;
-        }
         m_is_dirty_normal_xform = false;
     }
     return m_normal_xform;
@@ -228,17 +227,6 @@ void XformObject::update_xform_hier()
     }
     if(m_children.empty()) {
         get_xform(false); // update entire leaf-to-root lineage for all leaf nodes
-    }
-}
-
-void XformObject::update_normal_xform_hier()
-{
-    for(std::set<XformObject*>::iterator p = m_children.begin(); p != m_children.end(); p++) {
-        (*p)->mark_dirty_xform(); // mark entire subtree dirty
-        (*p)->update_normal_xform_hier();
-    }
-    if(m_children.empty()) {
-        get_normal_xform(false); // update entire leaf-to-root lineage for all leaf nodes
     }
 }
 

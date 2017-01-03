@@ -26,6 +26,12 @@ public:
     }
     void set_orient(glm::vec3 orient);
 
+    const glm::vec3 &get_up() const
+    {
+        return m_up;
+    }
+    void set_up(glm::vec3 up, glm::vec3* heading = NULL);
+
     const glm::vec3 &get_scale() const
     {
         return m_scale;
@@ -54,9 +60,8 @@ public:
         float        accept_distance);
 
     const glm::mat4 &get_xform(bool trace_down = true);
-    const glm::mat4 &get_normal_xform(bool trace_down = true);
+    const glm::mat4 &get_normal_xform();
     void update_xform_hier();
-    void update_normal_xform_hier();
 
 protected:
     glm::vec3 m_origin;
