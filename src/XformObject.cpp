@@ -13,7 +13,7 @@ XformObject::XformObject(
         glm::vec3 scale)
     : m_origin(origin),
       m_orient(orient),
-      m_up(VEC_UP),
+      m_up_direction(VEC_UP),
       m_scale(scale),
       m_parent(NULL),
       m_is_dirty_xform(true),
@@ -37,7 +37,7 @@ void XformObject::set_orient(glm::vec3 orient)
     mark_dirty_xform();
 }
 
-void XformObject::set_up(glm::vec3 up, glm::vec3* heading)
+void XformObject::set_up_direction(glm::vec3 up_direction, glm::vec3* heading)
 {
     glm::vec3 _heading;
     if(heading) {
@@ -45,10 +45,10 @@ void XformObject::set_up(glm::vec3 up, glm::vec3* heading)
     } else {
         _heading = orient_to_offset(m_orient);
     }
-    if(fabs(glm::angle(glm::normalize(up), glm::normalize(_heading))) - HALF_PI >= EPSILON) {
-        up = renormalize_up_vector(_heading, up);
+    if(fabs(glm::angle(glm::normalize(up_direction), glm::normalize(_heading))) - HALF_PI >= EPSILON) {
+        up_direction = renormalize_up_vector(_heading, up_direction);
     }
-    m_up = up;
+    m_up_direction = up_direction;
 }
 
 void XformObject::set_scale(glm::vec3 scale)
@@ -139,12 +139,12 @@ void XformObject::rotate(float angle_delta, glm::vec3 pivot)
     } else {
         local_pivot = pivot;
     }
-    glm::vec3 heading      = orient_to_offset(m_orient);
-    glm::mat4 rotate_xform = GLM_ROTATE(glm::mat4(1), angle_delta, local_pivot);
-    glm::vec3 new_heading  = glm::vec3(rotate_xform * glm::vec4(heading, 1));
-    glm::vec3 new_up = glm::vec3(rotate_xform * glm::vec4(m_up, 1));
-    set_up(new_up, &new_heading);
-    set_orient(offset_to_orient(new_heading, &new_up));
+    glm::vec3 heading          = orient_to_offset(m_orient);
+    glm::mat4 rotate_xform     = GLM_ROTATE(glm::mat4(1), angle_delta, local_pivot);
+    glm::vec3 new_heading      = glm::vec3(rotate_xform * glm::vec4(heading, 1));
+    glm::vec3 new_up_direction = glm::vec3(rotate_xform * glm::vec4(m_up_direction, 1));
+    set_up_direction(new_up_direction, &new_heading);
+    set_orient(offset_to_orient(new_heading, &new_up_direction));
 }
 
 // http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/

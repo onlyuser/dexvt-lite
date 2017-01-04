@@ -26,11 +26,11 @@ public:
     }
     void set_orient(glm::vec3 orient);
 
-    const glm::vec3 &get_up() const
+    const glm::vec3 &get_up_direction() const
     {
-        return m_up;
+        return m_up_direction;
     }
-    void set_up(glm::vec3 up, glm::vec3* heading = NULL);
+    void set_up_direction(glm::vec3 up_direction, glm::vec3* heading = NULL);
 
     const glm::vec3 &get_scale() const
     {
@@ -66,7 +66,7 @@ public:
 protected:
     glm::vec3 m_origin;
     glm::vec3 m_orient;
-    glm::vec3 m_up;
+    glm::vec3 m_up_direction;
     glm::vec3 m_scale;
     glm::mat4 m_xform;
     glm::mat4 m_normal_xform;

@@ -381,10 +381,10 @@ void Scene::render_lines(bool draw_axis, bool draw_axis_labels, bool draw_bbox, 
             {
                 glm::mat4 translate_xform = glm::translate(glm::mat4(1), glm::vec3((*p)->get_xform() * glm::vec4(glm::vec3(0), 1)));
                 glColor3f(1, 1, 1);
-                glm::vec3 p1 = glm::vec3(translate_xform * glm::vec4(glm::vec3(0), 1));
-                glVertex3fv(&p1.x);
-                glm::vec3 p2 = glm::vec3(translate_xform * glm::vec4((*p)->get_up() * up_arm_length, 1));
-                glVertex3fv(&p2.x);
+                glm::vec3 origin = glm::vec3(translate_xform * glm::vec4(glm::vec3(0), 1));
+                glVertex3fv(&origin.x);
+                glm::vec3 up_endpoint = glm::vec3(translate_xform * glm::vec4((*p)->get_up_direction() * up_arm_length, 1));
+                glVertex3fv(&up_endpoint.x);
             }
         }
 
