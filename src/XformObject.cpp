@@ -59,9 +59,10 @@ void XformObject::set_scale(glm::vec3 scale)
 
 void XformObject::reset_xform()
 {
-    m_origin = glm::vec3(0);
-    m_orient = glm::vec3(0);
-    m_scale = glm::vec3(1);
+    m_origin       = glm::vec3(0);
+    m_orient       = glm::vec3(0);
+    m_up_direction = VEC_UP;
+    m_scale        = glm::vec3(1);
     mark_dirty_xform();
 }
 
