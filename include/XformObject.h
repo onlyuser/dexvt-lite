@@ -26,11 +26,11 @@ public:
     }
     void set_orient(glm::vec3 orient);
 
+    // to render up_direction
     const glm::vec3 &get_up_direction() const
     {
         return m_up_direction;
     }
-    void set_up_direction(glm::vec3 up_direction, glm::vec3* heading = NULL);
 
     const glm::vec3 &get_scale() const
     {

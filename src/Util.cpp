@@ -27,42 +27,46 @@ void print_bitmap_string(void* font, const char* s)
 
 glm::vec3 orient_to_offset(glm::vec3 orient)
 {
-    glm::mat4 pitch = GLM_ROTATE(glm::mat4(1),
-                                 ORIENT_PITCH(orient),
-                                 VEC_LEFT);
-    glm::mat4 yaw = GLM_ROTATE(glm::mat4(1),
-                               ORIENT_YAW(orient),
-                               VEC_UP);
+    glm::mat4 pitch = GLM_ROTATE(glm::mat4(1), ORIENT_PITCH(orient), VEC_LEFT);
+    glm::mat4 yaw   = GLM_ROTATE(glm::mat4(1), ORIENT_YAW(orient),   VEC_UP);
     return glm::vec3(yaw * pitch * glm::vec4(VEC_FORWARD, 1));
 }
 
 glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up_direction)
 {
-    offset = glm::normalize(offset);
-    glm::vec3 flattened_offset(offset.x, 0, offset.z);
-    flattened_offset = glm::normalize(flattened_offset);
-    glm::vec3 orient(0,
-                     glm::angle(flattened_offset, offset),
-                     glm::angle(flattened_offset, VEC_FORWARD));
+    glm::vec3 orient;
+    glm::vec3 flattened_offset;
     if(static_cast<float>(fabs(offset.x)) < EPSILON && static_cast<float>(fabs(offset.z)) < EPSILON) {
-        ORIENT_PITCH(orient) = glm::degrees(-SIGN(offset.y) * glm::radians(90.0f));
-        return orient;
+        ORIENT_PITCH(orient) = 90;
+        if(up_direction) {
+            glm::vec3 flattened_up_direction = glm::normalize(glm::vec3(up_direction->x, 0, up_direction->z));
+            glm::vec3 flattened_offset = -flattened_up_direction;
+            ORIENT_YAW(orient) = glm::degrees(glm::angle(flattened_offset, VEC_FORWARD));
+            if(flattened_offset.x < 0) {
+                ORIENT_YAW(orient) = -fabs(ORIENT_YAW(orient));
+            }
+        }
+    } else {
+        flattened_offset = glm::normalize(glm::vec3(offset.x, 0, offset.z));
+        ORIENT_PITCH(orient) = glm::degrees(glm::angle(flattened_offset, glm::normalize(offset))),
+        ORIENT_YAW(orient)   = glm::degrees(glm::angle(flattened_offset, VEC_FORWARD));
+        if(offset.x < 0) {
+            ORIENT_YAW(orient) = -fabs(ORIENT_YAW(orient));
+        }
     }
-    if(offset.x < 0) ORIENT_YAW(orient)   *= -1;
-    if(offset.y > 0) ORIENT_PITCH(orient) *= -1;
-    ORIENT_PITCH(orient) = glm::degrees(ORIENT_PITCH(orient));
-    ORIENT_YAW(orient)   = glm::degrees(ORIENT_YAW(orient));
-    //if(up_direction) {
-    //    glm::mat4 rotate_xform =
-    //            GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_YAW(orient)),   VEC_UP) *  // Y axis
-    //            GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_PITCH(orient)), VEC_LEFT); // X axis
-    //    glm::vec3 local_up_direction_sans_roll = glm::normalize(glm::vec3(glm::inverse(rotate_xform) * glm::vec4(*up_direction, 1)));
-    //    glm::vec3 normal = glm::cross(local_up_direction_sans_roll, VEC_UP);
-    //    float offset_projection = glm::dot(offset, glm::normalize(normal));
-    //    float roll_sign = -SIGN(offset_projection);
-    //    ORIENT_ROLL(orient) = glm::degrees(glm::angle(local_up_direction_sans_roll, VEC_UP)) * roll_sign;
-    //    std::cout << ORIENT_ROLL(orient) << std::endl;
-    //}
+    if(offset.y > 0) {
+        ORIENT_PITCH(orient) = -fabs(ORIENT_PITCH(orient));
+    }
+    if(up_direction) {
+        glm::mat4 rotate_xform =
+                GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_YAW(orient)),   VEC_UP) *  // Y axis
+                GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_PITCH(orient)), VEC_LEFT); // X axis
+        glm::vec3 local_up_direction_sans_roll = glm::normalize(glm::vec3(glm::inverse(rotate_xform) * glm::vec4(*up_direction, 1)));
+        ORIENT_ROLL(orient) = glm::degrees(glm::angle(local_up_direction_sans_roll, VEC_UP));
+        if(local_up_direction_sans_roll.x > 0) {
+            ORIENT_ROLL(orient) = -fabs(ORIENT_ROLL(orient));
+        }
+    }
     return orient;
 }
 
@@ -71,7 +75,7 @@ glm::vec3 offset_to_orient(glm::vec3 offset)
     return offset_to_orient(offset, NULL);
 }
 
-glm::vec3 renormalize_up_vector(glm::vec3 heading, glm::vec3 up_direction)
+glm::vec3 renormalize_up_direction(glm::vec3 heading, glm::vec3 up_direction)
 {
     heading = glm::normalize(heading);
     glm::vec3 sideways = glm::normalize(glm::cross(heading, glm::normalize(up_direction)));
