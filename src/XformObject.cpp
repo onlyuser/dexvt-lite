@@ -37,6 +37,16 @@ void XformObject::set_orient(glm::vec3 orient)
     mark_dirty_xform();
 }
 
+const glm::vec3 XformObject::get_left_direction() const
+{
+    return glm::normalize(glm::cross(m_up_direction, get_heading()));
+}
+
+const glm::vec3 XformObject::get_heading() const
+{
+    return orient_to_offset(m_orient);
+}
+
 void XformObject::set_scale(glm::vec3 scale)
 {
     m_scale = scale;
@@ -131,7 +141,7 @@ void XformObject::rotate(float angle_delta, glm::vec3 pivot)
     glm::vec3 new_heading      = glm::vec3(rotate_xform * glm::vec4(heading, 1));
     glm::vec3 new_up_direction = glm::vec3(rotate_xform * glm::vec4(m_up_direction, 1));
     if(fabs(glm::angle(glm::normalize(new_up_direction), glm::normalize(new_heading))) - HALF_PI >= EPSILON) {
-        new_up_direction = renormalize_up_direction(new_heading, new_up_direction);
+        new_up_direction = renormalize_up_direction(new_up_direction, new_heading);
     }
     m_up_direction = new_up_direction;
     set_orient(offset_to_orient(new_heading, &new_up_direction));

@@ -61,8 +61,8 @@ glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up_direction)
         glm::mat4 rotate_xform =
                 GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_YAW(orient)),   VEC_UP) *  // Y axis
                 GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_PITCH(orient)), VEC_LEFT); // X axis
-        glm::vec3 local_up_direction_sans_roll = glm::normalize(glm::vec3(glm::inverse(rotate_xform) * glm::vec4(*up_direction, 1)));
-        ORIENT_ROLL(orient) = glm::degrees(glm::angle(local_up_direction_sans_roll, VEC_UP));
+        glm::vec3 local_up_direction_sans_roll = glm::vec3(glm::inverse(rotate_xform) * glm::vec4(*up_direction, 1));
+        ORIENT_ROLL(orient) = glm::degrees(glm::angle(glm::normalize(local_up_direction_sans_roll), VEC_UP));
         if(local_up_direction_sans_roll.x > 0) {
             ORIENT_ROLL(orient) = -fabs(ORIENT_ROLL(orient));
         }
@@ -75,11 +75,11 @@ glm::vec3 offset_to_orient(glm::vec3 offset)
     return offset_to_orient(offset, NULL);
 }
 
-glm::vec3 renormalize_up_direction(glm::vec3 heading, glm::vec3 up_direction)
+glm::vec3 renormalize_up_direction(glm::vec3 up_direction, glm::vec3 heading)
 {
     heading = glm::normalize(heading);
-    glm::vec3 sideways = glm::normalize(glm::cross(heading, glm::normalize(up_direction)));
-    return glm::normalize(glm::cross(sideways, heading));
+    glm::vec3 left_direction = glm::cross(glm::normalize(up_direction), heading);
+    return glm::normalize(glm::cross(heading, glm::normalize(left_direction)));
 }
 
 glm::vec3 orient_modulo(glm::vec3 orient)
