@@ -142,7 +142,7 @@ void XformObject::rotate(float angle_delta, glm::vec3 pivot)
     glm::mat4 rotate_xform     = GLM_ROTATE(glm::mat4(1), angle_delta, local_pivot);
     glm::vec3 new_heading      = glm::vec3(rotate_xform * glm::vec4(get_heading(), 1));
     glm::vec3 new_up_direction = glm::vec3(rotate_xform * glm::vec4(get_up_direction(), 1));
-    if(fabs(glm::angle(glm::normalize(new_up_direction), glm::normalize(new_heading))) - HALF_PI >= EPSILON) {
+    if(fabs(glm::angle(glm::normalize(new_up_direction), glm::normalize(new_heading)) - HALF_PI) >= EPSILON) {
         new_up_direction = renormalize_up_direction(new_up_direction, new_heading);
     }
     set_orient(offset_to_orient(new_heading, &new_up_direction));
@@ -171,8 +171,8 @@ bool XformObject::solve_ik_ccd(
             glm::vec3 local_target_normal           = glm::normalize(glm::vec3(current_segment_inverse_xform * glm::vec4(target, 1)));
             glm::vec3 local_end_effector_tip_normal = glm::normalize(glm::vec3(current_segment_inverse_xform * glm::vec4(end_effector_tip, 1)));
             glm::vec3 local_delta_normal            = glm::normalize(local_target_normal - local_end_effector_tip_normal);
-            glm::vec3 local_midpoint_normal         = glm::normalize((local_target_normal + local_end_effector_tip_normal) * 0.5f);
-            glm::vec3 local_pivot                   = glm::normalize(glm::cross(local_delta_normal, local_midpoint_normal));
+            glm::vec3 local_delta_midpoint_normal   = glm::normalize((local_target_normal + local_end_effector_tip_normal) * 0.5f);
+            glm::vec3 local_pivot                   = glm::cross(local_delta_normal, local_delta_midpoint_normal);
             float     angle_delta                   = glm::degrees(glm::angle(local_target_normal, local_end_effector_tip_normal));
             glm::vec3 heading                       = orient_to_offset(current_segment->get_orient());
             glm::vec3 new_heading                   = glm::vec3(GLM_ROTATE(glm::mat4(1), -angle_delta, local_pivot) * glm::vec4(heading, 1));

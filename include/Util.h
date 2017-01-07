@@ -42,7 +42,7 @@ class Mesh;
 
 void print_bitmap_string(void* font, const char* s);
 glm::vec3 orient_to_offset(glm::vec3 orient);
-glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up_direction);
+glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up_direction_hint);
 glm::vec3 offset_to_orient(glm::vec3 offset);
 glm::vec3 renormalize_up_direction(glm::vec3 up_direction, glm::vec3 heading);
 glm::vec3 orient_modulo(glm::vec3 orient);
