@@ -212,9 +212,9 @@ void onTick()
     frames++;
     static int angle = 0;
     meshes[0]->set_orient(glm::vec3(0, 0, angle));
-    //meshes[0]->rotate(1, glm::vec3(0, 1, 1)); // sign flip -- reaches 90 degrees vertical and enters undefined state!
-    //meshes[0]->rotate(1, glm::vec3(1, 0, 1)); // no sign flip
-    //meshes[0]->rotate(1, glm::vec3(1, 1, 0)); // no sign flip
+    //meshes[0]->rotate(1, glm::vec3(0, 1, 1));
+    //meshes[0]->rotate(1, glm::vec3(1, 0, 1));
+    //meshes[0]->rotate(1, glm::vec3(1, 1, 0));
     meshes[SEGMENT_COUNT - 1]->solve_ik_ccd(meshes[1], glm::vec3(0, 0, 1), targets[target_index], IK_ITERS, ACCEPT_DISTANCE);
     angle = (angle + 1) % 360;
 }

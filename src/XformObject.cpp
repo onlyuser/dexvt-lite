@@ -13,7 +13,6 @@ XformObject::XformObject(
         glm::vec3 scale)
     : m_origin(origin),
       m_orient(orient),
-      m_up_direction(VEC_UP),
       m_scale(scale),
       m_parent(NULL),
       m_is_dirty_xform(true),
@@ -37,14 +36,19 @@ void XformObject::set_orient(glm::vec3 orient)
     mark_dirty_xform();
 }
 
-const glm::vec3 XformObject::get_left_direction() const
+const glm::vec3 XformObject::get_left_direction()
 {
-    return glm::normalize(glm::cross(m_up_direction, get_heading()));
+    return glm::vec3(get_normal_xform() * glm::vec4(VEC_LEFT, 1));
 }
 
-const glm::vec3 XformObject::get_heading() const
+const glm::vec3 XformObject::get_up_direction()
 {
-    return orient_to_offset(m_orient);
+    return glm::vec3(get_normal_xform() * glm::vec4(VEC_UP, 1));
+}
+
+const glm::vec3 XformObject::get_heading()
+{
+    return glm::vec3(get_normal_xform() * glm::vec4(VEC_FORWARD, 1));
 }
 
 void XformObject::set_scale(glm::vec3 scale)
@@ -55,10 +59,9 @@ void XformObject::set_scale(glm::vec3 scale)
 
 void XformObject::reset_xform()
 {
-    m_origin       = glm::vec3(0);
-    m_orient       = glm::vec3(0);
-    m_up_direction = VEC_UP;
-    m_scale        = glm::vec3(1);
+    m_origin = glm::vec3(0);
+    m_orient = glm::vec3(0);
+    m_scale  = glm::vec3(1);
     mark_dirty_xform();
 }
 
@@ -139,11 +142,10 @@ void XformObject::rotate(float angle_delta, glm::vec3 pivot)
     glm::vec3 heading          = orient_to_offset(m_orient);
     glm::mat4 rotate_xform     = GLM_ROTATE(glm::mat4(1), angle_delta, local_pivot);
     glm::vec3 new_heading      = glm::vec3(rotate_xform * glm::vec4(heading, 1));
-    glm::vec3 new_up_direction = glm::vec3(rotate_xform * glm::vec4(m_up_direction, 1));
+    glm::vec3 new_up_direction = glm::vec3(rotate_xform * glm::vec4(get_up_direction(), 1));
     if(fabs(glm::angle(glm::normalize(new_up_direction), glm::normalize(new_heading))) - HALF_PI >= EPSILON) {
         new_up_direction = renormalize_up_direction(new_up_direction, new_heading);
     }
-    m_up_direction = new_up_direction;
     set_orient(offset_to_orient(new_heading, &new_up_direction));
 }
 
