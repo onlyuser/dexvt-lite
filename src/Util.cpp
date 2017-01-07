@@ -39,9 +39,9 @@ glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up_direction)
     if(static_cast<float>(fabs(offset.x)) < EPSILON && static_cast<float>(fabs(offset.z)) < EPSILON) {
         ORIENT_PITCH(orient) = 90;
         if(up_direction) {
-            glm::vec3 flattened_up_direction = glm::normalize(glm::vec3(up_direction->x, 0, up_direction->z));
+            glm::vec3 flattened_up_direction = glm::vec3(up_direction->x, 0, up_direction->z);
             glm::vec3 flattened_offset = -flattened_up_direction;
-            ORIENT_YAW(orient) = glm::degrees(glm::angle(flattened_offset, VEC_FORWARD));
+            ORIENT_YAW(orient) = glm::degrees(glm::angle(glm::normalize(flattened_offset), VEC_FORWARD));
             if(flattened_offset.x < 0) {
                 ORIENT_YAW(orient) = -fabs(ORIENT_YAW(orient));
             }

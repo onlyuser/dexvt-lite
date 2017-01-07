@@ -139,9 +139,8 @@ void XformObject::rotate(float angle_delta, glm::vec3 pivot)
     } else {
         local_pivot = pivot;
     }
-    glm::vec3 heading          = orient_to_offset(m_orient);
     glm::mat4 rotate_xform     = GLM_ROTATE(glm::mat4(1), angle_delta, local_pivot);
-    glm::vec3 new_heading      = glm::vec3(rotate_xform * glm::vec4(heading, 1));
+    glm::vec3 new_heading      = glm::vec3(rotate_xform * glm::vec4(get_heading(), 1));
     glm::vec3 new_up_direction = glm::vec3(rotate_xform * glm::vec4(get_up_direction(), 1));
     if(fabs(glm::angle(glm::normalize(new_up_direction), glm::normalize(new_heading))) - HALF_PI >= EPSILON) {
         new_up_direction = renormalize_up_direction(new_up_direction, new_heading);

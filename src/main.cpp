@@ -66,6 +66,12 @@ bool show_bbox = false;
 bool show_normals = false;
 bool show_lights = false;
 bool do_animation = true;
+bool left_key = false;
+bool right_key = false;
+bool up_key = false;
+bool down_key = false;
+bool page_up_key = false;
+bool page_down_key = false;
 
 int texture_id = 0;
 float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
@@ -211,10 +217,25 @@ void onTick()
     }
     frames++;
     static int angle = 0;
-    meshes[0]->set_orient(glm::vec3(0, 0, angle));
-    //meshes[0]->rotate(1, glm::vec3(0, 1, 1));
-    //meshes[0]->rotate(1, glm::vec3(1, 0, 1));
-    //meshes[0]->rotate(1, glm::vec3(1, 1, 0));
+    //meshes[0]->set_orient(glm::vec3(0, 0, angle));
+    if(left_key) {
+        meshes[0]->rotate(-1, meshes[0]->get_up_direction());
+    }
+    if(right_key) {
+        meshes[0]->rotate(1, meshes[0]->get_up_direction());
+    }
+    if(up_key) {
+        meshes[0]->rotate(-1, meshes[0]->get_left_direction());
+    }
+    if(down_key) {
+        meshes[0]->rotate(1, meshes[0]->get_left_direction());
+    }
+    if(page_up_key) {
+        meshes[0]->rotate(1, meshes[0]->get_heading());
+    }
+    if(page_down_key) {
+        meshes[0]->rotate(-1, meshes[0]->get_heading());
+    }
     meshes[SEGMENT_COUNT - 1]->solve_ik_ccd(meshes[1], glm::vec3(0, 0, 1), targets[target_index], IK_ITERS, ACCEPT_DISTANCE);
     angle = (angle + 1) % 360;
 }
@@ -269,13 +290,6 @@ void onKeyboard(unsigned char key, int x, int y)
                 camera->set_projection_mode(vt::Camera::PROJECTION_MODE_PERSPECTIVE);
             }
             break;
-        case 't': // target
-            {
-                size_t target_count = sizeof(targets)/sizeof(targets[0]);
-                target_index = (target_index + 1) % target_count;
-                std::cout << "target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
-            }
-            break;
         case 'w': // wireframe
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
@@ -317,10 +331,30 @@ void onSpecial(int key, int x, int y)
         case GLUT_KEY_F3:
             light3->set_enabled(!light3->get_enabled());
             break;
+        case GLUT_KEY_HOME: // target
+            {
+                size_t target_count = sizeof(targets)/sizeof(targets[0]);
+                target_index = (target_index + 1) % target_count;
+                std::cout << "target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
+            }
+            break;
         case GLUT_KEY_LEFT:
+            left_key = true;
+            break;
         case GLUT_KEY_RIGHT:
+            right_key = true;
+            break;
         case GLUT_KEY_UP:
+            up_key = true;
+            break;
         case GLUT_KEY_DOWN:
+            down_key = true;
+            break;
+        case GLUT_KEY_PAGE_UP:
+            page_up_key = true;
+            break;
+        case GLUT_KEY_PAGE_DOWN:
+            page_down_key = true;
             break;
     }
 }
@@ -328,11 +362,23 @@ void onSpecial(int key, int x, int y)
 void onSpecialUp(int key, int x, int y)
 {
     switch(key) {
-        case GLUT_KEY_F1:
         case GLUT_KEY_LEFT:
+            left_key = false;
+            break;
         case GLUT_KEY_RIGHT:
+            right_key = false;
+            break;
         case GLUT_KEY_UP:
+            up_key = false;
+            break;
         case GLUT_KEY_DOWN:
+            down_key = false;
+            break;
+        case GLUT_KEY_PAGE_UP:
+            page_up_key = false;
+            break;
+        case GLUT_KEY_PAGE_DOWN:
+            page_down_key = false;
             break;
     }
 }
