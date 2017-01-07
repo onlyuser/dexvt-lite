@@ -58,13 +58,14 @@ bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
 glm::vec3 prev_orient, orient, orbit_speed = glm::vec3(0, -0.5, -0.5);
 float prev_orbit_radius = 0, orbit_radius = 8, dolly_speed = 0.1, light_distance = 4;
-bool wireframe_mode = false;
+bool show_bbox = false;
 bool show_fps = false;
+bool show_help = false;
+bool show_lights = false;
+bool show_normals = false;
+bool wireframe_mode = false;
 bool show_axis = false;
 bool show_axis_labels = false;
-bool show_bbox = false;
-bool show_normals = false;
-bool show_lights = false;
 bool do_animation = true;
 bool left_key = false;
 bool right_key = false;
@@ -75,6 +76,8 @@ bool page_down_key = false;
 
 int texture_id = 0;
 float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
+
+int angle_delta = 1;
 
 std::vector<vt::Mesh*> meshes;
 
@@ -219,25 +222,30 @@ void onTick()
     static int angle = 0;
     //meshes[0]->set_orient(glm::vec3(0, 0, angle));
     if(left_key) {
-        meshes[0]->rotate(-1, meshes[0]->get_up_direction());
+        meshes[0]->rotate(-angle_delta, meshes[0]->get_up_direction());
     }
     if(right_key) {
-        meshes[0]->rotate(1, meshes[0]->get_up_direction());
+        meshes[0]->rotate(angle_delta, meshes[0]->get_up_direction());
     }
     if(up_key) {
-        meshes[0]->rotate(-1, meshes[0]->get_left_direction());
+        meshes[0]->rotate(-angle_delta, meshes[0]->get_left_direction());
     }
     if(down_key) {
-        meshes[0]->rotate(1, meshes[0]->get_left_direction());
+        meshes[0]->rotate(angle_delta, meshes[0]->get_left_direction());
     }
     if(page_up_key) {
-        meshes[0]->rotate(1, meshes[0]->get_heading());
+        meshes[0]->rotate(angle_delta, meshes[0]->get_heading());
     }
     if(page_down_key) {
-        meshes[0]->rotate(-1, meshes[0]->get_heading());
+        meshes[0]->rotate(-angle_delta, meshes[0]->get_heading());
     }
     meshes[SEGMENT_COUNT - 1]->solve_ik_ccd(meshes[1], glm::vec3(0, 0, 1), targets[target_index], IK_ITERS, ACCEPT_DISTANCE);
-    angle = (angle + 1) % 360;
+    angle = (angle + angle_delta) % 360;
+}
+
+char* get_help_string()
+{
+    return const_cast<char*>("HUD text");
 }
 
 void onDisplay()
@@ -256,8 +264,8 @@ void onDisplay()
         scene->render();
     }
 
-    if(show_axis || show_axis_labels || show_bbox || show_normals) {
-        scene->render_lines(show_axis, show_axis_labels, show_bbox, show_normals);
+    if(show_axis || show_axis_labels || show_bbox || show_normals || show_help) {
+        scene->render_lines(show_axis, show_axis_labels, show_bbox, show_normals, show_help, get_help_string());
     }
     if(show_lights) {
         scene->render_lights();
@@ -276,6 +284,9 @@ void onKeyboard(unsigned char key, int x, int y)
             if(!show_fps) {
                 glutSetWindowTitle(DEFAULT_CAPTION);
             }
+            break;
+        case 'h': // help
+            show_help = !show_help;
             break;
         case 'l': // lights
             show_lights = !show_lights;
@@ -417,10 +428,10 @@ void onMotion(int x, int y)
     }
     if(right_mouse_down) {
         if(camera->get_projection_mode() == vt::Camera::PROJECTION_MODE_PERSPECTIVE) {
-            orbit_radius = prev_orbit_radius + mouse_drag.y*dolly_speed;
+            orbit_radius = prev_orbit_radius + mouse_drag.y * dolly_speed;
             camera->orbit(orient, orbit_radius);
         } else if (camera->get_projection_mode() == vt::Camera::PROJECTION_MODE_ORTHO) {
-            zoom = prev_zoom + mouse_drag.y*ortho_dolly_speed;
+            zoom = prev_zoom + mouse_drag.y * ortho_dolly_speed;
             camera->set_zoom(&zoom);
         }
     }
@@ -429,6 +440,7 @@ void onMotion(int x, int y)
 void onReshape(int width, int height)
 {
     camera->resize(0, 0, width, height);
+    glViewport(0, 0, width, height);
 }
 
 int main(int argc, char* argv[])

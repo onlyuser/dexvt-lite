@@ -357,13 +357,19 @@ void Scene::render(
     }
 }
 
-void Scene::render_lines(bool draw_axis, bool draw_axis_labels, bool draw_bbox, bool draw_normals) const
+void Scene::render_lines(bool draw_axis,
+                         bool draw_axis_labels,
+                         bool draw_bbox,
+                         bool draw_normals,
+                         bool draw_hud_text,
+                         char* hud_text) const
 {
     const float axis_surface_distance = 0.05;
     const float axis_arm_length       = 0.25;
     const float up_arm_length         = 0.5;
 
     glUseProgram(0);
+
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(glm::value_ptr(m_camera->get_projection_xform()));
     glMatrixMode(GL_MODELVIEW);
@@ -373,8 +379,7 @@ void Scene::render_lines(bool draw_axis, bool draw_axis_labels, bool draw_bbox, 
             continue;
         }
 
-        glm::mat4 model_xform2 = m_camera->get_xform();
-        glLoadMatrixf(glm::value_ptr(model_xform2));
+        glLoadMatrixf(glm::value_ptr(m_camera->get_xform()));
         glBegin(GL_LINES);
 
         if(draw_axis) {
@@ -390,8 +395,7 @@ void Scene::render_lines(bool draw_axis, bool draw_axis_labels, bool draw_bbox, 
 
         glEnd();
 
-        glm::mat4 model_xform = m_camera->get_xform() * (*p)->get_xform();
-        glLoadMatrixf(glm::value_ptr(model_xform));
+        glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
         glBegin(GL_LINES);
 
         if(draw_axis) {
@@ -534,6 +538,31 @@ void Scene::render_lines(bool draw_axis, bool draw_axis_labels, bool draw_bbox, 
         }
     }
     glPopMatrix();
+
+    if(draw_hud_text) {
+        glMatrixMode(GL_PROJECTION);
+        Camera::projection_mode_t prev_projection_mode = m_camera->get_projection_mode();
+        m_camera->set_projection_mode(Camera::PROJECTION_MODE_ORTHO);
+        glLoadMatrixf(glm::value_ptr(m_camera->get_projection_xform()));
+        m_camera->set_projection_mode(prev_projection_mode);
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glm::vec2 dim(m_camera->get_width(), m_camera->get_height());
+        float aspect_ratio = m_camera->get_aspect_ratio();
+        float half_width  = 0.45;
+        float half_height = 0.45;
+        if(dim.y < dim.x) {
+            half_width *= aspect_ratio;
+        }
+        if(dim.x < dim.y) {
+            half_height /= aspect_ratio;
+        }
+        glLoadMatrixf(glm::value_ptr(glm::translate(glm::mat4(1), glm::vec3(-half_width, half_height, 0)) * m_camera->get_xform()));
+        glColor3f(1, 1, 1);
+        glRasterPos2f(0, 0);
+        print_bitmap_string(GLUT_BITMAP_TIMES_ROMAN_10, hud_text);
+        glPopMatrix();
+    }
 }
 
 void Scene::render_lights() const
@@ -547,8 +576,7 @@ void Scene::render_lights() const
     glPushMatrix();
     glColor3f(1, 1, 0);
     for(lights_t::const_iterator p = m_lights.begin(); p != m_lights.end(); p++) {
-        glm::mat4 model_xform = m_camera->get_xform()*(*p)->get_xform();
-        glLoadMatrixf(glm::value_ptr(model_xform));
+        glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
         glutWireSphere(light_radius, 4, 2);
     }
 }

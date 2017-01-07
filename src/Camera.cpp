@@ -165,11 +165,11 @@ const glm::mat4 &Camera::get_projection_xform()
 void Camera::update_projection_xform()
 {
     if(m_projection_mode == PROJECTION_MODE_PERSPECTIVE) {
-        m_projection_xform = glm::perspective(m_fov, static_cast<float>(m_dim.x)/m_dim.y, m_near_plane, m_far_plane);
+        m_projection_xform = glm::perspective(m_fov, static_cast<float>(m_dim.x) / m_dim.y, m_near_plane, m_far_plane);
     } else if(m_projection_mode == PROJECTION_MODE_ORTHO) {
-        float aspect_ratio = static_cast<float>(m_dim.x)/m_dim.y;
-        float half_width  = m_ortho_dim.x*0.5*m_zoom;
-        float half_height = m_ortho_dim.x*0.5*m_zoom;
+        float aspect_ratio = get_aspect_ratio();
+        float half_width  = m_ortho_dim.x * 0.5 * m_zoom;
+        float half_height = m_ortho_dim.x * 0.5 * m_zoom;
         if(m_dim.y < m_dim.x) {
             half_width *= aspect_ratio;
         }
@@ -186,9 +186,8 @@ void Camera::update_projection_xform()
 
 void Camera::update_xform()
 {
-    static glm::vec3 up = glm::vec3(0, 1, 0);
-    m_xform = glm::lookAt(m_origin, m_target, up);
-    m_orient = offset_to_orient(m_target-m_origin);
+    m_xform = glm::lookAt(m_origin, m_target, VEC_UP);
+    m_orient = offset_to_orient(m_target - m_origin);
 }
 
 }

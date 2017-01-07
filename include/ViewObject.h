@@ -33,6 +33,10 @@ public:
     {
         return m_dim.y;
     }
+    float get_aspect_ratio() const
+    {
+        return static_cast<float>(m_dim.x) / m_dim.y;
+    }
     void resize(T2 left, T2 bottom, T2 width, T2 height)
     {
         m_offset.x = left;
