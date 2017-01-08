@@ -2,9 +2,11 @@
 #define VT_UTIL_H_
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <glm/glm.hpp>
 #include <vector>
 #include <string>
+#include <iostream>
 
 #define EPSILON 0.0001
 

@@ -131,20 +131,9 @@ void XformObject::point_at(glm::vec3 target)
 
 void XformObject::rotate(float angle_delta, glm::vec3 pivot)
 {
-    glm::vec3 local_pivot;
-    if(m_parent) {
-        glm::mat4 inv_parent_xform = glm::inverse(m_parent->get_xform());
-        local_pivot = glm::vec3(inv_parent_xform * glm::vec4(pivot, 1)) -
-                      glm::vec3(inv_parent_xform * glm::vec4(glm::vec3(0), 1));
-    } else {
-        local_pivot = pivot;
-    }
-    glm::mat4 rotate_xform     = GLM_ROTATE(glm::mat4(1), angle_delta, local_pivot);
+    glm::mat4 rotate_xform     = GLM_ROTATE(glm::mat4(1), angle_delta, pivot);
     glm::vec3 new_heading      = glm::vec3(rotate_xform * glm::vec4(get_heading(), 1));
     glm::vec3 new_up_direction = glm::vec3(rotate_xform * glm::vec4(get_up_direction(), 1));
-    if(fabs(glm::angle(glm::normalize(new_up_direction), glm::normalize(new_heading)) - HALF_PI) >= EPSILON) {
-        new_up_direction = renormalize_up_direction(new_up_direction, new_heading);
-    }
     set_orient(offset_to_orient(new_heading, &new_up_direction));
 }
 
@@ -177,6 +166,9 @@ bool XformObject::solve_ik_ccd(
             glm::vec3 heading                       = orient_to_offset(current_segment->get_orient());
             glm::vec3 new_heading                   = glm::vec3(GLM_ROTATE(glm::mat4(1), -angle_delta, local_pivot) * glm::vec4(heading, 1));
             current_segment->set_orient(offset_to_orient(new_heading));
+            //glm::vec3 global_pivot = glm::vec3(current_segment->get_normal_xform() * glm::vec4(local_pivot, 1));
+            //current_segment->rotate(-angle_delta, global_pivot);
+            //std::cout << angle_delta << ", " << glm::to_string(local_pivot) << std::endl;
 #elif 0
             // attempt #2 -- do rotations in Euler coordinates with special handling for angle loop-around
             glm::vec3 local_target_orient           = offset_to_orient(glm::vec3(current_segment_inverse_xform * glm::vec4(target, 1)));

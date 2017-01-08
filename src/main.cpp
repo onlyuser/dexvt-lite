@@ -253,9 +253,7 @@ void onDisplay()
     if(do_animation) {
         onTick();
     }
-
     vt::Scene* scene = vt::Scene::instance();
-
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     if(wireframe_mode) {
@@ -263,9 +261,8 @@ void onDisplay()
     } else {
         scene->render();
     }
-
     if(show_axis || show_axis_labels || show_bbox || show_normals || show_help) {
-        scene->render_lines(show_axis, show_axis_labels, show_bbox, show_normals, show_help, get_help_string());
+        scene->render_lines_and_text(show_axis, show_axis_labels, show_bbox, show_normals, show_help, get_help_string());
     }
     if(show_lights) {
         scene->render_lights();

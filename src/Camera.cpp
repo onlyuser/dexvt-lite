@@ -81,14 +81,22 @@ void Camera::move(glm::vec3 origin, glm::vec3 target)
 
 void Camera::orbit(glm::vec3 &orient, float &radius)
 {
-    if(ORIENT_PITCH(orient) > MAX_PITCH) ORIENT_PITCH(orient) = MAX_PITCH;
-    if(ORIENT_PITCH(orient) < MIN_PITCH) ORIENT_PITCH(orient) = MIN_PITCH;
-    if(ORIENT_YAW(orient) > 360)         ORIENT_YAW(orient) -= 360;
-    if(ORIENT_YAW(orient) < 0)           ORIENT_YAW(orient) += 360;
+    if(ORIENT_PITCH(orient) > MAX_PITCH) {
+        ORIENT_PITCH(orient) = MAX_PITCH;
+    }
+    if(ORIENT_PITCH(orient) < MIN_PITCH) {
+        ORIENT_PITCH(orient) = MIN_PITCH;
+    }
+    if(ORIENT_YAW(orient) > 360) {
+        ORIENT_YAW(orient) -= 360;
+    }
+    if(ORIENT_YAW(orient) < 0) {
+        ORIENT_YAW(orient) += 360;
+    }
     if(radius < 0) {
         radius = 0;
     }
-    m_origin = m_target+orient_to_offset(orient)*radius;
+    m_origin = m_target + orient_to_offset(orient)*radius;
     mark_dirty_xform();
 }
 

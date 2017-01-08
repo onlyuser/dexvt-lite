@@ -357,7 +357,7 @@ void Scene::render(
     }
 }
 
-void Scene::render_lines(bool draw_axis,
+void Scene::render_lines_and_text(bool draw_axis,
                          bool draw_axis_labels,
                          bool draw_bbox,
                          bool draw_normals,
@@ -367,6 +367,8 @@ void Scene::render_lines(bool draw_axis,
     const float axis_surface_distance = 0.05;
     const float axis_arm_length       = 0.25;
     const float up_arm_length         = 0.5;
+
+    glDisable(GL_DEPTH_TEST);
 
     glUseProgram(0);
 
@@ -534,7 +536,7 @@ void Scene::render_lines(bool draw_axis,
 #endif
             glColor3f(1, 1, 1);
             glRasterPos2f(0, 0);
-            print_bitmap_string(GLUT_BITMAP_TIMES_ROMAN_10, axis_label.c_str());
+            print_bitmap_string(GLUT_BITMAP_HELVETICA_18, axis_label.c_str());
         }
     }
     glPopMatrix();
@@ -560,9 +562,11 @@ void Scene::render_lines(bool draw_axis,
         glLoadMatrixf(glm::value_ptr(glm::translate(glm::mat4(1), glm::vec3(-half_width, half_height, 0)) * m_camera->get_xform()));
         glColor3f(1, 1, 1);
         glRasterPos2f(0, 0);
-        print_bitmap_string(GLUT_BITMAP_TIMES_ROMAN_10, hud_text);
+        print_bitmap_string(GLUT_BITMAP_HELVETICA_18, hud_text);
         glPopMatrix();
     }
+
+    glEnable(GL_DEPTH_TEST);
 }
 
 void Scene::render_lights() const
