@@ -386,11 +386,10 @@ void Scene::render_lines_and_text(bool draw_axis,
 
         if(draw_axis) {
             {
-                glm::mat4 translate_xform = glm::translate(glm::mat4(1), glm::vec3((*p)->get_xform() * glm::vec4(glm::vec3(0), 1)));
                 glColor3f(1, 1, 1);
-                glm::vec3 origin = glm::vec3(translate_xform * glm::vec4(glm::vec3(0), 1));
+                glm::vec3 origin = glm::vec3((*p)->get_xform() * glm::vec4(glm::vec3(0), 1));
                 glVertex3fv(&origin.x);
-                glm::vec3 up_endpoint = glm::vec3(translate_xform * glm::vec4((*p)->get_up_direction() * up_arm_length, 1));
+                glm::vec3 up_endpoint = glm::vec3((*p)->get_xform() * glm::vec4(VEC_UP * up_arm_length, 1));
                 glVertex3fv(&up_endpoint.x);
             }
         }
