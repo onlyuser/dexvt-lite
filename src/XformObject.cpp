@@ -156,7 +156,7 @@ bool XformObject::solve_ik_ccd(
                 return true;
             }
             glm::mat4 current_segment_inverse_xform = glm::inverse(current_segment->get_xform());
-#if 0
+#if 1
             // attempt #4 -- same as attempt #3, but make use of roll component for each segment (less stable for some reason!)
             glm::vec3 local_target_dir             = glm::normalize(glm::vec3(current_segment_inverse_xform * glm::vec4(target, 1)));
             glm::vec3 local_end_effector_tip_dir   = glm::normalize(glm::vec3(current_segment_inverse_xform * glm::vec4(end_effector_tip, 1)));

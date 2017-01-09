@@ -43,7 +43,7 @@
 #include <iomanip> // std::setprecision
 
 #define SEGMENT_COUNT   6
-#define IK_ITERS        10
+#define IK_ITERS        100
 #define ACCEPT_DISTANCE 0.1
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
@@ -73,6 +73,7 @@ bool up_key = false;
 bool down_key = false;
 bool page_up_key = false;
 bool page_down_key = false;
+bool ik_changed = false;
 
 int texture_id = 0;
 float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
@@ -223,23 +224,32 @@ void onTick()
     //meshes[0]->set_orient(glm::vec3(0, 0, angle));
     if(left_key) {
         meshes[0]->rotate(-angle_delta, meshes[0]->get_up_direction());
+        ik_changed = true;
     }
     if(right_key) {
         meshes[0]->rotate(angle_delta, meshes[0]->get_up_direction());
+        ik_changed = true;
     }
     if(up_key) {
         meshes[0]->rotate(-angle_delta, meshes[0]->get_left_direction());
+        ik_changed = true;
     }
     if(down_key) {
         meshes[0]->rotate(angle_delta, meshes[0]->get_left_direction());
+        ik_changed = true;
     }
     if(page_up_key) {
         meshes[0]->rotate(angle_delta, meshes[0]->get_heading());
+        ik_changed = true;
     }
     if(page_down_key) {
         meshes[0]->rotate(-angle_delta, meshes[0]->get_heading());
+        ik_changed = true;
     }
-    meshes[SEGMENT_COUNT - 1]->solve_ik_ccd(meshes[1], glm::vec3(0, 0, 1), targets[target_index], IK_ITERS, ACCEPT_DISTANCE);
+    if(ik_changed) {
+        meshes[SEGMENT_COUNT - 1]->solve_ik_ccd(meshes[1], glm::vec3(0, 0, 1), targets[target_index], IK_ITERS, ACCEPT_DISTANCE);
+        ik_changed = false;
+    }
     angle = (angle + angle_delta) % 360;
 }
 
@@ -344,6 +354,7 @@ void onSpecial(int key, int x, int y)
                 size_t target_count = sizeof(targets)/sizeof(targets[0]);
                 target_index = (target_index + 1) % target_count;
                 std::cout << "target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
+                ik_changed = true;
             }
             break;
         case GLUT_KEY_LEFT:
