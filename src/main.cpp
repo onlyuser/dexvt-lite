@@ -73,7 +73,7 @@ bool up_key = false;
 bool down_key = false;
 bool page_up_key = false;
 bool page_down_key = false;
-bool ik_changed = false;
+bool ik_changed = true;
 
 int texture_id = 0;
 float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
