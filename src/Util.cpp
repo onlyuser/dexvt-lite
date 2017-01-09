@@ -76,13 +76,6 @@ glm::vec3 offset_to_orient(glm::vec3 offset)
     return offset_to_orient(offset, NULL);
 }
 
-glm::vec3 renormalize_up_direction(glm::vec3 up_direction, glm::vec3 heading)
-{
-    heading = glm::normalize(heading);
-    glm::vec3 left_direction = glm::cross(glm::normalize(up_direction), heading);
-    return glm::normalize(glm::cross(heading, glm::normalize(left_direction)));
-}
-
 glm::vec3 orient_modulo(glm::vec3 orient)
 {
     float yaw   = ORIENT_YAW(orient);

@@ -52,7 +52,7 @@ public:
     void rotate(float angle_delta, glm::vec3 pivot);
     bool solve_ik_ccd(
         XformObject* root,
-        glm::vec3    end_effector_tip_local_offset,
+        glm::vec3    local_end_effector_tip,
         glm::vec3    target,
         int          iters,
         float        accept_distance);
