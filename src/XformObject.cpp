@@ -157,7 +157,7 @@ bool XformObject::solve_ik_ccd(
             }
             glm::mat4 current_segment_inverse_xform = glm::inverse(current_segment->get_xform());
 #if 1
-            // attempt #4 -- same as attempt #3, but make use of roll component for each segment (less stable for some reason!)
+            // attempt #4 -- same as attempt #3, but make use of roll component for each segment (less stable)
             glm::vec3 local_target_dir             = glm::normalize(glm::vec3(current_segment_inverse_xform * glm::vec4(target, 1)));
             glm::vec3 local_end_effector_tip_dir   = glm::normalize(glm::vec3(current_segment_inverse_xform * glm::vec4(end_effector_tip, 1)));
             glm::vec3 local_arc_dir                = glm::normalize(local_target_dir - local_end_effector_tip_dir);
@@ -166,9 +166,9 @@ bool XformObject::solve_ik_ccd(
             float     angle_delta                  = glm::degrees(glm::angle(local_target_dir, local_end_effector_tip_dir));
             glm::vec3 current_segment_orient       = current_segment->get_orient();
             glm::mat4 current_segment_rotate_xform =
-                    GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_YAW(current_segment_orient)),   VEC_UP) *     // Y axis
-                    GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_PITCH(current_segment_orient)), VEC_LEFT) *   // X axis
-                    GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_ROLL(current_segment_orient)),  VEC_FORWARD); // Z axis
+                    GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_YAW(current_segment_orient)),   VEC_UP) *
+                    GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_PITCH(current_segment_orient)), VEC_LEFT) *
+                    GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_ROLL(current_segment_orient)),  VEC_FORWARD);
             glm::vec3 current_segment_heading          = glm::vec3(current_segment_rotate_xform * glm::vec4(VEC_FORWARD, 1));
             glm::vec3 current_segment_up_direction     = glm::vec3(current_segment_rotate_xform * glm::vec4(VEC_UP, 1));
             glm::mat4 local_arc_rotate_xform           = GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot);

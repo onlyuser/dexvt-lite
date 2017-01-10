@@ -43,7 +43,7 @@
 #include <iomanip> // std::setprecision
 
 #define SEGMENT_COUNT   6
-#define IK_ITERS        100
+#define IK_ITERS        50
 #define ACCEPT_DISTANCE 0.1
 
 const char* DEFAULT_CAPTION = "My Textured Cube";

@@ -24,8 +24,8 @@ Mesh* PrimitiveFactory::create_grid(
         float       tex_width_scale,
         float       tex_length_scale)
 {
-    int        num_vertex = (rows + 1)*(cols + 1);
-    int        num_tri    = rows*cols*2;
+    int        num_vertex = (rows + 1) * (cols + 1);
+    int        num_tri    = rows * cols * 2;
     MeshIFace* mesh       = alloc_meshiface(name, num_vertex, num_tri);
 
     // ==============================
@@ -36,9 +36,9 @@ Mesh* PrimitiveFactory::create_grid(
     for(int row = 0; row <= rows; row++) {
         for(int col = 0; col <= cols; col++) {
             mesh->set_vert_coord( vert_index, glm::vec3(
-                    width*(static_cast<float>(col)/cols),
+                    width * (static_cast<float>(col) / cols),
                     0,
-                    length*(1 - static_cast<float>(row)/rows)));
+                    length * (1 - static_cast<float>(row) / rows)));
             mesh->set_vert_normal( vert_index, glm::vec3(0, 1, 0));
             mesh->set_vert_tangent(vert_index, glm::vec3(1, 0, 0));
             vert_index++;
@@ -53,8 +53,8 @@ Mesh* PrimitiveFactory::create_grid(
     for(int row = 0; row <= rows; row++) {
         for(int col = 0; col <= cols; col++) {
             mesh->set_tex_coord(tex_vert_index++, glm::vec2(
-                    static_cast<float>(col)/cols/tex_width_scale,
-                    1 - static_cast<float>(row)/rows/tex_length_scale));
+                    static_cast<float>(col) / cols / tex_width_scale,
+                    1 - static_cast<float>(row) / rows / tex_length_scale));
         }
     }
 
@@ -65,9 +65,9 @@ Mesh* PrimitiveFactory::create_grid(
     int tri_index = 0;
     for(int row = 0; row < rows; row++) {
         for(int col = 0; col < cols; col++) {
-            int lower_left  = row*(cols + 1) + col;
+            int lower_left  = row * (cols + 1) + col;
             int lower_right = lower_left + 1;
-            int upper_left  = (row + 1)*(cols + 1) + col;
+            int upper_left  = (row + 1) * (cols + 1) + col;
             int upper_right = upper_left + 1;
             mesh->set_tri_indices(tri_index++, glm::uvec3(lower_left, lower_right, upper_right));
             mesh->set_tri_indices(tri_index++, glm::uvec3(upper_right, upper_left, lower_left));
@@ -100,15 +100,15 @@ Mesh* PrimitiveFactory::create_sphere(
         for(int col = 0; col <= cols; col++) {
             glm::vec3 normal = orient_to_offset(glm::vec3(
                     0,
-                    -(static_cast<float>(row)/rows*180-90), // pitch
-                    static_cast<float>(col)/cols*360));     // yaw
-            glm::vec3 offset = normal*radius;
+                    -(static_cast<float>(row) / rows * 180 - 90), // pitch
+                    static_cast<float>(col) / cols * 360));       // yaw
+            glm::vec3 offset = normal * radius;
             mesh->set_vert_coord(  vert_index, offset);
             mesh->set_vert_normal( vert_index, glm::normalize(offset));
             mesh->set_vert_tangent(vert_index, orient_to_offset(glm::vec3(
                     0,
-                    0,                                      // pitch
-                    static_cast<float>(col)/cols*360+90))); // yaw
+                    0,                                            // pitch
+                    static_cast<float>(col) / cols * 360 + 90))); // yaw
             vert_index++;
         }
     }
@@ -125,7 +125,7 @@ Mesh* PrimitiveFactory::create_hemisphere(
         float       radius)
 {
     int        cols = slices;
-    int        rows = stacks*0.5 + 2;
+    int        rows = stacks * 0.5 + 2;
     MeshIFace* mesh = _meshiface(create_grid(name, cols, rows));
 
     // ==============================
@@ -144,8 +144,8 @@ Mesh* PrimitiveFactory::create_hemisphere(
                     {
                         glm::vec3 offset = orient_to_offset(glm::vec3(
                                 0,
-                                (row == 1) ? 0 : -(static_cast<float>(row - 2)/(rows - 2)*90), // pitch
-                                static_cast<float>(col)/cols*360))                             // yaw
+                                (row == 1) ? 0 : -(static_cast<float>(row - 2) / (rows - 2) * 90), // pitch
+                                static_cast<float>(col) / cols * 360))                             // yaw
                                 *radius;
                         mesh->set_vert_coord( vert_index, offset);
                         mesh->set_vert_normal(vert_index, (row == 1) ?
@@ -155,8 +155,8 @@ Mesh* PrimitiveFactory::create_hemisphere(
             }
             mesh->set_vert_tangent(vert_index, orient_to_offset(glm::vec3(
                     0,
-                    0,                                      // pitch
-                    static_cast<float>(col)/cols*360+90))); // yaw
+                    0,                                            // pitch
+                    static_cast<float>(col) / cols * 360 + 90))); // yaw
             vert_index++;
         }
     }
@@ -193,8 +193,8 @@ Mesh* PrimitiveFactory::create_cylinder(
                     {
                         glm::vec3 offset = orient_to_offset(glm::vec3(
                                 0,
-                                0,                                 // pitch
-                                static_cast<float>(col)/cols*360)) // yaw
+                                0,                                     // pitch
+                                static_cast<float>(col) / cols * 360)) // yaw
                                 *radius;
                         mesh->set_vert_coord( vert_index, glm::vec3(offset.x, 0, offset.z));
                         mesh->set_vert_normal(vert_index, (row == 1) ?
@@ -206,8 +206,8 @@ Mesh* PrimitiveFactory::create_cylinder(
                     {
                         glm::vec3 offset = orient_to_offset(glm::vec3(
                                 0,
-                                0,                                 // pitch
-                                static_cast<float>(col)/cols*360)) // yaw
+                                0,                                     // pitch
+                                static_cast<float>(col) / cols * 360)) // yaw
                                 *radius;
                         mesh->set_vert_coord( vert_index, glm::vec3(offset.x, height, offset.z));
                         mesh->set_vert_normal(vert_index, (row == 4) ?
@@ -221,8 +221,8 @@ Mesh* PrimitiveFactory::create_cylinder(
             }
             mesh->set_vert_tangent(vert_index, orient_to_offset(glm::vec3(
                     0,
-                    0,                                      // pitch
-                    static_cast<float>(col)/cols*360+90))); // yaw
+                    0,                                            // pitch
+                    static_cast<float>(col) / cols * 360 + 90))); // yaw
             vert_index++;
         }
     }
@@ -246,7 +246,7 @@ Mesh* PrimitiveFactory::create_cone(
     // init mesh vertex/normal coords
     // ==============================
 
-    float rim_y_offset = radius*sin(HALF_PI-atan(height/radius));
+    float rim_y_offset = radius * sin(HALF_PI - atan(height / radius));
     int vert_index = 0;
     for(int row = 0; row <= rows; row++) {
         for(int col = 0; col <= cols; col++) {
@@ -260,30 +260,30 @@ Mesh* PrimitiveFactory::create_cone(
                     {
                         glm::vec3 offset = orient_to_offset(glm::vec3(
                                 0,
-                                0,                                 // pitch
-                                static_cast<float>(col)/cols*360)) // yaw
+                                0,                                     // pitch
+                                static_cast<float>(col) / cols * 360)) // yaw
                                 *radius;
                         mesh->set_vert_coord( vert_index, offset);
                         mesh->set_vert_normal(vert_index, (row == 1) ?
-                                glm::vec3(0, -1, 0) : glm::normalize(offset+glm::vec3(0, rim_y_offset, 0)));
+                                glm::vec3(0, -1, 0) : glm::normalize(offset + glm::vec3(0, rim_y_offset, 0)));
                     }
                     break;
                 case 3: // tip
                     {
                         glm::vec3 offset = orient_to_offset(glm::vec3(
                                 0,
-                                0,                                 // pitch
-                                static_cast<float>(col)/cols*360)) // yaw
+                                0,                                     // pitch
+                                static_cast<float>(col) / cols * 360)) // yaw
                                 *radius;
                         mesh->set_vert_coord( vert_index, glm::vec3(0, height, 0));
-                        mesh->set_vert_normal(vert_index, glm::normalize(offset+glm::vec3(0, rim_y_offset, 0)));
+                        mesh->set_vert_normal(vert_index, glm::normalize(offset + glm::vec3(0, rim_y_offset, 0)));
                     }
                     break;
             }
             mesh->set_vert_tangent(vert_index, orient_to_offset(glm::vec3(
                     0,
-                    0,                                      // pitch
-                    static_cast<float>(col)/cols*360+90))); // yaw
+                    0,                                            // pitch
+                    static_cast<float>(col) / cols * 360 + 90))); // yaw
             vert_index++;
         }
     }
@@ -313,18 +313,18 @@ Mesh* PrimitiveFactory::create_torus(
         for(int col = 0; col <= cols; col++) {
             glm::vec3 normal_major = orient_to_offset(glm::vec3(
                     0,
-                    0,                                  // pitch
-                    static_cast<float>(col)/cols*360)); // yaw
+                    0,                                      // pitch
+                    static_cast<float>(col) / cols * 360)); // yaw
             glm::vec3 normal_minor = orient_to_offset(glm::vec3(
                     0,
-                    -(static_cast<float>(row)/rows*360-180), // pitch
-                    static_cast<float>(col)/cols*360));      // yaw
-            mesh->set_vert_coord(  vert_index, normal_major*radius_major+normal_minor*radius_minor);
+                    -(static_cast<float>(row) / rows * 360 - 180), // pitch
+                    static_cast<float>(col) / cols * 360));        // yaw
+            mesh->set_vert_coord(  vert_index, normal_major * radius_major + normal_minor * radius_minor);
             mesh->set_vert_normal( vert_index, normal_minor);
             mesh->set_vert_tangent(vert_index, orient_to_offset(glm::vec3(
                     0,
-                    0,                                      // pitch
-                    static_cast<float>(col)/cols*360+90))); // yaw
+                    0,                                            // pitch
+                    static_cast<float>(col) / cols * 360 + 90))); // yaw
             vert_index++;
         }
     }
@@ -351,9 +351,9 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_vert_coord(1, glm::vec3(0, 0, 1));
     mesh->set_vert_coord(2, glm::vec3(0, 1, 1));
     mesh->set_vert_coord(3, glm::vec3(0, 1, 0));
-    for(int i=0; i<4; i++) {
-        mesh->set_vert_normal( 0*4+i, glm::vec3(-1, 0, 0));
-        mesh->set_vert_tangent(0*4+i, glm::vec3( 0, 0, 1));
+    for(int i = 0; i < 4; i++) {
+        mesh->set_vert_normal( 0 * 4 + i, glm::vec3( - 1, 0, 0));
+        mesh->set_vert_tangent(0 * 4 + i, glm::vec3( 0, 0, 1));
     }
 
     // front
@@ -361,9 +361,9 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_vert_coord(5, glm::vec3(1, 0, 1));
     mesh->set_vert_coord(6, glm::vec3(1, 1, 1));
     mesh->set_vert_coord(7, glm::vec3(0, 1, 1));
-    for(int i=0; i<4; i++) {
-        mesh->set_vert_normal( 1*4+i, glm::vec3(0, 0, 1));
-        mesh->set_vert_tangent(1*4+i, glm::vec3(1, 0, 0));
+    for(int i = 0; i < 4; i++) {
+        mesh->set_vert_normal( 1 * 4 + i, glm::vec3(0, 0, 1));
+        mesh->set_vert_tangent(1 * 4 + i, glm::vec3(1, 0, 0));
     }
 
     // left
@@ -371,9 +371,9 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_vert_coord( 9, glm::vec3(1, 0, 0));
     mesh->set_vert_coord(10, glm::vec3(1, 1, 0));
     mesh->set_vert_coord(11, glm::vec3(1, 1, 1));
-    for(int i=0; i<4; i++) {
-        mesh->set_vert_normal( 2*4+i, glm::vec3(1, 0,  0));
-        mesh->set_vert_tangent(2*4+i, glm::vec3(0, 0, -1));
+    for(int i = 0; i < 4; i++) {
+        mesh->set_vert_normal( 2 * 4 + i, glm::vec3(1, 0,  0));
+        mesh->set_vert_tangent(2 * 4 + i, glm::vec3(0, 0, -1));
     }
 
     // back
@@ -381,9 +381,9 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_vert_coord(13, glm::vec3(0, 0, 0));
     mesh->set_vert_coord(14, glm::vec3(0, 1, 0));
     mesh->set_vert_coord(15, glm::vec3(1, 1, 0));
-    for(int i=0; i<4; i++) {
-        mesh->set_vert_normal( 3*4+i, glm::vec3( 0, 0, -1));
-        mesh->set_vert_tangent(3*4+i, glm::vec3(-1, 0,  0));
+    for(int i = 0; i < 4; i++) {
+        mesh->set_vert_normal( 3 * 4 + i, glm::vec3( 0, 0, -1));
+        mesh->set_vert_tangent(3 * 4 + i, glm::vec3( - 1, 0,  0));
     }
 
     // top
@@ -391,9 +391,9 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_vert_coord(17, glm::vec3(0, 1, 0));
     mesh->set_vert_coord(18, glm::vec3(0, 1, 1));
     mesh->set_vert_coord(19, glm::vec3(1, 1, 1));
-    for(int i=0; i<4; i++) {
-        mesh->set_vert_normal( 4*4+i, glm::vec3( 0, 1, 0));
-        mesh->set_vert_tangent(4*4+i, glm::vec3(-1, 0, 0));
+    for(int i = 0; i < 4; i++) {
+        mesh->set_vert_normal( 4 * 4 + i, glm::vec3( 0, 1, 0));
+        mesh->set_vert_tangent(4 * 4 + i, glm::vec3( - 1, 0, 0));
     }
 
     // bottom
@@ -401,14 +401,14 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_vert_coord(21, glm::vec3(1, 0, 0));
     mesh->set_vert_coord(22, glm::vec3(1, 0, 1));
     mesh->set_vert_coord(23, glm::vec3(0, 0, 1));
-    for(int i=0; i<4; i++) {
-        mesh->set_vert_normal( 5*4+i, glm::vec3(0, -1, 0));
-        mesh->set_vert_tangent(5*4+i, glm::vec3(1,  0, 0));
+    for(int i = 0; i < 4; i++) {
+        mesh->set_vert_normal( 5 * 4 + i, glm::vec3(0, -1, 0));
+        mesh->set_vert_tangent(5 * 4 + i, glm::vec3(1,  0, 0));
     }
 
     glm::mat4 scale_xform = glm::scale(glm::mat4(1), glm::vec3(width, height, length));
-    for(int i=1; i<static_cast<int>(mesh->get_num_vertex()); i++) {
-        mesh->set_vert_coord(i, glm::vec3(glm::vec4(mesh->get_vert_coord(i), 1)*scale_xform));
+    for(int i = 1; i < static_cast<int>(mesh->get_num_vertex()); i++) {
+        mesh->set_vert_coord(i, glm::vec3(glm::vec4(mesh->get_vert_coord(i), 1) * scale_xform));
     }
 
     // ========================
@@ -421,11 +421,11 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_tex_coord(2, glm::vec2(1, 1));
     mesh->set_tex_coord(3, glm::vec2(0, 1));
 
-    for(int i=1; i<6; i++) {
-        mesh->set_tex_coord(i*4 + 0, mesh->get_tex_coord(0));
-        mesh->set_tex_coord(i*4 + 1, mesh->get_tex_coord(1));
-        mesh->set_tex_coord(i*4 + 2, mesh->get_tex_coord(2));
-        mesh->set_tex_coord(i*4+3, mesh->get_tex_coord(3));
+    for(int i = 1; i < 6; i++) {
+        mesh->set_tex_coord(i * 4 + 0, mesh->get_tex_coord(0));
+        mesh->set_tex_coord(i * 4 + 1, mesh->get_tex_coord(1));
+        mesh->set_tex_coord(i * 4 + 2, mesh->get_tex_coord(2));
+        mesh->set_tex_coord(i * 4 + 3, mesh->get_tex_coord(3));
     }
 
     // ==========================
@@ -511,56 +511,56 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         float       girdle_thick_part_thickness,
         float       girdle_thin_part_thickness)
 {
-    // table:         8    triangles
-    // star:          8    triangles
-    // kite:          8*2  triangles
-    // upper-girdle:  16   triangles
-    // girdle:        16*2 triangles
-    // lower-girdle:  16   triangles
-    // pavilion main: 8*2  triangles
-    // =============================
-    // total (faces):     16*7=112
-    // total (vertices):  112*3=336
+    // table:         8      triangles
+    // star:          8      triangles
+    // kite:          8 * 2  triangles
+    // upper-girdle:  16     triangles
+    // girdle:        16 * 2 triangles
+    // lower-girdle:  16     triangles
+    // pavilion main: 8 * 2  triangles
+    // ===============================
+    // total (faces):    16 * 7 = 112
+    // total (vertices): 112 * 3 = 336
 
     int        num_vertex = 336;
     int        num_tri    = 112;
     MeshIFace* mesh       = alloc_meshiface(name, num_vertex, num_tri);
 
-    float crown_height   = height*crown_height_to_total_height_ratio;
-    float pavilion_depth = height-crown_height;
+    float crown_height   = height * crown_height_to_total_height_ratio;
+    float pavilion_depth = height - crown_height;
 
-    float upper_girdle_inner_rim_y      = pavilion_depth+crown_height*upper_girdle_height_to_crown_height_ratio;
-    float upper_girdle_inner_rim_radius = radius-(radius-table_radius)*upper_girdle_height_to_crown_height_ratio;
+    float upper_girdle_inner_rim_y      = pavilion_depth + crown_height * upper_girdle_height_to_crown_height_ratio;
+    float upper_girdle_inner_rim_radius = radius - (radius - table_radius) * upper_girdle_height_to_crown_height_ratio;
 
-    float girdle_thick_part_top_y    = pavilion_depth+girdle_thick_part_thickness*0.5;
-    float girdle_thick_part_bottom_y = pavilion_depth-girdle_thick_part_thickness*0.5;
-    float girdle_thin_part_top_y     = pavilion_depth+girdle_thin_part_thickness*0.5;
-    float girdle_thin_part_bottom_y  = pavilion_depth-girdle_thin_part_thickness*0.5;
+    float girdle_thick_part_top_y    = pavilion_depth + girdle_thick_part_thickness * 0.5;
+    float girdle_thick_part_bottom_y = pavilion_depth - girdle_thick_part_thickness * 0.5;
+    float girdle_thin_part_top_y     = pavilion_depth + girdle_thin_part_thickness * 0.5;
+    float girdle_thin_part_bottom_y  = pavilion_depth - girdle_thin_part_thickness * 0.5;
 
-    float lower_girdle_inner_rim_y      = pavilion_depth*(1-lower_girdle_depth_to_pavilion_depth_ratio);
-    float lower_girdle_inner_rim_radius = radius*lower_girdle_depth_to_pavilion_depth_ratio;
+    float lower_girdle_inner_rim_y      = pavilion_depth * (1 - lower_girdle_depth_to_pavilion_depth_ratio);
+    float lower_girdle_inner_rim_radius = radius * lower_girdle_depth_to_pavilion_depth_ratio;
 
-    upper_girdle_inner_rim_radius /= cos(PI*0.125);
-    lower_girdle_inner_rim_radius /= cos(PI*0.125);
+    upper_girdle_inner_rim_radius /= cos(PI * 0.125);
+    lower_girdle_inner_rim_radius /= cos(PI * 0.125);
 
     int vert_index = 0;
     int tri_index  = 0;
 
     // table: 8 triangles
-    for(int i=0; i<8; i++) {
+    for(int i = 0; i < 8; i++) {
         glm::vec3 p1 = glm::vec3(0, height, 0);
         glm::vec3 p2 = orient_to_offset(glm::vec3(
                 0,
-                0,                            // pitch
-                static_cast<float>(i)/8*360)) // yaw
-                *table_radius
-                + glm::vec3(0, height, 0);
+                0,                                // pitch
+                static_cast<float>(i) / 8 * 360)) // yaw
+                        * table_radius
+                        + glm::vec3(0, height, 0);
         glm::vec3 p3 = orient_to_offset(glm::vec3(
                 0,
-                0,                                // pitch
-                static_cast<float>(i + 1)/8*360)) // yaw
-                *table_radius
-                + glm::vec3(0, height, 0);
+                0,                                    // pitch
+                static_cast<float>(i + 1) / 8 * 360)) // yaw
+                        * table_radius
+                        + glm::vec3(0, height, 0);
         mesh->set_vert_coord( vert_index + 0, p1);
         mesh->set_vert_coord( vert_index + 1, p2);
         mesh->set_vert_coord( vert_index + 2, p3);
@@ -569,25 +569,25 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
     }
 
     // star: 8 triangles
-    for(int i=0; i<8; i++) {
+    for(int i = 0; i < 8; i++) {
         glm::vec3 p1 = orient_to_offset(glm::vec3(
                 0,
-                0,                            // pitch
-                static_cast<float>(i)/8*360)) // yaw
-                *table_radius
-                + glm::vec3(0, height, 0);
+                0,                                // pitch
+                static_cast<float>(i) / 8 * 360)) // yaw
+                        * table_radius
+                        + glm::vec3(0, height, 0);
         glm::vec3 p2 = orient_to_offset(glm::vec3(
                 0,
-                0,                                  // pitch
-                static_cast<float>(i + 0.5)/8*360)) // yaw
-                *upper_girdle_inner_rim_radius
-                + glm::vec3(0, upper_girdle_inner_rim_y, 0);
+                0,                                      // pitch
+                static_cast<float>(i + 0.5) / 8 * 360)) // yaw
+                        * upper_girdle_inner_rim_radius
+                        + glm::vec3(0, upper_girdle_inner_rim_y, 0);
         glm::vec3 p3 = orient_to_offset(glm::vec3(
                 0,
-                0,                                // pitch
-                static_cast<float>(i + 1)/8*360)) // yaw
-                *table_radius
-                + glm::vec3(0, height, 0);
+                0,                                    // pitch
+                static_cast<float>(i + 1) / 8 * 360)) // yaw
+                        * table_radius
+                        + glm::vec3(0, height, 0);
         mesh->set_vert_coord( vert_index + 0, p1);
         mesh->set_vert_coord( vert_index + 1, p2);
         mesh->set_vert_coord( vert_index + 2, p3);
@@ -595,27 +595,27 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         vert_index += 3;
     }
 
-    // kite: 8*2 triangles
-    for(int i=0; i<8; i++) {
+    // kite: 8 * 2 triangles
+    for(int i = 0; i < 8; i++) {
         // half kite 1
         glm::vec3 p1 = orient_to_offset(glm::vec3(
                 0,
-                0,                            // pitch
-                static_cast<float>(i)/8*360)) // yaw
-                *table_radius
-                + glm::vec3(0, height, 0);
+                0,                                // pitch
+                static_cast<float>(i) / 8 * 360)) // yaw
+                        * table_radius
+                        + glm::vec3(0, height, 0);
         glm::vec3 p2 = orient_to_offset(glm::vec3(
                 0,
-                0,                            // pitch
-                static_cast<float>(i)/8*360)) // yaw
-                *radius
-                + glm::vec3(0, girdle_thick_part_top_y, 0);
+                0,                                // pitch
+                static_cast<float>(i) / 8 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, girdle_thick_part_top_y, 0);
         glm::vec3 p3 = orient_to_offset(glm::vec3(
                 0,
-                0,                                  // pitch
-                static_cast<float>(i + 0.5)/8*360)) // yaw
-                *upper_girdle_inner_rim_radius
-                + glm::vec3(0, upper_girdle_inner_rim_y, 0);
+                0,                                      // pitch
+                static_cast<float>(i + 0.5) / 8 * 360)) // yaw
+                        * upper_girdle_inner_rim_radius
+                        + glm::vec3(0, upper_girdle_inner_rim_y, 0);
         mesh->set_vert_coord( vert_index + 0, p1);
         mesh->set_vert_coord( vert_index + 1, p2);
         mesh->set_vert_coord( vert_index + 2, p3);
@@ -625,22 +625,22 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         // half kite 2
         glm::vec3 p4 = orient_to_offset(glm::vec3(
                 0,
-                0,                                // pitch
-                static_cast<float>(i + 1)/8*360)) // yaw
-                *table_radius
-                + glm::vec3(0, height, 0);
+                0,                                    // pitch
+                static_cast<float>(i + 1) / 8 * 360)) // yaw
+                        * table_radius
+                        + glm::vec3(0, height, 0);
         glm::vec3 p5 = orient_to_offset(glm::vec3(
                 0,
-                0,                                  // pitch
-                static_cast<float>(i + 0.5)/8*360)) // yaw
-                *upper_girdle_inner_rim_radius
-                + glm::vec3(0, upper_girdle_inner_rim_y, 0);
+                0,                                      // pitch
+                static_cast<float>(i + 0.5) / 8 * 360)) // yaw
+                        * upper_girdle_inner_rim_radius
+                        + glm::vec3(0, upper_girdle_inner_rim_y, 0);
         glm::vec3 p6 = orient_to_offset(glm::vec3(
                 0,
-                0,                                // pitch
-                static_cast<float>(i + 1)/8*360)) // yaw
-                *radius
-                + glm::vec3(0, girdle_thick_part_top_y, 0);
+                0,                                    // pitch
+                static_cast<float>(i + 1) / 8 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, girdle_thick_part_top_y, 0);
         mesh->set_vert_coord( vert_index + 0, p4);
         mesh->set_vert_coord( vert_index + 1, p5);
         mesh->set_vert_coord( vert_index + 2, p6);
@@ -649,26 +649,26 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
     }
 
     // upper-girdle: 16 triangles
-    for(int i=0; i<8; i++) {
+    for(int i = 0; i < 8; i++) {
         // half upper-girdle 1
         glm::vec3 p1 = orient_to_offset(glm::vec3(
                 0,
-                0,                                  // pitch
-                static_cast<float>(i + 0.5)/8*360)) // yaw
-                *upper_girdle_inner_rim_radius
-                + glm::vec3(0, upper_girdle_inner_rim_y, 0);
+                0,                                      // pitch
+                static_cast<float>(i + 0.5) / 8 * 360)) // yaw
+                        * upper_girdle_inner_rim_radius
+                        + glm::vec3(0, upper_girdle_inner_rim_y, 0);
         glm::vec3 p2 = orient_to_offset(glm::vec3(
                 0,
-                0,                            // pitch
-                static_cast<float>(i)/8*360)) // yaw
-                *radius
-                + glm::vec3(0, girdle_thick_part_top_y, 0);
+                0,                                // pitch
+                static_cast<float>(i) / 8 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, girdle_thick_part_top_y, 0);
         glm::vec3 p3 = orient_to_offset(glm::vec3(
                 0,
-                0,                                  // pitch
-                static_cast<float>(i + 0.5)/8*360)) // yaw
-                *radius
-                + glm::vec3(0, girdle_thin_part_top_y, 0);
+                0,                                      // pitch
+                static_cast<float>(i + 0.5) / 8 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, girdle_thin_part_top_y, 0);
         mesh->set_vert_coord( vert_index + 0, p1);
         mesh->set_vert_coord( vert_index + 1, p2);
         mesh->set_vert_coord( vert_index + 2, p3);
@@ -678,22 +678,22 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         // half upper-girdle 2
         glm::vec3 p4 = orient_to_offset(glm::vec3(
                 0,
-                0,                                  // pitch
-                static_cast<float>(i + 0.5)/8*360)) // yaw
-                *upper_girdle_inner_rim_radius
-                + glm::vec3(0, upper_girdle_inner_rim_y, 0);
+                0,                                      // pitch
+                static_cast<float>(i + 0.5) / 8 * 360)) // yaw
+                        * upper_girdle_inner_rim_radius
+                        + glm::vec3(0, upper_girdle_inner_rim_y, 0);
         glm::vec3 p5 = orient_to_offset(glm::vec3(
                 0,
-                0,                                  // pitch
-                static_cast<float>(i + 0.5)/8*360)) // yaw
-                *radius
-                + glm::vec3(0, girdle_thin_part_top_y, 0);
+                0,                                      // pitch
+                static_cast<float>(i + 0.5) / 8 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, girdle_thin_part_top_y, 0);
         glm::vec3 p6 = orient_to_offset(glm::vec3(
                 0,
-                0,                                // pitch
-                static_cast<float>(i + 1)/8*360)) // yaw
-                *radius
-                + glm::vec3(0, girdle_thick_part_top_y, 0);
+                0,                                    // pitch
+                static_cast<float>(i + 1) / 8 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, girdle_thick_part_top_y, 0);
         mesh->set_vert_coord( vert_index + 0, p4);
         mesh->set_vert_coord( vert_index + 1, p5);
         mesh->set_vert_coord( vert_index + 2, p6);
@@ -701,32 +701,32 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         vert_index += 3;
     }
 
-    // girdle: 16*2 triangles
-    for(int i=0; i<16; i++) {
-        float left_top_y     = (i%2)       ? girdle_thin_part_top_y    : girdle_thick_part_top_y;
-        float left_bottom_y  = (i%2)       ? girdle_thin_part_bottom_y : girdle_thick_part_bottom_y;
-        float right_top_y    = ((i + 1)%2) ? girdle_thin_part_top_y    : girdle_thick_part_top_y;
-        float right_bottom_y = ((i + 1)%2) ? girdle_thin_part_bottom_y : girdle_thick_part_bottom_y;
+    // girdle: 16 * 2 triangles
+    for(int i = 0; i < 16; i++) {
+        float left_top_y     = (i % 2)       ? girdle_thin_part_top_y    : girdle_thick_part_top_y;
+        float left_bottom_y  = (i % 2)       ? girdle_thin_part_bottom_y : girdle_thick_part_bottom_y;
+        float right_top_y    = ((i + 1) % 2) ? girdle_thin_part_top_y    : girdle_thick_part_top_y;
+        float right_bottom_y = ((i + 1) % 2) ? girdle_thin_part_bottom_y : girdle_thick_part_bottom_y;
 
         // top half
         glm::vec3 p1 = orient_to_offset(glm::vec3(
                 0,
-                0,                                 // pitch
-                static_cast<float>(i + 1)/16*360)) // yaw
-                *radius
-                + glm::vec3(0, right_top_y, 0);
+                0,                                     // pitch
+                static_cast<float>(i + 1) / 16 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, right_top_y, 0);
         glm::vec3 p2 = orient_to_offset(glm::vec3(
                 0,
-                0,                             // pitch
-                static_cast<float>(i)/16*360)) // yaw
-                *radius
-                + glm::vec3(0, left_top_y, 0);
+                0,                                 // pitch
+                static_cast<float>(i) / 16 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, left_top_y, 0);
         glm::vec3 p3 = orient_to_offset(glm::vec3(
                 0,
-                0,                             // pitch
-                static_cast<float>(i)/16*360)) // yaw
-                *radius
-                + glm::vec3(0, left_bottom_y, 0);
+                0,                                 // pitch
+                static_cast<float>(i) / 16 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, left_bottom_y, 0);
         mesh->set_vert_coord( vert_index + 0, p1);
         mesh->set_vert_coord( vert_index + 1, p2);
         mesh->set_vert_coord( vert_index + 2, p3);
@@ -736,22 +736,22 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         // bottom half
         glm::vec3 p4 = orient_to_offset(glm::vec3(
                 0,
-                0,                             // pitch
-                static_cast<float>(i)/16*360)) // yaw
-                *radius
-                + glm::vec3(0, left_bottom_y, 0);
+                0,                                 // pitch
+                static_cast<float>(i) / 16 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, left_bottom_y, 0);
         glm::vec3 p5 = orient_to_offset(glm::vec3(
                 0,
-                0,                                 // pitch
-                static_cast<float>(i + 1)/16*360)) // yaw
-                *radius
-                + glm::vec3(0, right_bottom_y, 0);
+                0,                                     // pitch
+                static_cast<float>(i + 1) / 16 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, right_bottom_y, 0);
         glm::vec3 p6 = orient_to_offset(glm::vec3(
                 0,
-                0,                                 // pitch
-                static_cast<float>(i + 1)/16*360)) // yaw
-                *radius
-                + glm::vec3(0, right_top_y, 0);
+                0,                                     // pitch
+                static_cast<float>(i + 1) / 16 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, right_top_y, 0);
         mesh->set_vert_coord( vert_index + 0, p4);
         mesh->set_vert_coord( vert_index + 1, p5);
         mesh->set_vert_coord( vert_index + 2, p6);
@@ -760,26 +760,26 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
     }
 
     // lower-girdle: 16 triangles
-    for(int i=0; i<8; i++) {
+    for(int i = 0; i < 8; i++) {
         // half lower-girdle 1
         glm::vec3 p1 = orient_to_offset(glm::vec3(
                 0,
-                0,                                  // pitch
-                static_cast<float>(i + 0.5)/8*360)) // yaw
-                *lower_girdle_inner_rim_radius
-                + glm::vec3(0, lower_girdle_inner_rim_y, 0);
+                0,                                      // pitch
+                static_cast<float>(i + 0.5) / 8 * 360)) // yaw
+                        * lower_girdle_inner_rim_radius
+                        + glm::vec3(0, lower_girdle_inner_rim_y, 0);
         glm::vec3 p2 = orient_to_offset(glm::vec3(
                 0,
-                0,                                  // pitch
-                static_cast<float>(i + 0.5)/8*360)) // yaw
-                *radius
-                + glm::vec3(0, girdle_thin_part_bottom_y, 0);
+                0,                                      // pitch
+                static_cast<float>(i + 0.5) / 8 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, girdle_thin_part_bottom_y, 0);
         glm::vec3 p3 = orient_to_offset(glm::vec3(
                 0,
-                0,                            // pitch
-                static_cast<float>(i)/8*360)) // yaw
-                *radius
-                + glm::vec3(0, girdle_thick_part_bottom_y, 0);
+                0,                                // pitch
+                static_cast<float>(i) / 8 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, girdle_thick_part_bottom_y, 0);
         mesh->set_vert_coord( vert_index + 0, p1);
         mesh->set_vert_coord( vert_index + 1, p2);
         mesh->set_vert_coord( vert_index + 2, p3);
@@ -789,22 +789,22 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         // half lower-girdle 2
         glm::vec3 p4 = orient_to_offset(glm::vec3(
                 0,
-                0,                                  // pitch
-                static_cast<float>(i + 0.5)/8*360)) // yaw
-                *lower_girdle_inner_rim_radius
-                + glm::vec3(0, lower_girdle_inner_rim_y, 0);
+                0,                                      // pitch
+                static_cast<float>(i + 0.5) / 8 * 360)) // yaw
+                        * lower_girdle_inner_rim_radius
+                        + glm::vec3(0, lower_girdle_inner_rim_y, 0);
         glm::vec3 p5 = orient_to_offset(glm::vec3(
                 0,
-                0,                                // pitch
-                static_cast<float>(i + 1)/8*360)) // yaw
-                *radius
-                + glm::vec3(0, girdle_thick_part_bottom_y, 0);
+                0,                                    // pitch
+                static_cast<float>(i + 1) / 8 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, girdle_thick_part_bottom_y, 0);
         glm::vec3 p6 = orient_to_offset(glm::vec3(
                 0,
-                0,                                  // pitch
-                static_cast<float>(i + 0.5)/8*360)) // yaw
-                *radius
-                + glm::vec3(0, girdle_thin_part_bottom_y, 0);
+                0,                                      // pitch
+                static_cast<float>(i + 0.5) / 8 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, girdle_thin_part_bottom_y, 0);
         mesh->set_vert_coord( vert_index + 0, p4);
         mesh->set_vert_coord( vert_index + 1, p5);
         mesh->set_vert_coord( vert_index + 2, p6);
@@ -812,22 +812,22 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         vert_index += 3;
     }
 
-    // pavilion main: 8*2 triangles
-    for(int i=0; i<8; i++) {
+    // pavilion main: 8 * 2 triangles
+    for(int i = 0; i < 8; i++) {
         // half pavilion main 1
         glm::vec3 p1 = glm::vec3(0, 0, 0);
         glm::vec3 p2 = orient_to_offset(glm::vec3(
                 0,
-                0,                                  // pitch
-                static_cast<float>(i + 0.5)/8*360)) // yaw
-                *lower_girdle_inner_rim_radius
-                + glm::vec3(0, lower_girdle_inner_rim_y, 0);
+                0,                                      // pitch
+                static_cast<float>(i + 0.5) / 8 * 360)) // yaw
+                        * lower_girdle_inner_rim_radius
+                        + glm::vec3(0, lower_girdle_inner_rim_y, 0);
         glm::vec3 p3 = orient_to_offset(glm::vec3(
                 0,
-                0,                            // pitch
-                static_cast<float>(i)/8*360)) // yaw
-                *radius
-                + glm::vec3(0, girdle_thick_part_bottom_y, 0);
+                0,                                // pitch
+                static_cast<float>(i) / 8 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, girdle_thick_part_bottom_y, 0);
         mesh->set_vert_coord( vert_index + 0, p1);
         mesh->set_vert_coord( vert_index + 1, p2);
         mesh->set_vert_coord( vert_index + 2, p3);
@@ -838,16 +838,16 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         glm::vec3 p4 = glm::vec3(0, 0, 0);
         glm::vec3 p5 = orient_to_offset(glm::vec3(
                 0,
-                0,                                // pitch
-                static_cast<float>(i + 1)/8*360)) // yaw
-                *radius
-                + glm::vec3(0, girdle_thick_part_bottom_y, 0);
+                0,                                    // pitch
+                static_cast<float>(i + 1) / 8 * 360)) // yaw
+                        * radius
+                        + glm::vec3(0, girdle_thick_part_bottom_y, 0);
         glm::vec3 p6 = orient_to_offset(glm::vec3(
                 0,
-                0,                                  // pitch
-                static_cast<float>(i + 0.5)/8*360)) // yaw
-                *lower_girdle_inner_rim_radius
-                + glm::vec3(0, lower_girdle_inner_rim_y, 0);
+                0,                                      // pitch
+                static_cast<float>(i + 0.5) / 8 * 360)) // yaw
+                        * lower_girdle_inner_rim_radius
+                        + glm::vec3(0, lower_girdle_inner_rim_y, 0);
         mesh->set_vert_coord( vert_index + 0, p4);
         mesh->set_vert_coord( vert_index + 1, p5);
         mesh->set_vert_coord( vert_index + 2, p6);

@@ -28,8 +28,8 @@ void print_bitmap_string(void* font, const char* s)
 glm::vec3 orient_to_offset(glm::vec3 orient)
 {
     glm::mat4 rotate_xform_sans_roll =
-            GLM_ROTATE(glm::mat4(1), ORIENT_YAW(orient),   VEC_UP) *  // yaw
-            GLM_ROTATE(glm::mat4(1), ORIENT_PITCH(orient), VEC_LEFT); // pitch
+            GLM_ROTATE(glm::mat4(1), ORIENT_YAW(orient),   VEC_UP) *
+            GLM_ROTATE(glm::mat4(1), ORIENT_PITCH(orient), VEC_LEFT);
     return glm::vec3(rotate_xform_sans_roll * glm::vec4(VEC_FORWARD, 1));
 }
 
@@ -59,8 +59,8 @@ glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up_direction_hint)
     }
     if(up_direction_hint) {
         glm::mat4 rotate_xform_sans_roll =
-                GLM_ROTATE(glm::mat4(1), ORIENT_YAW(orient),   VEC_UP) *  // yaw
-                GLM_ROTATE(glm::mat4(1), ORIENT_PITCH(orient), VEC_LEFT); // pitch
+                GLM_ROTATE(glm::mat4(1), ORIENT_YAW(orient),   VEC_UP) *
+                GLM_ROTATE(glm::mat4(1), ORIENT_PITCH(orient), VEC_LEFT);
         glm::vec3 local_up_direction_hint_roll_component =
                 glm::vec3(glm::inverse(rotate_xform_sans_roll) * glm::vec4(*up_direction_hint, 1));
         ORIENT_ROLL(orient) = glm::degrees(glm::angle(glm::normalize(local_up_direction_hint_roll_component), VEC_UP));
@@ -111,7 +111,7 @@ void mesh_apply_ripple(Mesh* mesh, glm::vec3 origin, float amplitude, float wave
         glm::vec3 new_pos = pos;
         new_pos.y = origin.y +
                     static_cast<float>(sin(glm::distance(glm::vec2(origin.x, origin.z),
-                                                         glm::vec2(pos.x, pos.z))/(wavelength/(PI*2)) + phase))*amplitude;
+                                                         glm::vec2(pos.x, pos.z)) / (wavelength / (PI * 2)) + phase)) * amplitude;
         mesh->set_vert_coord(i, new_pos);
     }
     mesh->update_normals_and_tangents();
