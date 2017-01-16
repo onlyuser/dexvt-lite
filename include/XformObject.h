@@ -9,6 +9,13 @@ namespace vt {
 class XformObject
 {
 public:
+    // for guide wires
+    glm::vec3 m_target_dir;
+    glm::vec3 m_end_effector_tip_dir;
+    glm::vec3 m_local_pivot;
+    glm::vec3 m_new_heading;
+    glm::vec3 m_local_target;
+
     XformObject(glm::vec3 origin = glm::vec3(0),
                 glm::vec3 orient = glm::vec3(0),
                 glm::vec3 scale  = glm::vec3(1));

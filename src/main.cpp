@@ -64,6 +64,7 @@ bool show_help = false;
 bool show_lights = false;
 bool show_normals = false;
 bool wireframe_mode = false;
+bool show_guide_wires = false;
 bool show_axis = false;
 bool show_axis_labels = false;
 bool do_animation = true;
@@ -271,8 +272,8 @@ void onDisplay()
     } else {
         scene->render();
     }
-    if(show_axis || show_axis_labels || show_bbox || show_normals || show_help) {
-        scene->render_lines_and_text(show_axis, show_axis_labels, show_bbox, show_normals, show_help, get_help_string());
+    if(show_guide_wires || show_axis || show_axis_labels || show_bbox || show_normals || show_help) {
+        scene->render_lines_and_text(show_guide_wires, show_axis, show_axis_labels, show_bbox, show_normals, show_help, get_help_string());
     }
     if(show_lights) {
         scene->render_lights();
@@ -291,6 +292,9 @@ void onKeyboard(unsigned char key, int x, int y)
             if(!show_fps) {
                 glutSetWindowTitle(DEFAULT_CAPTION);
             }
+            break;
+        case 'g': // guide wires
+            show_guide_wires = !show_guide_wires;
             break;
         case 'h': // help
             show_help = !show_help;
@@ -325,7 +329,7 @@ void onKeyboard(unsigned char key, int x, int y)
         case 'x': // axis
             show_axis = !show_axis;
             break;
-        case 'z': // axis_labels
+        case 'z': // axis labels
             show_axis_labels = !show_axis_labels;
             break;
         case 32: // space
@@ -355,6 +359,7 @@ void onSpecial(int key, int x, int y)
                 target_index = (target_index + 1) % target_count;
                 std::cout << "target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
                 ik_changed = true;
+                vt::Scene::instance()->m_target = targets[target_index];
             }
             break;
         case GLUT_KEY_LEFT:
