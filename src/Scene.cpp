@@ -365,11 +365,10 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
                                   char* hud_text) const
 {
     const float axis_surface_distance       = 0.05;
-    const float up_arm_length               = 0.5;
-    //const float local_pivot_length          = 1 * up_arm_length;
-    //const float end_effector_tip_dir_length = 4 * up_arm_length;
-    //const float new_heading_length          = 6 * up_arm_length;
-    //const float target_dir_length           = 1 * up_arm_length;
+    const float up_arm_length               = 0.5;                // white
+    const float local_pivot_length          = 1  * up_arm_length; // magenta
+    const float end_effector_tip_dir_length = 10 * up_arm_length; // yellow
+    const float target_dir_length           = 10 * up_arm_length; // cyan
     const float guide_wire_width            = 1;
     const float axis_arm_length             = 0.25;
     const float axis_line_width             = 3;
@@ -377,6 +376,20 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
     glDisable(GL_DEPTH_TEST);
 
     glUseProgram(0);
+
+    const float light_radius = 0.125;
+
+    if(draw_guide_wires) {
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * glm::translate(glm::mat4(1), m_target)));
+
+        // magenta
+        glColor3f(1, 0, 1);
+        glutWireSphere(light_radius, 4, 2);
+
+        glPopMatrix();
+    }
 
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(glm::value_ptr(m_camera->get_projection_xform()));
@@ -387,77 +400,72 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
             continue;
         }
 
-        glLoadMatrixf(glm::value_ptr(m_camera->get_xform()));
-        glLineWidth(guide_wire_width);
-        glBegin(GL_LINES);
-
         if(draw_guide_wires) {
-            {
-                // white
-                glColor3f(1, 1, 1);
-                glm::vec3 origin = glm::vec3((*p)->get_xform() * glm::vec4(glm::vec3(0), 1));
-                glVertex3fv(&origin.x);
-                glm::vec3 up_endpoint = glm::vec3((*p)->get_xform() * glm::vec4(VEC_UP * up_arm_length, 1));
-                glVertex3fv(&up_endpoint.x);
-            }
+            glLoadMatrixf(glm::value_ptr(m_camera->get_xform()));
+            glLineWidth(guide_wire_width);
+            glBegin(GL_LINES);
 
-#if 0
-            // TODO: fix-me!
+            // white
+            glColor3f(1, 1, 1);
+            glm::vec3 origin = glm::vec3((*p)->get_xform() * glm::vec4(glm::vec3(0), 1));
+            glVertex3fv(&origin.x);
+            glm::vec3 endpoint = glm::vec3((*p)->get_xform() * glm::vec4(VEC_UP * up_arm_length, 1));
+            glVertex3fv(&endpoint.x);
+
+            glEnd();
+            glLineWidth(1);
+        }
+
+        if(draw_guide_wires && (*p)->get_parent()) {
+            glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_parent()->get_xform()));
+            glLineWidth(guide_wire_width);
+            glBegin(GL_LINES);
+
             {
                 // magenta
                 glColor3f(1, 0, 1);
-                glm::vec3 origin = glm::vec3((*p)->get_xform() * glm::vec4(glm::vec3(0), 1));
+                glm::vec3 origin = glm::vec3(glm::vec4((*p)->get_origin(), 1));
                 glVertex3fv(&origin.x);
-                glm::vec3 up_endpoint = glm::vec3((*p)->get_xform() * glm::vec4((*p)->m_local_pivot * local_pivot_length, 1));
-                glVertex3fv(&up_endpoint.x);
+                glm::vec3 endpoint = glm::vec3(glm::vec4((*p)->get_origin() + (*p)->m_local_pivot * local_pivot_length, 1));
+                glVertex3fv(&endpoint.x);
             }
 
             {
                 // yellow
                 glColor3f(1, 1, 0);
-                glm::vec3 origin = glm::vec3((*p)->get_xform() * glm::vec4(glm::vec3(0), 1));
+                glm::vec3 origin = glm::vec3(glm::vec4((*p)->get_origin(), 1));
                 glVertex3fv(&origin.x);
-                glm::vec3 up_endpoint = glm::vec3((*p)->get_xform() * glm::vec4((*p)->m_end_effector_tip_dir * end_effector_tip_dir_length, 1));
-                glVertex3fv(&up_endpoint.x);
-            }
-
-            {
-                // grey
-                glColor3f(0.5, 0.5, 0.5);
-                glm::vec3 origin = glm::vec3((*p)->get_xform() * glm::vec4(glm::vec3(0), 1));
-                glVertex3fv(&origin.x);
-                glm::vec3 up_endpoint = glm::vec3((*p)->get_xform() * glm::vec4((*p)->m_new_heading * new_heading_length, 1));
-                glVertex3fv(&up_endpoint.x);
+                glm::vec3 endpoint = glm::vec3(glm::vec4((*p)->get_origin() + (*p)->m_end_effector_tip_dir * end_effector_tip_dir_length, 1));
+                glVertex3fv(&endpoint.x);
             }
 
             {
                 // cyan
                 glColor3f(0, 1, 1);
-                glm::vec3 origin = glm::vec3((*p)->get_xform() * glm::vec4(glm::vec3(0), 1));
+                glm::vec3 origin = glm::vec3(glm::vec4((*p)->get_origin(), 1));
                 glVertex3fv(&origin.x);
-                glm::vec3 up_endpoint = glm::vec3((*p)->get_xform() * glm::vec4((*p)->m_target_dir * target_dir_length, 1));
-                glVertex3fv(&up_endpoint.x);
+                glm::vec3 endpoint = glm::vec3(glm::vec4((*p)->get_origin() + (*p)->m_target_dir * target_dir_length, 1));
+                glVertex3fv(&endpoint.x);
             }
 
             {
                 // blue
                 glColor3f(0, 0, 1);
-                glm::vec3 origin = glm::vec3((*p)->get_xform() * glm::vec4(glm::vec3(0), 1));
+                glm::vec3 origin = glm::vec3(glm::vec4((*p)->get_origin(), 1));
                 glVertex3fv(&origin.x);
-                glm::vec3 up_endpoint = glm::vec3((*p)->get_xform() * glm::vec4((*p)->m_local_target, 1));
-                glVertex3fv(&up_endpoint.x);
+                glm::vec3 endpoint = glm::vec3(glm::vec4((*p)->get_origin() + (*p)->m_local_target, 1));
+                glVertex3fv(&endpoint.x);
             }
-#endif
+
+            glEnd();
+            glLineWidth(1);
         }
 
-        glEnd();
-        glLineWidth(1);
-
-        glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
-        glLineWidth(axis_line_width);
-        glBegin(GL_LINES);
-
         if(draw_axis) {
+            glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
+            glLineWidth(axis_line_width);
+            glBegin(GL_LINES);
+
             // x-axis
             {
                 glColor3f(1, 0, 0);
@@ -484,10 +492,10 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
                 v += glm::vec3(0, 0, axis_arm_length);
                 glVertex3fv(&v.x);
             }
-        }
 
-        glEnd();
-        glLineWidth(1);
+            glEnd();
+            glLineWidth(1);
+        }
 
         glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
         glBegin(GL_LINES);
@@ -641,16 +649,12 @@ void Scene::render_lights() const
     glLoadMatrixf(glm::value_ptr(m_camera->get_projection_xform()));
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-    glColor3f(1, 1, 0);
     for(lights_t::const_iterator p = m_lights.begin(); p != m_lights.end(); p++) {
         glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
+        glColor3f(1, 1, 0);
         glutWireSphere(light_radius, 4, 2);
     }
-
-    // magenta
-    glColor3f(1, 0, 1);
-    glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * glm::translate(glm::mat4(1), m_target)));
-    glutWireSphere(light_radius, 4, 2);
+    glPopMatrix();
 }
 
 }

@@ -42,7 +42,7 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
-#define SEGMENT_COUNT   6
+#define SEGMENT_COUNT   3
 #define IK_ITERS        50
 #define ACCEPT_DISTANCE 0.1
 
@@ -295,6 +295,9 @@ void onKeyboard(unsigned char key, int x, int y)
             break;
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
+            if(show_guide_wires) {
+                vt::Scene::instance()->m_target = targets[target_index];
+            }
             break;
         case 'h': // help
             show_help = !show_help;

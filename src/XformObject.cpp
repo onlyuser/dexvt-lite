@@ -190,17 +190,15 @@ bool XformObject::solve_ik_ccd(
             if(i < iters - 1) { // reserve last iter for updating guide wires
                 current_segment->set_orient(offset_to_orient(new_current_segment_heading, &new_current_segment_up_direction));
             }
-#if 0
-            // TODO: fix-me!
             current_segment->m_target_dir           = local_target_dir;
             current_segment->m_end_effector_tip_dir = local_end_effector_tip_dir;
             current_segment->m_local_pivot          = local_arc_pivot;
-            current_segment->m_new_heading          = glm::vec3(GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot) * glm::vec4(VEC_FORWARD, 1));
             current_segment->m_local_target         = glm::vec3(current_segment_parent_inverse_xform * glm::vec4(target, 1)) - current_segment->get_origin();
-            //std::cout << "INDEX: " << index << std::endl;
-            //std::cout << "TARGET: " << glm::to_string(local_target_dir) << ", END_EFF: " << glm::to_string(local_end_effector_tip_dir) << ", ANGLE: " << angle_delta << std::endl;
-            //std::cout << "BEFORE: " << glm::to_string(current_segment_heading) << ", AFTER: " << glm::to_string(new_current_segment_heading) << std::endl;
-            //std::cout << "PIVOT: " << glm::to_string(local_arc_pivot) << std::endl;
+#if 0
+            std::cout << "INDEX: " << index << std::endl;
+            std::cout << "TARGET: " << glm::to_string(local_target_dir) << ", END_EFF: " << glm::to_string(local_end_effector_tip_dir) << ", ANGLE: " << angle_delta << std::endl;
+            std::cout << "BEFORE: " << glm::to_string(current_segment_heading) << ", AFTER: " << glm::to_string(new_current_segment_heading) << std::endl;
+            std::cout << "PIVOT: " << glm::to_string(local_arc_pivot) << std::endl;
 #endif
 #elif 1
             // attempt #3 -- do rotations in Cartesian coordinates
