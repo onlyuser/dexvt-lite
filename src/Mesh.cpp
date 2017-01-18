@@ -39,11 +39,11 @@ Mesh::Mesh(
       m_frontface_depth_overlay_texture_index(-1),
       m_reflect_to_refract_ratio(1) // 100% reflective
 {
-    m_vert_coords   = new GLfloat[num_vertex*3];
-    m_vert_normal   = new GLfloat[num_vertex*3];
-    m_vert_tangent  = new GLfloat[num_vertex*3];
-    m_tex_coords    = new GLfloat[num_vertex*2];
-    m_tri_indices   = new GLushort[num_tri*3];
+    m_vert_coords   = new GLfloat[ num_vertex * 3];
+    m_vert_normal   = new GLfloat[ num_vertex * 3];
+    m_vert_tangent  = new GLfloat[ num_vertex * 3];
+    m_tex_coords    = new GLfloat[ num_vertex * 2];
+    m_tri_indices   = new GLushort[num_tri    * 3];
     m_ambient_color = new GLfloat[3];
     m_ambient_color[0] = 1;
     m_ambient_color[1] = 1;
@@ -169,8 +169,8 @@ void Mesh::update_normals_and_tangents()
         glm::vec3 p0 = get_vert_coord(tri_indices[0]);
         glm::vec3 p1 = get_vert_coord(tri_indices[1]);
         glm::vec3 p2 = get_vert_coord(tri_indices[2]);
-        glm::vec3 e1 = glm::normalize(p1-p0);
-        glm::vec3 e2 = glm::normalize(p2-p0);
+        glm::vec3 e1 = glm::normalize(p1 - p0);
+        glm::vec3 e2 = glm::normalize(p2 - p0);
         glm::vec3 n = glm::normalize(glm::cross(e1, e2));
         for(int j=0; j < 3; j++) {
             set_vert_normal( tri_indices[j], n);
@@ -190,11 +190,11 @@ void Mesh::init_buffers()
     if(m_buffers_already_init) {
         return;
     }
-    m_vbo_vert_coords  = new Buffer(GL_ARRAY_BUFFER, sizeof(GLfloat)*m_num_vertex*3, m_vert_coords);
-    m_vbo_vert_normal  = new Buffer(GL_ARRAY_BUFFER, sizeof(GLfloat)*m_num_vertex*3, m_vert_normal);
-    m_vbo_vert_tangent = new Buffer(GL_ARRAY_BUFFER, sizeof(GLfloat)*m_num_vertex*3, m_vert_tangent);
-    m_vbo_tex_coords   = new Buffer(GL_ARRAY_BUFFER, sizeof(GLfloat)*m_num_vertex*2, m_tex_coords);
-    m_ibo_tri_indices  = new Buffer(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort)*m_num_tri*3, m_tri_indices);
+    m_vbo_vert_coords  = new Buffer(GL_ARRAY_BUFFER,         sizeof(GLfloat)  * m_num_vertex * 3, m_vert_coords);
+    m_vbo_vert_normal  = new Buffer(GL_ARRAY_BUFFER,         sizeof(GLfloat)  * m_num_vertex * 3, m_vert_normal);
+    m_vbo_vert_tangent = new Buffer(GL_ARRAY_BUFFER,         sizeof(GLfloat)  * m_num_vertex * 3, m_vert_tangent);
+    m_vbo_tex_coords   = new Buffer(GL_ARRAY_BUFFER,         sizeof(GLfloat)  * m_num_vertex * 2, m_tex_coords);
+    m_ibo_tri_indices  = new Buffer(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * m_num_tri    * 3, m_tri_indices);
     m_buffers_already_init = true;
 }
 
@@ -370,11 +370,7 @@ void Mesh::center_axis(align_t align)
 
 void Mesh::update_xform()
 {
-    m_xform = glm::translate(glm::mat4(1), m_origin) *
-              GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_YAW(m_orient)),   VEC_UP) *
-              GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_PITCH(m_orient)), VEC_LEFT) *
-              GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_ROLL(m_orient)),  VEC_FORWARD) *
-              glm::scale(glm::mat4(1), m_scale);
+    m_xform = glm::translate(glm::mat4(1), m_origin) * get_local_rotate_xform() * glm::scale(glm::mat4(1), m_scale);
 }
 
 MeshIFace* alloc_meshiface(std::string name, size_t num_vertex, size_t num_tri)

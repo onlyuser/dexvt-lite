@@ -32,9 +32,11 @@ public:
     }
     void set_orient(glm::vec3 orient);
 
-    const glm::vec3 get_left_direction();
-    const glm::vec3 get_up_direction();
-    const glm::vec3 get_heading();
+    const glm::vec3 get_abs_coord(glm::vec3 local_point = glm::vec3(0));
+    const glm::vec3 get_offset_from_origin_in_parent_system(glm::vec3 abs_point);
+    const glm::vec3 get_abs_left_direction();
+    const glm::vec3 get_abs_up_direction();
+    const glm::vec3 get_abs_heading();
 
     const glm::vec3 &get_scale() const
     {
@@ -54,7 +56,7 @@ public:
     void link_parent(XformObject* parent, bool keep_xform = false);
     void unlink_children();
 
-    void point_at(glm::vec3 p);
+    void point_at(glm::vec3 target);
     void rotate(float angle_delta, glm::vec3 pivot);
     bool solve_ik_ccd(
         XformObject* root,
@@ -83,6 +85,7 @@ protected:
     }
     virtual void update_xform() = 0;
     virtual void update_normal_xform();
+    glm::mat4 get_local_rotate_xform() const;
 
 private:
     bool m_is_dirty_xform;

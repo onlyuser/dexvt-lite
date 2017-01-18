@@ -224,27 +224,27 @@ void onTick()
     static int angle = 0;
     //meshes[0]->set_orient(glm::vec3(0, 0, angle));
     if(left_key) {
-        meshes[0]->rotate(-angle_delta, meshes[0]->get_up_direction());
+        meshes[0]->rotate(-angle_delta, meshes[0]->get_abs_up_direction());
         ik_changed = true;
     }
     if(right_key) {
-        meshes[0]->rotate(angle_delta, meshes[0]->get_up_direction());
+        meshes[0]->rotate(angle_delta, meshes[0]->get_abs_up_direction());
         ik_changed = true;
     }
     if(up_key) {
-        meshes[0]->rotate(-angle_delta, meshes[0]->get_left_direction());
+        meshes[0]->rotate(-angle_delta, meshes[0]->get_abs_left_direction());
         ik_changed = true;
     }
     if(down_key) {
-        meshes[0]->rotate(angle_delta, meshes[0]->get_left_direction());
+        meshes[0]->rotate(angle_delta, meshes[0]->get_abs_left_direction());
         ik_changed = true;
     }
     if(page_up_key) {
-        meshes[0]->rotate(angle_delta, meshes[0]->get_heading());
+        meshes[0]->rotate(angle_delta, meshes[0]->get_abs_heading());
         ik_changed = true;
     }
     if(page_down_key) {
-        meshes[0]->rotate(-angle_delta, meshes[0]->get_heading());
+        meshes[0]->rotate(-angle_delta, meshes[0]->get_abs_heading());
         ik_changed = true;
     }
     if(ik_changed) {
