@@ -36,6 +36,20 @@ void XformObject::set_orient(glm::vec3 orient)
     mark_dirty_xform();
 }
 
+void XformObject::set_scale(glm::vec3 scale)
+{
+    m_scale = scale;
+    mark_dirty_xform();
+}
+
+void XformObject::reset_xform()
+{
+    m_origin = glm::vec3(0);
+    m_orient = glm::vec3(0);
+    m_scale  = glm::vec3(1);
+    mark_dirty_xform();
+}
+
 const glm::vec3 XformObject::get_abs_coord(glm::vec3 local_point)
 {
     return glm::vec3(get_xform() * glm::vec4(local_point, 1));
@@ -62,20 +76,6 @@ const glm::vec3 XformObject::get_abs_up_direction()
 const glm::vec3 XformObject::get_abs_heading()
 {
     return glm::vec3(get_normal_xform() * glm::vec4(VEC_FORWARD, 1));
-}
-
-void XformObject::set_scale(glm::vec3 scale)
-{
-    m_scale = scale;
-    mark_dirty_xform();
-}
-
-void XformObject::reset_xform()
-{
-    m_origin = glm::vec3(0);
-    m_orient = glm::vec3(0);
-    m_scale  = glm::vec3(1);
-    mark_dirty_xform();
 }
 
 void XformObject::link_parent(XformObject* parent, bool keep_xform)
@@ -144,12 +144,11 @@ void XformObject::rotate(float angle_delta, glm::vec3 pivot)
 }
 
 // http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/
-bool XformObject::solve_ik_ccd(
-    XformObject* root,
-    glm::vec3    local_end_effector_tip,
-    glm::vec3    target,
-    int          iters,
-    float        accept_distance)
+bool XformObject::solve_ik_ccd(XformObject* root,
+                               glm::vec3    local_end_effector_tip,
+                               glm::vec3    target,
+                               int          iters,
+                               float        accept_distance)
 {
     for(int i = 0; i < iters; i++) {
         //int index = 0;
@@ -174,10 +173,10 @@ bool XformObject::solve_ik_ccd(
             if(i < iters - 1) { // reserve last iter for updating guide wires
                 current_segment->set_orient(offset_to_orient(new_current_segment_heading, &new_current_segment_up_direction));
             }
-            current_segment->m_target_dir           = local_target_dir;
-            current_segment->m_end_effector_tip_dir = local_end_effector_tip_dir;
-            current_segment->m_local_pivot          = local_arc_pivot;
-            current_segment->m_local_target         = current_segment->get_offset_from_origin_in_parent_system(target);
+            current_segment->m_debug_target_dir           = local_target_dir;
+            current_segment->m_debug_end_effector_tip_dir = local_end_effector_tip_dir;
+            current_segment->m_debug_local_pivot          = local_arc_pivot;
+            current_segment->m_debug_local_target         = current_segment->get_offset_from_origin_in_parent_system(target);
 #if 0
             std::cout << "INDEX: " << index << std::endl;
             std::cout << "TARGET: " << glm::to_string(local_target_dir) << ", END_EFF: " << glm::to_string(local_end_effector_tip_dir) << ", ANGLE: " << angle_delta << std::endl;
@@ -240,6 +239,13 @@ const glm::mat4 &XformObject::get_normal_xform()
     return m_normal_xform;
 }
 
+glm::mat4 XformObject::get_local_rotate_xform() const
+{
+    return GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_YAW(m_orient)),   VEC_UP) *
+           GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_PITCH(m_orient)), VEC_LEFT) *
+           GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_ROLL(m_orient)),  VEC_FORWARD);
+}
+
 void XformObject::update_xform_hier()
 {
     for(std::set<XformObject*>::iterator p = m_children.begin(); p != m_children.end(); p++) {
@@ -254,13 +260,6 @@ void XformObject::update_xform_hier()
 void XformObject::update_normal_xform()
 {
     m_normal_xform = glm::transpose(glm::inverse(get_xform()));
-}
-
-glm::mat4 XformObject::get_local_rotate_xform() const
-{
-    return GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_YAW(m_orient)),   VEC_UP) *
-           GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_PITCH(m_orient)), VEC_LEFT) *
-           GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_ROLL(m_orient)),  VEC_FORWARD);
 }
 
 }

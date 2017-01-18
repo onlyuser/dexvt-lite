@@ -19,7 +19,7 @@ class Scene
 {
 public:
     // for guide wires
-    glm::vec3 m_target;
+    glm::vec3 m_debug_target;
 
     typedef enum { USE_MESH_MATERIAL,
                    USE_NORMAL_MATERIAL,

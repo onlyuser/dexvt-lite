@@ -296,7 +296,7 @@ void onKeyboard(unsigned char key, int x, int y)
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
             if(show_guide_wires) {
-                vt::Scene::instance()->m_target = targets[target_index];
+                vt::Scene::instance()->m_debug_target = targets[target_index];
             }
             break;
         case 'h': // help
@@ -362,7 +362,7 @@ void onSpecial(int key, int x, int y)
                 target_index = (target_index + 1) % target_count;
                 std::cout << "target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
                 ik_changed = true;
-                vt::Scene::instance()->m_target = targets[target_index];
+                vt::Scene::instance()->m_debug_target = targets[target_index];
             }
             break;
         case GLUT_KEY_LEFT:

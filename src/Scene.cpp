@@ -382,7 +382,7 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
     if(draw_guide_wires) {
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
-        glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * glm::translate(glm::mat4(1), m_target)));
+        glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * glm::translate(glm::mat4(1), m_debug_target)));
 
         // magenta
         glColor3f(1, 0, 1);
@@ -426,7 +426,7 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
                 glColor3f(1, 0, 1);
                 glm::vec3 origin = glm::vec3(glm::vec4((*p)->get_origin(), 1));
                 glVertex3fv(&origin.x);
-                glm::vec3 endpoint = glm::vec3(glm::vec4((*p)->get_origin() + (*p)->m_local_pivot * local_pivot_length, 1));
+                glm::vec3 endpoint = glm::vec3(glm::vec4((*p)->get_origin() + (*p)->m_debug_local_pivot * local_pivot_length, 1));
                 glVertex3fv(&endpoint.x);
             }
 
@@ -435,7 +435,7 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
                 glColor3f(1, 1, 0);
                 glm::vec3 origin = glm::vec3(glm::vec4((*p)->get_origin(), 1));
                 glVertex3fv(&origin.x);
-                glm::vec3 endpoint = glm::vec3(glm::vec4((*p)->get_origin() + (*p)->m_end_effector_tip_dir * end_effector_tip_dir_length, 1));
+                glm::vec3 endpoint = glm::vec3(glm::vec4((*p)->get_origin() + (*p)->m_debug_end_effector_tip_dir * end_effector_tip_dir_length, 1));
                 glVertex3fv(&endpoint.x);
             }
 
@@ -444,7 +444,7 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
                 glColor3f(0, 1, 1);
                 glm::vec3 origin = glm::vec3(glm::vec4((*p)->get_origin(), 1));
                 glVertex3fv(&origin.x);
-                glm::vec3 endpoint = glm::vec3(glm::vec4((*p)->get_origin() + (*p)->m_target_dir * target_dir_length, 1));
+                glm::vec3 endpoint = glm::vec3(glm::vec4((*p)->get_origin() + (*p)->m_debug_target_dir * target_dir_length, 1));
                 glVertex3fv(&endpoint.x);
             }
 
@@ -453,7 +453,7 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
                 glColor3f(0, 0, 1);
                 glm::vec3 origin = glm::vec3(glm::vec4((*p)->get_origin(), 1));
                 glVertex3fv(&origin.x);
-                glm::vec3 endpoint = glm::vec3(glm::vec4((*p)->get_origin() + (*p)->m_local_target, 1));
+                glm::vec3 endpoint = glm::vec3(glm::vec4((*p)->get_origin() + (*p)->m_debug_local_target, 1));
                 glVertex3fv(&endpoint.x);
             }
 
