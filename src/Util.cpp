@@ -64,8 +64,8 @@ glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up_direction_hint)
     if(up_direction_hint) {
         glm::mat4 rotate_xform_sans_roll = GLM_ROTATE(glm::mat4(1), ORIENT_YAW(orient),   VEC_UP) *
                                            GLM_ROTATE(glm::mat4(1), ORIENT_PITCH(orient), VEC_LEFT);
-        glm::vec3 local_up_direction_hint_roll_component =
-                glm::vec3(glm::inverse(rotate_xform_sans_roll) * glm::vec4(*up_direction_hint, 1));
+        glm::vec3 local_up_direction_hint_roll_component = glm::vec3(glm::inverse(rotate_xform_sans_roll) *
+                                                           glm::vec4(*up_direction_hint, 1));
         ORIENT_ROLL(orient) = glm::degrees(glm::angle(glm::normalize(local_up_direction_hint_roll_component), VEC_UP));
         if(local_up_direction_hint_roll_component.x > 0) {
             ORIENT_ROLL(orient) = -fabs(ORIENT_ROLL(orient));
@@ -96,16 +96,16 @@ glm::vec3 orient_modulo(glm::vec3 orient)
 
 glm::vec3 orient_diff(glm::vec3 a, glm::vec3 b)
 {
-    float yaw_diff   = ORIENT_YAW(a)   - ORIENT_YAW(b);
-    float pitch_diff = ORIENT_PITCH(a) - ORIENT_PITCH(b);
-    return orient_modulo(glm::vec3(0, pitch_diff, yaw_diff));
+    return orient_modulo(glm::vec3(0,
+                                   ORIENT_PITCH(a) - ORIENT_PITCH(b),
+                                   ORIENT_YAW(a)   - ORIENT_YAW(b)));
 }
 
 glm::vec3 orient_sum(glm::vec3 a, glm::vec3 b)
 {
-    float yaw_sum   = ORIENT_YAW(a)   + ORIENT_YAW(b);
-    float pitch_sum = ORIENT_PITCH(a) + ORIENT_PITCH(b);
-    return orient_modulo(glm::vec3(0, pitch_sum, yaw_sum));
+    return orient_modulo(glm::vec3(0,
+                                   ORIENT_PITCH(a) + ORIENT_PITCH(b),
+                                   ORIENT_YAW(a)   + ORIENT_YAW(b)));
 }
 
 void mesh_apply_ripple(Mesh* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase)
@@ -113,9 +113,8 @@ void mesh_apply_ripple(Mesh* mesh, glm::vec3 origin, float amplitude, float wave
     for(int i = 0; i < static_cast<int>(mesh->get_num_vertex()); i++) {
         glm::vec3 pos = mesh->get_vert_coord(i);
         glm::vec3 new_pos = pos;
-        new_pos.y = origin.y +
-                    static_cast<float>(sin(glm::distance(glm::vec2(origin.x, origin.z),
-                                                         glm::vec2(pos.x, pos.z)) / (wavelength / (PI * 2)) + phase)) * amplitude;
+        new_pos.y = origin.y + static_cast<float>(sin(glm::distance(glm::vec2(origin.x, origin.z),
+                               glm::vec2(pos.x, pos.z)) / (wavelength / (PI * 2)) + phase)) * amplitude;
         mesh->set_vert_coord(i, new_pos);
     }
     mesh->update_normals_and_tangents();
