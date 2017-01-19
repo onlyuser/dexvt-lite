@@ -30,8 +30,9 @@ public:
     void reset_xform();
 
     // coordinate system conversions
-    const glm::vec3 get_abs_coord(glm::vec3 local_point = glm::vec3(0));
-    const glm::vec3 get_offset_from_origin_in_parent_system(glm::vec3 abs_point);
+    const glm::vec3 map_to_abs_coord(glm::vec3 local_point = glm::vec3(0));
+    const glm::vec3 map_to_parent_coord(glm::vec3 abs_point);
+    const glm::vec3 map_to_origin_in_parent_coord(glm::vec3 abs_point);
     const glm::vec3 get_abs_left_direction();
     const glm::vec3 get_abs_up_direction();
     const glm::vec3 get_abs_heading();

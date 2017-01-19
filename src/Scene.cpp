@@ -407,7 +407,7 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
 
             // white
             glColor3f(1, 1, 1);
-            glm::vec3 abs_origin = (*p)->get_abs_coord();
+            glm::vec3 abs_origin = (*p)->map_to_abs_coord();
             glVertex3fv(&abs_origin.x);
             glm::vec3 endpoint = glm::vec3((*p)->get_xform() * glm::vec4(VEC_UP * up_arm_length, 1));
             glVertex3fv(&endpoint.x);

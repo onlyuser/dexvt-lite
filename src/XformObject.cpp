@@ -50,17 +50,22 @@ void XformObject::reset_xform()
     mark_dirty_xform();
 }
 
-const glm::vec3 XformObject::get_abs_coord(glm::vec3 local_point)
+const glm::vec3 XformObject::map_to_abs_coord(glm::vec3 local_point)
 {
     return glm::vec3(get_xform() * glm::vec4(local_point, 1));
 }
 
-const glm::vec3 XformObject::get_offset_from_origin_in_parent_system(glm::vec3 abs_point)
+const glm::vec3 XformObject::map_to_parent_coord(glm::vec3 abs_point)
 {
     if(m_parent) {
-        return glm::vec3(glm::inverse(m_parent->get_xform()) * glm::vec4(abs_point, 1)) - m_origin;
+        return glm::vec3(glm::inverse(m_parent->get_xform()) * glm::vec4(abs_point, 1));
     }
-    return abs_point - m_origin;
+    return abs_point;
+}
+
+const glm::vec3 XformObject::map_to_origin_in_parent_coord(glm::vec3 abs_point)
+{
+    return map_to_parent_coord(abs_point) - m_origin;
 }
 
 const glm::vec3 XformObject::get_abs_left_direction()
@@ -82,7 +87,7 @@ void XformObject::link_parent(XformObject* parent, bool keep_xform)
 {
     glm::vec3 abs_origin;
     if(keep_xform) {
-        abs_origin = get_abs_coord();
+        abs_origin = map_to_abs_coord();
     }
     if(parent) {
         if(keep_xform) {
@@ -131,15 +136,15 @@ void XformObject::unlink_children()
 
 void XformObject::point_at(glm::vec3 target)
 {
-    set_orient(offset_to_orient(get_offset_from_origin_in_parent_system(target)));
+    set_orient(offset_to_orient(map_to_origin_in_parent_coord(target)));
 }
 
 void XformObject::rotate(float angle_delta, glm::vec3 pivot)
 {
     glm::mat4 rotate_xform                  = GLM_ROTATE(glm::mat4(1), angle_delta, pivot);
-    glm::vec3 abs_origin                    = get_abs_coord();
-    glm::vec3 parent_local_new_heading      = get_offset_from_origin_in_parent_system(abs_origin + glm::vec3(rotate_xform * glm::vec4(get_abs_heading(), 1)));
-    glm::vec3 parent_local_new_up_direction = get_offset_from_origin_in_parent_system(abs_origin + glm::vec3(rotate_xform * glm::vec4(get_abs_up_direction(), 1)));
+    glm::vec3 abs_origin                    = map_to_abs_coord();
+    glm::vec3 parent_local_new_heading      = map_to_origin_in_parent_coord(abs_origin + glm::vec3(rotate_xform * glm::vec4(get_abs_heading(), 1)));
+    glm::vec3 parent_local_new_up_direction = map_to_origin_in_parent_coord(abs_origin + glm::vec3(rotate_xform * glm::vec4(get_abs_up_direction(), 1)));
     set_orient(offset_to_orient(parent_local_new_heading, &parent_local_new_up_direction));
 }
 
@@ -154,14 +159,14 @@ bool XformObject::solve_ik_ccd(XformObject* root,
         //int index = 0;
         for(XformObject* current_segment = this; current_segment && current_segment != root->get_parent(); current_segment = current_segment->get_parent())
         {
-            glm::vec3 end_effector_tip = get_abs_coord(local_end_effector_tip);
+            glm::vec3 end_effector_tip = map_to_abs_coord(local_end_effector_tip);
             if(glm::distance(end_effector_tip, target) < accept_distance) {
                 return true;
             }
 #if 1
             // attempt #4 -- same as attempt #3, but make use of roll component for each segment
-            glm::vec3 local_target_dir                 = glm::normalize(current_segment->get_offset_from_origin_in_parent_system(target));
-            glm::vec3 local_end_effector_tip_dir       = glm::normalize(current_segment->get_offset_from_origin_in_parent_system(end_effector_tip));
+            glm::vec3 local_target_dir                 = glm::normalize(current_segment->map_to_origin_in_parent_coord(target));
+            glm::vec3 local_end_effector_tip_dir       = glm::normalize(current_segment->map_to_origin_in_parent_coord(end_effector_tip));
             glm::vec3 local_arc_dir                    = glm::normalize(local_target_dir - local_end_effector_tip_dir);
             glm::vec3 local_arc_midpoint_dir           = glm::normalize((local_target_dir + local_end_effector_tip_dir) * 0.5f);
             glm::vec3 local_arc_pivot                  = glm::cross(local_arc_dir, local_arc_midpoint_dir);
@@ -176,7 +181,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             current_segment->m_debug_target_dir           = local_target_dir;
             current_segment->m_debug_end_effector_tip_dir = local_end_effector_tip_dir;
             current_segment->m_debug_local_pivot          = local_arc_pivot;
-            current_segment->m_debug_local_target         = current_segment->get_offset_from_origin_in_parent_system(target);
+            current_segment->m_debug_local_target         = current_segment->map_to_origin_in_parent_coord(target);
 #if 0
             std::cout << "INDEX: " << index << std::endl;
             std::cout << "TARGET: " << glm::to_string(local_target_dir) << ", END_EFF: " << glm::to_string(local_end_effector_tip_dir) << ", ANGLE: " << angle_delta << std::endl;
@@ -185,8 +190,8 @@ bool XformObject::solve_ik_ccd(XformObject* root,
 #endif
 #elif 1
             // attempt #3 -- do rotations in Cartesian coordinates
-            glm::vec3 local_target_dir            = glm::normalize(current_segment->get_offset_from_origin_in_parent_system(target));
-            glm::vec3 local_end_effector_tip_dir  = glm::normalize(current_segment->get_offset_from_origin_in_parent_system(end_effector_tip));
+            glm::vec3 local_target_dir            = glm::normalize(current_segment->map_to_origin_in_parent_coord(target));
+            glm::vec3 local_end_effector_tip_dir  = glm::normalize(current_segment->map_to_origin_in_parent_coord(end_effector_tip));
             glm::vec3 local_arc_dir               = glm::normalize(local_target_dir - local_end_effector_tip_dir);
             glm::vec3 local_arc_midpoint_dir      = glm::normalize((local_target_dir + local_end_effector_tip_dir) * 0.5f);
             glm::vec3 local_arc_pivot             = glm::cross(local_arc_dir, local_arc_midpoint_dir);
@@ -196,14 +201,14 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             current_segment->set_orient(offset_to_orient(new_current_segment_heading));
 #elif 1
             // attempt #2 -- do rotations in Euler coordinates with special handling for angle loop-around
-            glm::vec3 local_target_orient           = offset_to_orient(current_segment->get_offset_from_origin_in_parent_system(target));
-            glm::vec3 local_end_effector_tip_orient = offset_to_orient(current_segment->get_offset_from_origin_in_parent_system(end_effector_tip));
+            glm::vec3 local_target_orient           = offset_to_orient(current_segment->map_to_origin_in_parent_coord(target));
+            glm::vec3 local_end_effector_tip_orient = offset_to_orient(current_segment->map_to_origin_in_parent_coord(end_effector_tip));
             glm::vec3 orient_delta                  = orient_diff(local_target_orient, local_end_effector_tip_orient);
             current_segment->set_orient(orient_sum(current_segment->get_orient(), orient_delta));
 #else
             // attempt #1 -- do rotations in Euler coordinates
-            glm::vec3 local_target_orient           = offset_to_orient(current_segment->get_offset_from_origin_in_parent_system(target));
-            glm::vec3 local_end_effector_tip_orient = offset_to_orient(current_segment->get_offset_from_origin_in_parent_system(end_effector_tip));
+            glm::vec3 local_target_orient           = offset_to_orient(current_segment->map_to_origin_in_parent_coord(target));
+            glm::vec3 local_end_effector_tip_orient = offset_to_orient(current_segment->map_to_origin_in_parent_coord(end_effector_tip));
             glm::vec3 orient_delta                  = local_target_orient - local_end_effector_tip_orient;
             current_segment->set_orient(current_segment->get_orient() + orient_delta);
 #endif

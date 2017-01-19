@@ -355,11 +355,7 @@ void Mesh::set_axis(glm::vec3 axis)
 {
     glm::vec3 local_axis = glm::vec3(glm::inverse(get_xform()) * glm::vec4(axis, 1));
     xform_vertices(glm::translate(glm::mat4(1), -local_axis));
-    if(m_parent) {
-        m_origin = glm::vec3(glm::inverse(m_parent->get_xform()) * glm::vec4(axis, 1));
-    } else {
-        m_origin = axis;
-    }
+    m_origin = map_to_parent_coord(axis);
     mark_dirty_xform();
 }
 
