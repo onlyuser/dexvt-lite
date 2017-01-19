@@ -27,16 +27,16 @@ void print_bitmap_string(void* font, const char* s)
 
 glm::vec3 orient_to_offset(glm::vec3 orient)
 {
-    glm::mat4 rotate_xform_sans_roll =
-            GLM_ROTATE(glm::mat4(1), ORIENT_YAW(orient),   VEC_UP) *
-            GLM_ROTATE(glm::mat4(1), ORIENT_PITCH(orient), VEC_LEFT);
+    glm::mat4 rotate_xform_sans_roll = GLM_ROTATE(glm::mat4(1), ORIENT_YAW(orient),   VEC_UP) *
+                                       GLM_ROTATE(glm::mat4(1), ORIENT_PITCH(orient), VEC_LEFT);
     return glm::vec3(rotate_xform_sans_roll * glm::vec4(VEC_FORWARD, 1));
 }
 
 glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up_direction_hint)
 {
     glm::vec3 orient;
-    glm::vec3 flattened_offset;
+
+    // yaw
     if(static_cast<float>(fabs(offset.x)) < EPSILON && static_cast<float>(fabs(offset.z)) < EPSILON) {
         ORIENT_PITCH(orient) = 90;
         if(up_direction_hint) {
@@ -47,20 +47,23 @@ glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up_direction_hint)
             }
         }
     } else {
-        flattened_offset = glm::normalize(glm::vec3(offset.x, 0, offset.z));
+        glm::vec3 flattened_offset = glm::normalize(glm::vec3(offset.x, 0, offset.z));
         ORIENT_PITCH(orient) = glm::degrees(glm::angle(flattened_offset, glm::normalize(offset))),
         ORIENT_YAW(orient)   = glm::degrees(glm::angle(flattened_offset, VEC_FORWARD));
         if(flattened_offset.x < 0) {
             ORIENT_YAW(orient) = -fabs(ORIENT_YAW(orient));
         }
     }
+
+    // pitch
     if(offset.y > 0) {
         ORIENT_PITCH(orient) = -fabs(ORIENT_PITCH(orient));
     }
+
+    // roll
     if(up_direction_hint) {
-        glm::mat4 rotate_xform_sans_roll =
-                GLM_ROTATE(glm::mat4(1), ORIENT_YAW(orient),   VEC_UP) *
-                GLM_ROTATE(glm::mat4(1), ORIENT_PITCH(orient), VEC_LEFT);
+        glm::mat4 rotate_xform_sans_roll = GLM_ROTATE(glm::mat4(1), ORIENT_YAW(orient),   VEC_UP) *
+                                           GLM_ROTATE(glm::mat4(1), ORIENT_PITCH(orient), VEC_LEFT);
         glm::vec3 local_up_direction_hint_roll_component =
                 glm::vec3(glm::inverse(rotate_xform_sans_roll) * glm::vec4(*up_direction_hint, 1));
         ORIENT_ROLL(orient) = glm::degrees(glm::angle(glm::normalize(local_up_direction_hint_roll_component), VEC_UP));
@@ -68,6 +71,7 @@ glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up_direction_hint)
             ORIENT_ROLL(orient) = -fabs(ORIENT_ROLL(orient));
         }
     }
+
     return orient;
 }
 
@@ -92,14 +96,14 @@ glm::vec3 orient_modulo(glm::vec3 orient)
 
 glm::vec3 orient_diff(glm::vec3 a, glm::vec3 b)
 {
-    float yaw_diff   = ORIENT_YAW(a) - ORIENT_YAW(b);
+    float yaw_diff   = ORIENT_YAW(a)   - ORIENT_YAW(b);
     float pitch_diff = ORIENT_PITCH(a) - ORIENT_PITCH(b);
     return orient_modulo(glm::vec3(0, pitch_diff, yaw_diff));
 }
 
 glm::vec3 orient_sum(glm::vec3 a, glm::vec3 b)
 {
-    float yaw_sum   = ORIENT_YAW(a) + ORIENT_YAW(b);
+    float yaw_sum   = ORIENT_YAW(a)   + ORIENT_YAW(b);
     float pitch_sum = ORIENT_PITCH(a) + ORIENT_PITCH(b);
     return orient_modulo(glm::vec3(0, pitch_sum, yaw_sum));
 }
@@ -172,7 +176,7 @@ bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_
         return false;
     }
     regfree(&preg);
-    for(int i = 0; i<nmatch; i++) {
+    for(int i = 0; i < nmatch; i++) {
         if(!cap_groups[i]) {
             continue;
         }
@@ -198,7 +202,7 @@ bool regexp(std::string &s, std::string pattern, int nmatch, ...)
     std::vector<std::string*> args(nmatch);
     va_list ap;
     va_start(ap, nmatch);
-    for(int i = 0; i<nmatch; i++) {
+    for(int i = 0; i < nmatch; i++) {
         args[i] = va_arg(ap, std::string*);
     }
     va_end(ap);
