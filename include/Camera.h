@@ -1,7 +1,6 @@
 #ifndef VT_CAMERA_H_
 #define VT_CAMERA_H_
 
-#include <NamedObject.h>
 #include <XformObject.h>
 #include <ViewObject.h>
 #include <string>
@@ -16,8 +15,7 @@ namespace vt {
 
 class FrameBuffer;
 
-class Camera : public NamedObject,
-               public XformObject,
+class Camera : public XformObject,
                public ViewObject<glm::vec2, float>
 {
 public:

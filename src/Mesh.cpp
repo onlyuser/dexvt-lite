@@ -1,5 +1,4 @@
 #include <Mesh.h>
-#include <NamedObject.h>
 #include <Buffer.h>
 #include <Material.h>
 #include <Texture.h>
@@ -16,7 +15,7 @@ Mesh::Mesh(
         std::string name,
         size_t      num_vertex,
         size_t      num_tri)
-    : NamedObject(name),
+    : XformObject(name),
       m_num_vertex(num_vertex),
       m_num_tri(num_tri),
       m_visible(true),

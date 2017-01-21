@@ -1,20 +1,18 @@
 #ifndef VT_LIGHT_H_
 #define VT_LIGHT_H_
 
-#include <NamedObject.h>
 #include <XformObject.h>
 #include <glm/glm.hpp>
 #include <string>
 
 namespace vt {
 
-class Light : public NamedObject, public XformObject
+class Light : public XformObject
 {
 public:
-    Light(
-            std::string name   = "",
-            glm::vec3   origin = glm::vec3(0),
-            glm::vec3   color  = glm::vec3(1));
+    Light(std::string name   = "",
+          glm::vec3   origin = glm::vec3(0),
+          glm::vec3   color  = glm::vec3(1));
 
     const glm::vec3 get_color() const
     {

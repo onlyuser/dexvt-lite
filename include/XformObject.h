@@ -1,12 +1,13 @@
 #ifndef VT_XFORM_OBJECT_H_
 #define VT_XFORM_OBJECT_H_
 
+#include <NamedObject.h>
 #include <glm/glm.hpp>
 #include <set>
 
 namespace vt {
 
-class XformObject
+class XformObject : public NamedObject
 {
 public:
     // for guide wires
@@ -15,9 +16,10 @@ public:
     glm::vec3 m_debug_local_pivot;
     glm::vec3 m_debug_local_target;
 
-    XformObject(glm::vec3 origin = glm::vec3(0),
-                glm::vec3 orient = glm::vec3(0),
-                glm::vec3 scale  = glm::vec3(1));
+    XformObject(std::string name,
+                glm::vec3   origin = glm::vec3(0),
+                glm::vec3   orient = glm::vec3(0),
+                glm::vec3   scale  = glm::vec3(1));
     virtual ~XformObject();
 
     // basic features
@@ -38,12 +40,12 @@ public:
     void set_orient_constraints_max_deviation(glm::vec3 orient_constraints_max_deviation) { m_orient_constraints_max_deviation = orient_constraints_max_deviation; }
 
     // coordinate system conversions
-    const glm::vec3 map_to_abs_coord(glm::vec3 local_point = glm::vec3(0));
-    const glm::vec3 map_to_parent_coord(glm::vec3 abs_point);
-    const glm::vec3 map_to_origin_in_parent_coord(glm::vec3 abs_point);
-    const glm::vec3 get_abs_left_direction();
-    const glm::vec3 get_abs_up_direction();
-    const glm::vec3 get_abs_heading();
+    glm::vec3 map_to_abs_coord(glm::vec3 local_point = glm::vec3(0));
+    glm::vec3 map_to_parent_coord(glm::vec3 abs_point) const;
+    glm::vec3 map_to_origin_in_parent_coord(glm::vec3 abs_point) const;
+    glm::vec3 get_abs_left_direction();
+    glm::vec3 get_abs_up_direction();
+    glm::vec3 get_abs_heading();
 
     // hierarchy related
     void link_parent(XformObject* parent, bool keep_xform = false);
@@ -59,6 +61,7 @@ public:
                       glm::vec3    target,
                       int          iters,
                       float        accept_distance);
+    void update_boid(glm::vec3 target, float forward_speed, float angle_delta);
 
     // basic features
     const glm::mat4 &get_xform(bool trace_down = true);

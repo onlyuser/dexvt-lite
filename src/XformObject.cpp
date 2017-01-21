@@ -1,4 +1,5 @@
 #include <XformObject.h>
+#include <NamedObject.h>
 #include <Util.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/vector_angle.hpp>
@@ -8,10 +9,12 @@
 namespace vt {
 
 XformObject::XformObject(
-        glm::vec3 origin,
-        glm::vec3 orient,
-        glm::vec3 scale)
-    : m_origin(origin),
+        std::string name,
+        glm::vec3   origin,
+        glm::vec3   orient,
+        glm::vec3   scale)
+    : NamedObject(name),
+      m_origin(origin),
       m_orient(orient),
       m_scale(scale),
       m_enable_orient_constraints(       glm::ivec3(  0,  0,   0)),
@@ -53,12 +56,12 @@ void XformObject::reset_xform()
     mark_dirty_xform();
 }
 
-const glm::vec3 XformObject::map_to_abs_coord(glm::vec3 local_point)
+glm::vec3 XformObject::map_to_abs_coord(glm::vec3 local_point)
 {
     return glm::vec3(get_xform() * glm::vec4(local_point, 1));
 }
 
-const glm::vec3 XformObject::map_to_parent_coord(glm::vec3 abs_point)
+glm::vec3 XformObject::map_to_parent_coord(glm::vec3 abs_point) const
 {
     if(m_parent) {
         return glm::vec3(glm::inverse(m_parent->get_xform()) * glm::vec4(abs_point, 1));
@@ -66,22 +69,22 @@ const glm::vec3 XformObject::map_to_parent_coord(glm::vec3 abs_point)
     return abs_point;
 }
 
-const glm::vec3 XformObject::map_to_origin_in_parent_coord(glm::vec3 abs_point)
+glm::vec3 XformObject::map_to_origin_in_parent_coord(glm::vec3 abs_point) const
 {
     return map_to_parent_coord(abs_point) - m_origin;
 }
 
-const glm::vec3 XformObject::get_abs_left_direction()
+glm::vec3 XformObject::get_abs_left_direction()
 {
     return glm::vec3(get_normal_xform() * glm::vec4(VEC_LEFT, 1));
 }
 
-const glm::vec3 XformObject::get_abs_up_direction()
+glm::vec3 XformObject::get_abs_up_direction()
 {
     return glm::vec3(get_normal_xform() * glm::vec4(VEC_UP, 1));
 }
 
-const glm::vec3 XformObject::get_abs_heading()
+glm::vec3 XformObject::get_abs_heading()
 {
     return glm::vec3(get_normal_xform() * glm::vec4(VEC_FORWARD, 1));
 }
@@ -159,9 +162,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
                                float        accept_distance)
 {
     for(int i = 0; i < iters; i++) {
-        //int index = 0;
-        for(XformObject* current_segment = this; current_segment && current_segment != root->get_parent(); current_segment = current_segment->get_parent())
-        {
+        for(XformObject* current_segment = this; current_segment && current_segment != root->get_parent(); current_segment = current_segment->get_parent()) {
             glm::vec3 end_effector_tip = map_to_abs_coord(local_end_effector_tip);
             if(glm::distance(end_effector_tip, target) < accept_distance) {
                 return true;
@@ -186,9 +187,9 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             current_segment->m_debug_local_pivot          = local_arc_pivot;
             current_segment->m_debug_local_target         = current_segment->map_to_origin_in_parent_coord(target);
 #if 0
-            std::cout << "INDEX: " << index << std::endl;
+            std::cout << "NAME: " << current_segment->get_name() << ", ORIENT: " << glm::to_string(current_segment->get_orient()) << std::endl;
             std::cout << "TARGET: " << glm::to_string(local_target_dir) << ", END_EFF: " << glm::to_string(local_end_effector_tip_dir) << ", ANGLE: " << angle_delta << std::endl;
-            std::cout << "BEFORE: " << glm::to_string(current_segment_heading) << ", AFTER: " << glm::to_string(new_current_segment_heading) << std::endl;
+            std::cout << "BEFORE: " << glm::to_string(current_segment_rotate_xform * glm::vec4(VEC_FORWARD, 1)) << ", AFTER: " << glm::to_string(new_current_segment_heading) << std::endl;
             std::cout << "PIVOT: " << glm::to_string(local_arc_pivot) << std::endl;
 #endif
 #elif 1
@@ -215,11 +216,15 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             glm::vec3 orient_delta                  = local_target_orient - local_end_effector_tip_orient;
             current_segment->set_orient(current_segment->get_orient() + orient_delta);
 #endif
-            //index++;
             //return true;
         }
     }
     return false;
+}
+
+void XformObject::update_boid(glm::vec3 target, float forward_speed, float angle_delta)
+{
+    // TODO: fix-me!
 }
 
 const glm::mat4 &XformObject::get_xform(bool trace_down)

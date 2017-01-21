@@ -184,6 +184,11 @@ int init_resources()
         (*p)->set_texture_index(     (*p)->get_material()->get_texture_index_by_name("chesterfield_color"));
         (*p)->set_bump_texture_index((*p)->get_material()->get_texture_index_by_name("chesterfield_normal"));
         (*p)->set_ambient_color(glm::vec3(0, 0, 0));
+#if 0
+        // lock roll
+        (*p)->set_enable_orient_constraints(glm::ivec3(1, 0, 0));
+        (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 0, 0));
+#endif
     }
 
     return 1;

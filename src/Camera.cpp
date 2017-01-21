@@ -1,5 +1,4 @@
 #include <Camera.h>
-#include <NamedObject.h>
 #include <XformObject.h>
 #include <ViewObject.h>
 #include <Util.h>
@@ -28,8 +27,7 @@ Camera::Camera(
         glm::vec2         ortho_dim,
         float             zoom,
         projection_mode_t projection_mode)
-    : NamedObject(name),
-      XformObject(origin),
+    : XformObject(name, origin),
       ViewObject(offset, dim),
       m_target(target),
       m_fov(fov),

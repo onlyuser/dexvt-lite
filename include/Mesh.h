@@ -1,7 +1,6 @@
 #ifndef VT_MESH_H_
 #define VT_MESH_H_
 
-#include <NamedObject.h>
 #include <ShaderContext.h>
 #include <Buffer.h>
 #include <XformObject.h>
@@ -17,8 +16,7 @@ namespace vt {
 
 class Material;
 
-class Mesh : public NamedObject,
-             public XformObject,
+class Mesh : public XformObject,
              public BBoxObject,
              public MeshIFace
 {
