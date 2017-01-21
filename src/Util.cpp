@@ -82,30 +82,72 @@ glm::vec3 offset_to_orient(glm::vec3 offset)
 
 glm::vec3 orient_modulo(glm::vec3 orient)
 {
-    float yaw   = ORIENT_YAW(orient);
-    float pitch = ORIENT_PITCH(orient);
-    if(fabs(yaw) >= 180) {
-        yaw = -SIGN(yaw) * (360 - fabs(yaw));
+    if(fabs(ORIENT_YAW(orient)) >= 180) {
+        // yaw:  181 ==> -179
+        // yaw: -181 ==>  179
+        ORIENT_YAW(orient) = -SIGN(ORIENT_YAW(orient)) * (360 - fabs(ORIENT_YAW(orient)));
     }
-    if(fabs(pitch) >= 90) {
-        pitch = -SIGN(pitch) * (180 - fabs(pitch));
-        yaw = -SIGN(yaw) * (180 - fabs(yaw));
+    if(fabs(ORIENT_PITCH(orient)) >= 90) {
+        // pitch:  91 ==>  89
+        // pitch: -91 ==> -89
+        ORIENT_PITCH(orient) = SIGN(ORIENT_PITCH(orient)) * (180 - fabs(ORIENT_PITCH(orient)));
+        // yaw:  179 ==> -1
+        // yaw: -179 ==>  1
+        ORIENT_YAW(orient) = -SIGN(ORIENT_YAW(orient)) * (180 - fabs(ORIENT_YAW(orient)));
     }
-    return glm::vec3(0, pitch, yaw);
+    if(fabs(ORIENT_ROLL(orient)) >= 180) {
+        // roll:  181 ==> -179
+        // roll: -181 ==>  179
+        ORIENT_ROLL(orient) = -SIGN(ORIENT_ROLL(orient)) * (360 - fabs(ORIENT_YAW(orient)));
+    }
+    return orient;
 }
 
-glm::vec3 orient_diff(glm::vec3 a, glm::vec3 b)
+float angle_distance(float angle1, float angle2, float min_angle, float max_angle)
 {
-    return orient_modulo(glm::vec3(0,
-                                   ORIENT_PITCH(a) - ORIENT_PITCH(b),
-                                   ORIENT_YAW(a)   - ORIENT_YAW(b)));
+    float angle_range = max_angle - min_angle;
+    float angle_diff = fabs(angle1 - angle2);
+    if(angle_diff > angle_range * 0.5) {
+        return angle_range - angle_diff;
+    }
+    return angle_diff;
 }
 
-glm::vec3 orient_sum(glm::vec3 a, glm::vec3 b)
+glm::vec3 orient_limit(glm::vec3 orient, glm::ivec3 enable_orient_constraints, glm::vec3 orient_constraints_center, glm::vec3 orient_constraints_max_deviation)
+{
+    static glm::vec3 min_orient(-180, -90, -180);
+    static glm::vec3 max_orient( 180,  90,  180);
+    for(int i = 0; i < 3; i++) {
+        if(!enable_orient_constraints[i]) {
+            continue;
+        }
+        if(angle_distance(orient[i], orient_constraints_center[i], min_orient[i], max_orient[i]) > orient_constraints_max_deviation[i]) {
+            float min_angle = orient_constraints_center[i] - orient_constraints_max_deviation[i];
+            float max_angle = orient_constraints_center[i] + orient_constraints_max_deviation[i];
+            float distance_to_lower_bound = angle_distance(orient[i], min_angle, min_orient[i], max_orient[i]);
+            float distance_to_upper_bound = angle_distance(orient[i], max_angle, min_orient[i], max_orient[i]);
+            if(distance_to_lower_bound < distance_to_upper_bound) {
+                orient[i] = min_angle;
+            } else {
+                orient[i] = max_angle;
+            }
+        }
+    }
+    return orient;
+}
+
+glm::vec3 orient_diff(glm::vec3 orient, glm::vec3 orient_delta)
 {
     return orient_modulo(glm::vec3(0,
-                                   ORIENT_PITCH(a) + ORIENT_PITCH(b),
-                                   ORIENT_YAW(a)   + ORIENT_YAW(b)));
+                                   ORIENT_PITCH(orient) - ORIENT_PITCH(orient_delta),
+                                   ORIENT_YAW(orient)   - ORIENT_YAW(orient_delta)));
+}
+
+glm::vec3 orient_sum(glm::vec3 orient, glm::vec3 orient_delta)
+{
+    return orient_modulo(glm::vec3(0,
+                                   ORIENT_PITCH(orient) + ORIENT_PITCH(orient_delta),
+                                   ORIENT_YAW(orient)   + ORIENT_YAW(orient_delta)));
 }
 
 void mesh_apply_ripple(Mesh* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase)

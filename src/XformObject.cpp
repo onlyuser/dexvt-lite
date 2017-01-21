@@ -14,6 +14,9 @@ XformObject::XformObject(
     : m_origin(origin),
       m_orient(orient),
       m_scale(scale),
+      m_enable_orient_constraints(       glm::ivec3(  0,  0,   0)),
+      m_orient_constraints_center(       glm::ivec3(  0,  0,   0)),
+      m_orient_constraints_max_deviation(glm::ivec3(180, 90, 180)),
       m_parent(NULL),
       m_is_dirty_xform(true),
       m_is_dirty_normal_xform(true)
@@ -32,7 +35,7 @@ void XformObject::set_origin(glm::vec3 origin)
 
 void XformObject::set_orient(glm::vec3 orient)
 {
-    m_orient = orient;
+    m_orient = orient_limit(orient, m_enable_orient_constraints, m_orient_constraints_center, m_orient_constraints_max_deviation);
     mark_dirty_xform();
 }
 
@@ -45,7 +48,7 @@ void XformObject::set_scale(glm::vec3 scale)
 void XformObject::reset_xform()
 {
     m_origin = glm::vec3(0);
-    m_orient = glm::vec3(0);
+    set_orient(glm::vec3(0));
     m_scale  = glm::vec3(1);
     mark_dirty_xform();
 }
