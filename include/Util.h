@@ -43,8 +43,11 @@ namespace vt {
 class Mesh;
 
 void print_bitmap_string(void* font, const char* s);
+glm::vec3 orient_to_offset(glm::vec3 orient,
+                           glm::vec3* up_direction); // out
 glm::vec3 orient_to_offset(glm::vec3 orient);
-glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up_direction_hint);
+glm::vec3 offset_to_orient(glm::vec3 offset,
+                           glm::vec3* up_direction); // in
 glm::vec3 offset_to_orient(glm::vec3 offset);
 glm::vec3 orient_modulo(glm::vec3 orient);
 float angle_distance(float angle1, float angle2, float min_angle, float max_angle);

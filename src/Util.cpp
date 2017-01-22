@@ -25,22 +25,36 @@ void print_bitmap_string(void* font, const char* s)
     }
 }
 
-glm::vec3 orient_to_offset(glm::vec3 orient)
+glm::vec3 orient_to_offset(glm::vec3 orient,
+                           glm::vec3* up_direction) // out
 {
+    if(up_direction) {
+        glm::mat4 rotate_xform = GLM_ROTATE(glm::mat4(1), ORIENT_YAW(orient),   VEC_UP) *
+                                 GLM_ROTATE(glm::mat4(1), ORIENT_PITCH(orient), VEC_LEFT) *
+                                 GLM_ROTATE(glm::mat4(1), ORIENT_ROLL(orient),  VEC_FORWARD);
+        *up_direction = glm::vec3(rotate_xform * glm::vec4(VEC_UP, 1));
+        return glm::vec3(rotate_xform * glm::vec4(VEC_FORWARD, 1));
+    }
     glm::mat4 rotate_xform_sans_roll = GLM_ROTATE(glm::mat4(1), ORIENT_YAW(orient),   VEC_UP) *
                                        GLM_ROTATE(glm::mat4(1), ORIENT_PITCH(orient), VEC_LEFT);
     return glm::vec3(rotate_xform_sans_roll * glm::vec4(VEC_FORWARD, 1));
 }
 
-glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up_direction_hint)
+glm::vec3 orient_to_offset(glm::vec3 orient)
+{
+    return orient_to_offset(orient, NULL);
+}
+
+glm::vec3 offset_to_orient(glm::vec3 offset,
+                           glm::vec3* up_direction) // in
 {
     glm::vec3 orient;
 
     // yaw
     if(static_cast<float>(fabs(offset.x)) < EPSILON && static_cast<float>(fabs(offset.z)) < EPSILON) {
         ORIENT_PITCH(orient) = 90;
-        if(up_direction_hint) {
-            glm::vec3 flattened_offset = -glm::vec3(up_direction_hint->x, 0, up_direction_hint->z);
+        if(up_direction) {
+            glm::vec3 flattened_offset = -glm::vec3(up_direction->x, 0, up_direction->z);
             ORIENT_YAW(orient) = glm::degrees(glm::angle(glm::normalize(flattened_offset), VEC_FORWARD));
             if(flattened_offset.x < 0) {
                 ORIENT_YAW(orient) = -fabs(ORIENT_YAW(orient));
@@ -61,13 +75,13 @@ glm::vec3 offset_to_orient(glm::vec3 offset, glm::vec3* up_direction_hint)
     }
 
     // roll
-    if(up_direction_hint) {
+    if(up_direction) {
         glm::mat4 rotate_xform_sans_roll = GLM_ROTATE(glm::mat4(1), ORIENT_YAW(orient),   VEC_UP) *
                                            GLM_ROTATE(glm::mat4(1), ORIENT_PITCH(orient), VEC_LEFT);
-        glm::vec3 local_up_direction_hint_roll_component = glm::vec3(glm::inverse(rotate_xform_sans_roll) *
-                                                           glm::vec4(*up_direction_hint, 1));
-        ORIENT_ROLL(orient) = glm::degrees(glm::angle(glm::normalize(local_up_direction_hint_roll_component), VEC_UP));
-        if(local_up_direction_hint_roll_component.x > 0) {
+        glm::vec3 local_up_direction_roll_component = glm::vec3(glm::inverse(rotate_xform_sans_roll) *
+                                                           glm::vec4(*up_direction, 1));
+        ORIENT_ROLL(orient) = glm::degrees(glm::angle(glm::normalize(local_up_direction_roll_component), VEC_UP));
+        if(local_up_direction_roll_component.x > 0) {
             ORIENT_ROLL(orient) = -fabs(ORIENT_ROLL(orient));
         }
     }

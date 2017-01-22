@@ -444,7 +444,7 @@ void onMotion(int x, int y)
         mouse_drag = glm::vec2(x, y) - prev_mouse_coord;
     }
     if(left_mouse_down) {
-        orient = prev_orient+glm::vec3(0, mouse_drag.y*ORIENT_PITCH(orbit_speed), mouse_drag.x*ORIENT_YAW(orbit_speed));
+        orient = prev_orient + glm::vec3(0, mouse_drag.y * ORIENT_PITCH(orbit_speed), mouse_drag.x * ORIENT_YAW(orbit_speed));
         camera->orbit(orient, orbit_radius);
     }
     if(right_mouse_down) {

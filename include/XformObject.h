@@ -2,6 +2,7 @@
 #define VT_XFORM_OBJECT_H_
 
 #include <NamedObject.h>
+#include <Util.h>
 #include <glm/glm.hpp>
 #include <set>
 
@@ -54,7 +55,7 @@ public:
     void unlink_children();
 
     // advanced features
-    void point_at(glm::vec3 target);
+    void point_at(glm::vec3 target, glm::vec3 up_direction = VEC_UP);
     void rotate(float angle_delta, glm::vec3 pivot);
     bool solve_ik_ccd(XformObject* root,
                       glm::vec3    local_end_effector_tip,

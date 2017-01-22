@@ -140,9 +140,9 @@ void XformObject::unlink_children()
     }
 }
 
-void XformObject::point_at(glm::vec3 target)
+void XformObject::point_at(glm::vec3 target, glm::vec3 up_direction)
 {
-    set_orient(offset_to_orient(map_to_origin_in_parent_coord(target)));
+    set_orient(offset_to_orient(map_to_origin_in_parent_coord(target), &up_direction));
 }
 
 void XformObject::rotate(float angle_delta, glm::vec3 pivot)
@@ -167,7 +167,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             if(glm::distance(end_effector_tip, target) < accept_distance) {
                 return true;
             }
-#if 1
+#if 0
             // attempt #4 -- same as attempt #3, but make use of roll component for each segment
             glm::vec3 local_target_dir                 = glm::normalize(current_segment->map_to_origin_in_parent_coord(target));
             glm::vec3 local_end_effector_tip_dir       = glm::normalize(current_segment->map_to_origin_in_parent_coord(end_effector_tip));
@@ -203,6 +203,9 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             glm::vec3 current_segment_heading     = orient_to_offset(current_segment->get_orient());
             glm::vec3 new_current_segment_heading = glm::vec3(GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot) * glm::vec4(current_segment_heading, 1));
             current_segment->set_orient(offset_to_orient(new_current_segment_heading));
+#if 0
+            std::cout << "NAME: " << current_segment->get_name() << ", ORIENT: " << glm::to_string(current_segment->get_orient()) << std::endl;
+#endif
 #elif 1
             // attempt #2 -- do rotations in Euler coordinates with special handling for angle loop-around
             glm::vec3 local_target_orient           = offset_to_orient(current_segment->map_to_origin_in_parent_coord(target));

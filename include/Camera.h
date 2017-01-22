@@ -24,20 +24,19 @@ public:
         PROJECTION_MODE_ORTHO
     };
 
-    Camera(
-            std::string       name            = "",
-            glm::vec3         origin          = glm::vec3(0),
-            glm::vec3         target          = glm::vec3(-1),
-            float             fov             = 45,
-            glm::vec2         offset          = glm::vec2(0, 0),
-            glm::vec2         dim             = glm::vec2(DEFAULT_VIEWPORT_WIDTH,
-                                                          DEFAULT_VIEWPORT_HEIGHT),
-            float             near_plane      = 4,
-            float             far_plane       = 16,
-            glm::vec2         ortho_dim       = glm::vec2(DEFAULT_ORTHO_VIEWPORT_WIDTH,
-                                                          DEFAULT_ORTHO_VIEWPORT_HEIGHT),
-            float             zoom            = 1,
-            projection_mode_t projection_mode = PROJECTION_MODE_PERSPECTIVE);
+    Camera(std::string       name            = "",
+           glm::vec3         origin          = glm::vec3(0),
+           glm::vec3         target          = glm::vec3(-1),
+           float             fov             = 45,
+           glm::vec2         offset          = glm::vec2(0, 0),
+           glm::vec2         dim             = glm::vec2(DEFAULT_VIEWPORT_WIDTH,
+                                                         DEFAULT_VIEWPORT_HEIGHT),
+           float             near_plane      = 4,
+           float             far_plane       = 16,
+           glm::vec2         ortho_dim       = glm::vec2(DEFAULT_ORTHO_VIEWPORT_WIDTH,
+                                                         DEFAULT_ORTHO_VIEWPORT_HEIGHT),
+           float             zoom            = 1,
+           projection_mode_t projection_mode = PROJECTION_MODE_PERSPECTIVE);
     virtual ~Camera();
 
     void set_origin(glm::vec3 origin);

@@ -15,18 +15,17 @@
 
 namespace vt {
 
-Camera::Camera(
-        std::string       name,
-        glm::vec3         origin,
-        glm::vec3         target,
-        float             fov,
-        glm::vec2         offset,
-        glm::vec2         dim,
-        float             near_plane,
-        float             far_plane,
-        glm::vec2         ortho_dim,
-        float             zoom,
-        projection_mode_t projection_mode)
+Camera::Camera(std::string       name,
+               glm::vec3         origin,
+               glm::vec3         target,
+               float             fov,
+               glm::vec2         offset,
+               glm::vec2         dim,
+               float             near_plane,
+               float             far_plane,
+               glm::vec2         ortho_dim,
+               float             zoom,
+               projection_mode_t projection_mode)
     : XformObject(name, origin),
       ViewObject(offset, dim),
       m_target(target),
@@ -49,19 +48,21 @@ Camera::~Camera()
 void Camera::set_origin(glm::vec3 origin)
 {
     m_origin = origin;
+    m_orient = offset_to_orient(m_target - m_origin);
     mark_dirty_xform();
 }
 
 void Camera::set_orient(glm::vec3 orient)
 {
     m_orient = orient;
-    m_target = m_origin+orient_to_offset(orient);
+    m_target = m_origin + orient_to_offset(orient);
     mark_dirty_xform();
 }
 
 void Camera::set_target(glm::vec3 target)
 {
     m_target = target;
+    m_orient = offset_to_orient(m_target - m_origin);
     mark_dirty_xform();
 }
 
@@ -74,6 +75,7 @@ void Camera::move(glm::vec3 origin, glm::vec3 target)
 {
     m_origin = origin;
     m_target = target;
+    m_orient = offset_to_orient(m_target - m_origin);
     mark_dirty_xform();
 }
 
@@ -85,16 +87,17 @@ void Camera::orbit(glm::vec3 &orient, float &radius)
     if(ORIENT_PITCH(orient) < MIN_PITCH) {
         ORIENT_PITCH(orient) = MIN_PITCH;
     }
-    if(ORIENT_YAW(orient) > 360) {
-        ORIENT_YAW(orient) -= 360;
+    if(ORIENT_YAW(orient) > 180) {
+        ORIENT_YAW(orient) -= 180;
     }
-    if(ORIENT_YAW(orient) < 0) {
-        ORIENT_YAW(orient) += 360;
+    if(ORIENT_YAW(orient) < -180) {
+        ORIENT_YAW(orient) += 180;
     }
     if(radius < 0) {
         radius = 0;
     }
-    m_origin = m_target + orient_to_offset(orient)*radius;
+    m_orient = orient;
+    m_origin = m_target + orient_to_offset(orient) * radius;
     mark_dirty_xform();
 }
 
@@ -192,8 +195,9 @@ void Camera::update_projection_xform()
 
 void Camera::update_xform()
 {
-    m_xform = glm::lookAt(m_origin, m_target, VEC_UP);
-    m_orient = offset_to_orient(m_target - m_origin);
+    glm::vec3 up_direction;
+    orient_to_offset(m_orient, &up_direction);
+    m_xform = glm::lookAt(m_origin, m_target, up_direction);
 }
 
 }
