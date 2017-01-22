@@ -227,13 +227,13 @@ bool XformObject::solve_ik_ccd(XformObject* root,
 
 void XformObject::update_boid(glm::vec3 target, float forward_speed, float angle_delta)
 {
-    glm::vec3 end_effector_tip = map_to_abs_coord(VEC_FORWARD);
+    glm::vec3 abs_heading = map_to_abs_coord(VEC_FORWARD);
 #if 1
     // attempt #4 -- same as attempt #3, but make use of roll component
     glm::vec3 local_target_dir                 = glm::normalize(map_to_origin_in_parent_coord(target));
-    glm::vec3 local_end_effector_tip_dir       = glm::normalize(map_to_origin_in_parent_coord(end_effector_tip));
-    glm::vec3 local_arc_dir                    = glm::normalize(local_target_dir - local_end_effector_tip_dir);
-    glm::vec3 local_arc_midpoint_dir           = glm::normalize((local_target_dir + local_end_effector_tip_dir) * 0.5f);
+    glm::vec3 local_heading                    = glm::normalize(map_to_origin_in_parent_coord(abs_heading));
+    glm::vec3 local_arc_dir                    = glm::normalize(local_target_dir - local_heading);
+    glm::vec3 local_arc_midpoint_dir           = glm::normalize((local_target_dir + local_heading) * 0.5f);
     glm::vec3 local_arc_pivot                  = glm::cross(local_arc_dir, local_arc_midpoint_dir);
     glm::mat4 current_segment_rotate_xform     = get_local_rotate_xform();
     glm::mat4 local_arc_rotate_xform           = GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot);
@@ -243,9 +243,9 @@ void XformObject::update_boid(glm::vec3 target, float forward_speed, float angle
 #else
     // attempt #3 -- do rotations in Cartesian coordinates
     glm::vec3 local_target_dir            = glm::normalize(map_to_origin_in_parent_coord(target));
-    glm::vec3 local_end_effector_tip_dir  = glm::normalize(map_to_origin_in_parent_coord(end_effector_tip));
-    glm::vec3 local_arc_dir               = glm::normalize(local_target_dir - local_end_effector_tip_dir);
-    glm::vec3 local_arc_midpoint_dir      = glm::normalize((local_target_dir + local_end_effector_tip_dir) * 0.5f);
+    glm::vec3 local_heading               = glm::normalize(map_to_origin_in_parent_coord(abs_heading));
+    glm::vec3 local_arc_dir               = glm::normalize(local_target_dir - local_heading);
+    glm::vec3 local_arc_midpoint_dir      = glm::normalize((local_target_dir + local_heading) * 0.5f);
     glm::vec3 local_arc_pivot             = glm::cross(local_arc_dir, local_arc_midpoint_dir);
     glm::vec3 current_segment_heading     = orient_to_offset(get_orient());
     glm::vec3 new_current_segment_heading = glm::vec3(GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot) * glm::vec4(current_segment_heading, 1));
