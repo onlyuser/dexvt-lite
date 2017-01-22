@@ -168,7 +168,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
                 return true;
             }
 #if 0
-            // attempt #4 -- same as attempt #3, but make use of roll component for each segment
+            // attempt #4 -- same as attempt #3, but make use of roll component
             glm::vec3 local_target_dir                 = glm::normalize(current_segment->map_to_origin_in_parent_coord(target));
             glm::vec3 local_end_effector_tip_dir       = glm::normalize(current_segment->map_to_origin_in_parent_coord(end_effector_tip));
             glm::vec3 local_arc_dir                    = glm::normalize(local_target_dir - local_end_effector_tip_dir);
@@ -229,7 +229,7 @@ void XformObject::update_boid(glm::vec3 target, float forward_speed, float angle
 {
     glm::vec3 end_effector_tip = map_to_abs_coord(VEC_FORWARD);
 #if 1
-    // attempt #4 -- same as attempt #3, but make use of roll component for each segment
+    // attempt #4 -- same as attempt #3, but make use of roll component
     glm::vec3 local_target_dir                 = glm::normalize(map_to_origin_in_parent_coord(target));
     glm::vec3 local_end_effector_tip_dir       = glm::normalize(map_to_origin_in_parent_coord(end_effector_tip));
     glm::vec3 local_arc_dir                    = glm::normalize(local_target_dir - local_end_effector_tip_dir);
