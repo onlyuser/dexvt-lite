@@ -88,10 +88,10 @@ void Camera::orbit(glm::vec3 &orient, float &radius)
         ORIENT_PITCH(orient) = MIN_PITCH;
     }
     if(ORIENT_YAW(orient) > 180) {
-        ORIENT_YAW(orient) -= 180;
+        ORIENT_YAW(orient) -= 360;
     }
     if(ORIENT_YAW(orient) < -180) {
-        ORIENT_YAW(orient) += 180;
+        ORIENT_YAW(orient) += 360;
     }
     if(radius < 0) {
         radius = 0;
