@@ -62,7 +62,7 @@ public:
                       glm::vec3    target,
                       int          iters,
                       float        accept_distance);
-    void update_boid(glm::vec3 target, float forward_speed, float angle_delta);
+    void update_boid(glm::vec3 target, float forward_speed, float angle_delta, float avoid_radius);
 
     // basic features
     const glm::mat4 &get_xform(bool trace_down = true);

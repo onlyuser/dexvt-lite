@@ -309,7 +309,7 @@ void onTick()
         ik_changed = false;
     }
     for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
-        (*p)->update_boid(targets[target_index], 0.025, 2.5);
+        (*p)->update_boid(targets[target_index], 0.025, 2.5, 1);
     }
     angle = (angle + angle_delta) % 360;
 }
