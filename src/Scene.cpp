@@ -204,13 +204,13 @@ void Scene::render(bool                clear_canvas,
     int i = 0;
     for(lights_t::const_iterator p = m_lights.begin(); p != m_lights.end(); p++) {
         glm::vec3 light_pos = (*p)->get_origin();
-        m_light_pos[i*3 + 0] = light_pos.x;
-        m_light_pos[i*3 + 1] = light_pos.y;
-        m_light_pos[i*3 + 2] = light_pos.z;
+        m_light_pos[i * 3 + 0] = light_pos.x;
+        m_light_pos[i * 3 + 1] = light_pos.y;
+        m_light_pos[i * 3 + 2] = light_pos.z;
         glm::vec3 light_color = (*p)->get_color();
-        m_light_color[i*3 + 0] = light_color.r;
-        m_light_color[i*3 + 1] = light_color.g;
-        m_light_color[i*3 + 2] = light_color.b;
+        m_light_color[i * 3 + 0] = light_color.r;
+        m_light_color[i * 3 + 1] = light_color.g;
+        m_light_color[i * 3 + 2] = light_color.b;
         m_light_enabled[i] = (*p)->get_enabled();
         i++;
     }
