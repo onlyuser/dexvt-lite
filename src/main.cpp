@@ -170,11 +170,12 @@ int init_resources()
     glm::vec3 scatter_max( 10,  10,  10);
     create_boid_boxes(scene, &boid_meshes, BOID_COUNT, scatter_min, scatter_max, "boid_box", glm::vec3(0.0625, 0.0625, 0.25));
 
-    vt::Material* bump_mapped_material = new vt::Material(
-            "bump_mapped",
-            "src/shaders/bump_mapped.v.glsl",
-            "src/shaders/bump_mapped.f.glsl");
-    scene->add_material(bump_mapped_material);
+    vt::Material* ambient_material = new vt::Material(
+            "ambient",
+            "src/shaders/ambient.v.glsl",
+            "src/shaders/ambient.f.glsl");
+    scene->add_material(ambient_material);
+    scene->set_wireframe_material(ambient_material);
 
     vt::Material* skybox_material = new vt::Material(
             "skybox",
@@ -183,12 +184,28 @@ int init_resources()
             true); // use_overlay
     scene->add_material(skybox_material);
 
-    vt::Material* ambient_material = new vt::Material(
-            "ambient",
-            "src/shaders/ambient.v.glsl",
-            "src/shaders/ambient.f.glsl");
-    scene->add_material(ambient_material);
-    scene->set_wireframe_material(ambient_material);
+    vt::Material* bump_mapped_material = new vt::Material(
+            "bump_mapped",
+            "src/shaders/bump_mapped.v.glsl",
+            "src/shaders/bump_mapped.f.glsl");
+    scene->add_material(bump_mapped_material);
+
+    vt::Material* phong_material = new vt::Material(
+            "phong",
+            "src/shaders/phong.v.glsl",
+            "src/shaders/phong.f.glsl");
+    scene->add_material(phong_material);
+
+    texture_skybox = new vt::Texture(
+            "skybox_texture",
+            "data/SaintPetersSquare2/posx.png",
+            "data/SaintPetersSquare2/negx.png",
+            "data/SaintPetersSquare2/posy.png",
+            "data/SaintPetersSquare2/negy.png",
+            "data/SaintPetersSquare2/posz.png",
+            "data/SaintPetersSquare2/negz.png");
+    scene->add_texture(          texture_skybox);
+    skybox_material->add_texture(texture_skybox);
 
     texture_box_color = new vt::Texture(
             "chesterfield_color",
@@ -201,17 +218,6 @@ int init_resources()
             "data/chesterfield_normal.png");
     scene->add_texture(               texture_box_normal);
     bump_mapped_material->add_texture(texture_box_normal);
-
-    texture_skybox = new vt::Texture(
-            "skybox_texture",
-            "data/SaintPetersSquare2/posx.png",
-            "data/SaintPetersSquare2/negx.png",
-            "data/SaintPetersSquare2/posy.png",
-            "data/SaintPetersSquare2/negy.png",
-            "data/SaintPetersSquare2/posz.png",
-            "data/SaintPetersSquare2/negz.png");
-    scene->add_texture(          texture_skybox);
-    skybox_material->add_texture(texture_skybox);
 
     glm::vec3 origin = glm::vec3();
     camera = new vt::Camera("camera", origin + glm::vec3(0, 0, orbit_radius), origin);
@@ -237,9 +243,7 @@ int init_resources()
     }
 
     for(std::vector<vt::Mesh*>::iterator q = boid_meshes.begin(); q != boid_meshes.end(); q++) {
-        (*q)->set_material(bump_mapped_material);
-        (*q)->set_texture_index(     (*q)->get_material()->get_texture_index_by_name("chesterfield_color"));
-        (*q)->set_bump_texture_index((*q)->get_material()->get_texture_index_by_name("chesterfield_normal"));
+        (*q)->set_material(phong_material);
         (*q)->set_ambient_color(glm::vec3(0, 0, 0));
     }
 

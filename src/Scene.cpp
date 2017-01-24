@@ -364,7 +364,7 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
                                   bool draw_hud_text,
                                   char* hud_text) const
 {
-    const float normal_surface_distance       = 0.05;
+    const float normal_surface_distance     = 0.05;
     const float up_arm_length               = 0.5;                // white
     const float local_pivot_length          = 1  * up_arm_length; // magenta
     const float end_effector_tip_dir_length = 10 * up_arm_length; // yellow
