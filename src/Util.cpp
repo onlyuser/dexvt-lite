@@ -150,20 +150,6 @@ glm::vec3 orient_limit(glm::vec3 orient, glm::ivec3 enable_orient_constraints, g
     return orient;
 }
 
-glm::vec3 orient_diff(glm::vec3 orient, glm::vec3 orient_delta)
-{
-    return orient_modulo(glm::vec3(0,
-                                   ORIENT_PITCH(orient) - ORIENT_PITCH(orient_delta),
-                                   ORIENT_YAW(orient)   - ORIENT_YAW(orient_delta)));
-}
-
-glm::vec3 orient_sum(glm::vec3 orient, glm::vec3 orient_delta)
-{
-    return orient_modulo(glm::vec3(0,
-                                   ORIENT_PITCH(orient) + ORIENT_PITCH(orient_delta),
-                                   ORIENT_YAW(orient)   + ORIENT_YAW(orient_delta)));
-}
-
 void mesh_apply_ripple(Mesh* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase)
 {
     for(int i = 0; i < static_cast<int>(mesh->get_num_vertex()); i++) {

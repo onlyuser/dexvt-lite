@@ -52,8 +52,6 @@ glm::vec3 offset_to_orient(glm::vec3 offset);
 glm::vec3 orient_modulo(glm::vec3 orient);
 float angle_distance(float angle1, float angle2, float min_angle, float max_angle);
 glm::vec3 orient_limit(glm::vec3 orient, glm::ivec3 enable_orient_constraints, glm::vec3 orient_constraints_center, glm::vec3 orient_constraints_max_deviation);
-glm::vec3 orient_diff(glm::vec3 orient, glm::vec3 orient_delta);
-glm::vec3 orient_sum(glm::vec3 orient, glm::vec3 orient_delta);
 void mesh_apply_ripple(Mesh* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase);
 bool read_file(std::string filename, std::string &s);
 bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups, size_t* start_pos);
