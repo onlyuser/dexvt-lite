@@ -403,7 +403,7 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
             continue;
         }
 
-        if(draw_guide_wires) {
+        if(draw_guide_wires && ((*p)->get_parent() || (*p)->get_children().size())) {
             glLoadMatrixf(glm::value_ptr(m_camera->get_xform()));
             glLineWidth(guide_wire_width);
             glBegin(GL_LINES);

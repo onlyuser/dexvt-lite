@@ -177,7 +177,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             float     angle_delta                = glm::degrees(glm::angle(local_target_dir, local_end_effector_tip_dir));
             glm::vec3 local_arc_pivot            = glm::cross(local_arc_dir, local_arc_midpoint_dir);
             glm::mat4 local_arc_rotate_xform     = GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot);
-    #if 0
+    #if 1
             // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
             glm::mat4 current_segment_rotate_xform     = current_segment->get_local_rotate_xform();
             glm::vec3 new_current_segment_heading      = glm::vec3(local_arc_rotate_xform * current_segment_rotate_xform * glm::vec4(VEC_FORWARD, 1));
