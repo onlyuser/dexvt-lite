@@ -42,40 +42,40 @@ Scene::Scene()
     for(int j = 0; j < BLOOM_KERNEL_SIZE; j++) {
         sum_weights += m_bloom_kernel[j];
     }
-    float sum_weights_inv = 1/sum_weights;
+    float sum_weights_inv = 1 / sum_weights;
     for(int k = 0; k < BLOOM_KERNEL_SIZE; k++) {
         m_bloom_kernel[k] *= sum_weights_inv;
     }
     m_glow_cutoff_threshold = 0;
-    m_light_pos     = new GLfloat[NUM_LIGHTS*3];
-    m_light_color   = new GLfloat[NUM_LIGHTS*3];
+    m_light_pos     = new GLfloat[NUM_LIGHTS * 3];
+    m_light_color   = new GLfloat[NUM_LIGHTS * 3];
     m_light_enabled = new GLint[NUM_LIGHTS];
     for(int q = 0; q < NUM_LIGHTS; q++) {
-        m_light_pos[q*3 + 0]   = 0;
-        m_light_pos[q*3 + 1]   = 0;
-        m_light_pos[q*3 + 2]   = 0;
-        m_light_color[q*3 + 0] = 0;
-        m_light_color[q*3 + 1] = 0;
-        m_light_color[q*3 + 2] = 0;
-        m_light_enabled[q]     = 0;
+        m_light_pos[q * 3 + 0]   = 0;
+        m_light_pos[q * 3 + 1]   = 0;
+        m_light_pos[q * 3 + 2]   = 0;
+        m_light_color[q * 3 + 0] = 0;
+        m_light_color[q * 3 + 1] = 0;
+        m_light_color[q * 3 + 2] = 0;
+        m_light_enabled[q]       = 0;
     }
 
     // http://john-chapman-graphics.blogspot.tw/2013/01/ssao-tutorial.html
-    m_ssao_sample_kernel_pos = new GLfloat[NUM_SSAO_SAMPLE_KERNELS*3];
+    m_ssao_sample_kernel_pos = new GLfloat[NUM_SSAO_SAMPLE_KERNELS * 3];
     for(int r = 0; r < NUM_SSAO_SAMPLE_KERNELS; r++) {
         glm::vec3 offset;
         do {
             offset = glm::vec3(
-                    m_ssao_sample_kernel_pos[r*3 + 0] = static_cast<float>(rand())/RAND_MAX*2 - 1,
-                    m_ssao_sample_kernel_pos[r*3 + 1] = static_cast<float>(rand())/RAND_MAX*2 - 1,
-                    m_ssao_sample_kernel_pos[r*3 + 2] = static_cast<float>(rand())/RAND_MAX);
+                    m_ssao_sample_kernel_pos[r * 3 + 0] = static_cast<float>(rand()) / RAND_MAX * 2 - 1,
+                    m_ssao_sample_kernel_pos[r * 3 + 1] = static_cast<float>(rand()) / RAND_MAX * 2 - 1,
+                    m_ssao_sample_kernel_pos[r * 3 + 2] = static_cast<float>(rand()) / RAND_MAX);
         } while(glm::dot(glm::vec3(0, 0, 1), offset) < 0.15);
-        float scale = static_cast<float>(r)/NUM_SSAO_SAMPLE_KERNELS;
-        scale = glm::lerp(0.1f, 1.0f, scale*scale);
+        float scale = static_cast<float>(r) / NUM_SSAO_SAMPLE_KERNELS;
+        scale = glm::lerp(0.1f, 1.0f, scale * scale);
         offset *= scale;
-        m_ssao_sample_kernel_pos[r*3 + 0] = offset.x;
-        m_ssao_sample_kernel_pos[r*3 + 1] = offset.y;
-        m_ssao_sample_kernel_pos[r*3 + 2] = offset.z;
+        m_ssao_sample_kernel_pos[r * 3 + 0] = offset.x;
+        m_ssao_sample_kernel_pos[r * 3 + 1] = offset.y;
+        m_ssao_sample_kernel_pos[r * 3 + 2] = offset.z;
     }
 }
 
@@ -364,7 +364,7 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
                                   bool draw_hud_text,
                                   char* hud_text) const
 {
-    const float axis_surface_distance       = 0.05;
+    const float normal_surface_distance       = 0.05;
     const float up_arm_length               = 0.5;                // white
     const float local_pivot_length          = 1  * up_arm_length; // magenta
     const float end_effector_tip_dir_length = 10 * up_arm_length; // yellow
@@ -372,6 +372,9 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
     const float guide_wire_width            = 1;
     const float axis_arm_length             = 0.25;
     const float axis_line_width             = 3;
+    const float bbox_line_width             = 1;
+    const float normal_arm_length           = 0.125;
+    const float normal_line_width           = 1;
 
     glDisable(GL_DEPTH_TEST);
 
@@ -497,15 +500,13 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
             glLineWidth(1);
         }
 
-        glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
-        glBegin(GL_LINES);
-
         if(draw_bbox) {
+            glEnable(GL_DEPTH_TEST);
+
             glm::vec3 min, max;
             (*p)->get_min_max(&min, &max);
-            min -= glm::vec3(axis_surface_distance);
-            max += glm::vec3(axis_surface_distance);
-            glColor3f(1, 0, 0);
+            min -= glm::vec3(normal_surface_distance);
+            max += glm::vec3(normal_surface_distance);
 
             glm::vec3 llb(min.x, min.y, min.z);
             glm::vec3 lrb(max.x, min.y, min.z);
@@ -515,6 +516,12 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
             glm::vec3 lrf(max.x, min.y, max.z);
             glm::vec3 urf(max.x, max.y, max.z);
             glm::vec3 ulf(min.x, max.y, max.z);
+
+            glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
+            glLineWidth(bbox_line_width);
+            glBegin(GL_LINES);
+
+            glColor3f(1, 0, 0);
 
             // back quad
             glVertex3fv(&llb.x);
@@ -554,42 +561,56 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
 
             glVertex3fv(&ulb.x);
             glVertex3fv(&ulf.x);
+
+            glEnd();
+            glLineWidth(1);
+
+            glDisable(GL_DEPTH_TEST);
         }
 
         if(draw_normals) {
+            glEnable(GL_DEPTH_TEST);
+
+            glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
+            glLineWidth(normal_line_width);
+            glBegin(GL_LINES);
+
             // normal
             glColor3f(0, 0, 1);
-            for (int i = 0; i < static_cast<int>((*p)->get_num_vertex()); i++){
+            for (int i = 0; i < static_cast<int>((*p)->get_num_vertex()); i++) {
                 glm::vec3 v = (*p)->get_vert_coord(i);
-                v += (*p)->get_vert_normal(i)*axis_surface_distance;
+                v += (*p)->get_vert_normal(i) * normal_surface_distance;
                 glVertex3fv(&v.x);
-                v += (*p)->get_vert_normal(i)*axis_arm_length;
+                v += (*p)->get_vert_normal(i) * normal_arm_length;
                 glVertex3fv(&v.x);
             }
 
             // tangent
             glColor3f(1, 0, 0);
-            for (int i = 0; i < static_cast<int>((*p)->get_num_vertex()); i++){
+            for (int i = 0; i < static_cast<int>((*p)->get_num_vertex()); i++) {
                 glm::vec3 v = (*p)->get_vert_coord(i);
-                v += (*p)->get_vert_normal(i)*axis_surface_distance;
+                v += (*p)->get_vert_normal(i) * normal_surface_distance;
                 glVertex3fv(&v.x);
-                v += (*p)->get_vert_tangent(i)*axis_arm_length;
+                v += (*p)->get_vert_tangent(i) * normal_arm_length;
                 glVertex3fv(&v.x);
             }
 
             // bitangent
             glColor3f(0, 1, 0);
-            for (int i = 0; i < static_cast<int>((*p)->get_num_vertex()); i++){
+            for (int i = 0; i < static_cast<int>((*p)->get_num_vertex()); i++) {
                 glm::vec3 v = (*p)->get_vert_coord(i);
-                v += (*p)->get_vert_normal(i)*axis_surface_distance;
+                v += (*p)->get_vert_normal(i) * normal_surface_distance;
                 glVertex3fv(&v.x);
                 glm::vec3 bitangent = glm::normalize(glm::cross((*p)->get_vert_normal(i), (*p)->get_vert_tangent(i)));
-                v += bitangent*axis_arm_length;
+                v += bitangent * normal_arm_length;
                 glVertex3fv(&v.x);
             }
-        }
 
-        glEnd();
+            glEnd();
+            glLineWidth(1);
+
+            glDisable(GL_DEPTH_TEST);
+        }
 
         if(draw_axis_labels) {
             std::string axis_label;
