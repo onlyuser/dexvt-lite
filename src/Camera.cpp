@@ -1,6 +1,6 @@
 #include <Camera.h>
 #include <XformObject.h>
-#include <ViewObject.h>
+#include <FrameObject.h>
 #include <Util.h>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -27,7 +27,7 @@ Camera::Camera(std::string       name,
                float             zoom,
                projection_mode_t projection_mode)
     : XformObject(name, origin),
-      ViewObject(offset, dim),
+      FrameObject(offset, dim),
       m_target(target),
       m_fov(fov),
       m_near_plane(near_plane),
@@ -110,7 +110,7 @@ void Camera::set_fov(float fov)
 
 void Camera::resize(float left, float bottom, float width, float height)
 {
-    ViewObject<glm::vec2, float>::resize(left, bottom, width, height);
+    FrameObject<glm::vec2, float>::resize(left, bottom, width, height);
     m_is_dirty_projection_xform = true;
     mark_dirty_xform();
 }

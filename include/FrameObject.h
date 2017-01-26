@@ -1,12 +1,12 @@
-#ifndef VT_VIEW_OBJECT_H_
-#define VT_VIEW_OBJECT_H_
+#ifndef VT_FRAME_OBJECT_H_
+#define VT_FRAME_OBJECT_H_
 
 #include <glm/glm.hpp>
 
 namespace vt {
 
 template<class T, class T2>
-class ViewObject
+class FrameObject
 {
 public:
     T get_offset() const
@@ -49,14 +49,14 @@ protected:
     T m_offset;
     T m_dim;
 
-    ViewObject(
+    FrameObject(
             T offset,
             T dim)
         : m_offset(offset),
           m_dim(dim)
     {
     }
-    virtual ~ViewObject()
+    virtual ~FrameObject()
     {
     }
 };

@@ -2,7 +2,7 @@
 #define VT_CAMERA_H_
 
 #include <XformObject.h>
-#include <ViewObject.h>
+#include <FrameObject.h>
 #include <string>
 #include <glm/glm.hpp>
 
@@ -16,7 +16,7 @@ namespace vt {
 class FrameBuffer;
 
 class Camera : public XformObject,
-               public ViewObject<glm::vec2, float>
+               public FrameObject<glm::vec2, float>
 {
 public:
     enum projection_mode_t {

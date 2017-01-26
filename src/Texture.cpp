@@ -1,6 +1,6 @@
 #include <Texture.h>
 #include <NamedObject.h>
-#include <ViewObject.h>
+#include <FrameObject.h>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <png.h>
@@ -12,15 +12,14 @@
 
 namespace vt {
 
-Texture::Texture(
-        std::string          name,
-        glm::ivec2           dim,
-        const unsigned char* pixel_data,
-        type_t               type,
-        bool                 smooth,
-        bool                 random)
+Texture::Texture(std::string          name,
+                 glm::ivec2           dim,
+                 const unsigned char* pixel_data,
+                 type_t               type,
+                 bool                 smooth,
+                 bool                 random)
     : NamedObject(name),
-      ViewObject(glm::ivec2(0, 0), dim),
+      FrameObject(glm::ivec2(0, 0), dim),
       m_skybox(false),
       m_type(type)
 {
@@ -72,12 +71,11 @@ Texture::Texture(
     }
 }
 
-Texture::Texture(
-        std::string name,
-        std::string png_filename,
-        bool        smooth)
+Texture::Texture(std::string name,
+                 std::string png_filename,
+                 bool        smooth)
     : NamedObject(name),
-      ViewObject(glm::ivec2(0, 0), glm::ivec2(0, 0)),
+      FrameObject(glm::ivec2(0, 0), glm::ivec2(0, 0)),
       m_skybox(false),
       m_type(Texture::RGB)
 {
@@ -104,7 +102,7 @@ Texture::Texture(
         std::string png_filename_pos_z,
         std::string png_filename_neg_z)
     : NamedObject(name),
-      ViewObject(glm::ivec2(0, 0), glm::ivec2(0, 0)),
+      FrameObject(glm::ivec2(0, 0), glm::ivec2(0, 0)),
       m_skybox(true),
       m_type(Texture::RGB)
 {
@@ -182,12 +180,11 @@ void Texture::bind()
     }
 }
 
-GLuint Texture::gen_texture_internal(
-        size_t      width,
-        size_t      height,
-        const void* pixel_data,
-        type_t      type,
-        bool        smooth)
+GLuint Texture::gen_texture_internal(size_t      width,
+                                     size_t      height,
+                                     const void* pixel_data,
+                                     type_t      type,
+                                     bool        smooth)
 {
     GLuint id = 0;
     glGenTextures(1, &id);
@@ -222,15 +219,14 @@ GLuint Texture::gen_texture_internal(
     return id;
 }
 
-GLuint Texture::gen_texture_skybox_internal(
-        size_t      width,
-        size_t      height,
-        const void* pixel_data_pos_x,
-        const void* pixel_data_neg_x,
-        const void* pixel_data_pos_y,
-        const void* pixel_data_neg_y,
-        const void* pixel_data_pos_z,
-        const void* pixel_data_neg_z)
+GLuint Texture::gen_texture_skybox_internal(size_t      width,
+                                            size_t      height,
+                                            const void* pixel_data_pos_x,
+                                            const void* pixel_data_neg_x,
+                                            const void* pixel_data_pos_y,
+                                            const void* pixel_data_neg_y,
+                                            const void* pixel_data_pos_z,
+                                            const void* pixel_data_neg_z)
 {
     GLuint id = 0;
     glGenTextures(1, &id);
@@ -303,7 +299,10 @@ GLuint Texture::gen_texture_skybox_internal(
     return id;
 }
 
-bool Texture::read_png(std::string png_filename, void** pixel_data, size_t* width, size_t* height)
+bool Texture::read_png(std::string png_filename,
+                       void**      pixel_data,
+                       size_t*     width,
+                       size_t*     height)
 {
     if(!pixel_data || !width || !height) {
         return false;

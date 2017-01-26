@@ -149,11 +149,11 @@ void XformObject::point_at(glm::vec3 target, glm::vec3 up_direction)
 
 void XformObject::rotate(float angle_delta, glm::vec3 pivot)
 {
-    glm::mat4 rotate_xform                  = GLM_ROTATE(glm::mat4(1), angle_delta, pivot);
-    glm::vec3 abs_origin                    = map_to_abs_coord();
-    glm::vec3 parent_local_new_heading      = map_to_origin_in_parent_coord(abs_origin + glm::vec3(rotate_xform * glm::vec4(get_abs_heading(), 1)));
-    glm::vec3 parent_local_new_up_direction = map_to_origin_in_parent_coord(abs_origin + glm::vec3(rotate_xform * glm::vec4(get_abs_up_direction(), 1)));
-    set_orient(offset_to_orient(parent_local_new_heading, &parent_local_new_up_direction));
+    glm::mat4 rotate_xform           = GLM_ROTATE(glm::mat4(1), angle_delta, pivot);
+    glm::vec3 abs_origin             = map_to_abs_coord();
+    glm::vec3 local_new_heading      = map_to_origin_in_parent_coord(abs_origin + glm::vec3(rotate_xform * glm::vec4(get_abs_heading(), 1)));
+    glm::vec3 local_new_up_direction = map_to_origin_in_parent_coord(abs_origin + glm::vec3(rotate_xform * glm::vec4(get_abs_up_direction(), 1)));
+    set_orient(offset_to_orient(local_new_heading, &local_new_up_direction));
 }
 
 // http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/
