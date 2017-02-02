@@ -72,7 +72,7 @@ CPP_STEMS_BOIDS   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Lig
 CPP_STEMS_HEXAPOD = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light main_hexapod Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 OBJECTS_IK      = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK))
 OBJECTS_BOIDS   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_BOIDS))
-OBJECTS_HEXAPOD = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_BOIDS))
+OBJECTS_HEXAPOD = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_HEXAPOD))
 
 $(BIN_PATH)/main_ik : $(OBJECTS_IK)
 	mkdir -p $(BIN_PATH)
