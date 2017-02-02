@@ -66,7 +66,7 @@ bool show_help = false;
 bool show_lights = false;
 bool show_normals = false;
 bool wireframe_mode = false;
-bool show_guide_wires = false;
+bool show_guide_wires = true;
 bool show_axis = false;
 bool show_axis_labels = false;
 bool do_animation = true;
@@ -76,14 +76,12 @@ bool up_key = false;
 bool down_key = false;
 bool page_up_key = false;
 bool page_down_key = false;
-bool ik_changed = true;
+bool user_input = true;
 
 int texture_id = 0;
 float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 
 int angle_delta = 1;
-
-std::vector<vt::Mesh*> ik_meshes;
 
 int target_index = 0;
 glm::vec3 targets[] = {glm::vec3( 1,  1,  1),
@@ -95,7 +93,7 @@ glm::vec3 targets[] = {glm::vec3( 1,  1,  1),
                        glm::vec3(-1, -1, -1),
                        glm::vec3(-1, -1,  1)};
 
-std::vector<vt::Mesh*> boid_meshes;
+std::vector<vt::Mesh*> ik_meshes;
 
 static void create_linked_boxes(vt::Scene*              scene,
                                 std::vector<vt::Mesh*>* ik_meshes,
@@ -123,37 +121,8 @@ static void create_linked_boxes(vt::Scene*              scene,
         prev_mesh = mesh;
         z_offset += box_dim.z;
     }
-    if(!ik_meshes->empty()) {
+    if(ik_meshes->size()) {
         (*ik_meshes)[0]->set_origin(glm::vec3(0, 0, 0));
-    }
-}
-
-static void create_boid_boxes(vt::Scene* scene,
-                              std::vector<vt::Mesh*>* boid_meshes,
-                              int boid_count,
-                              glm::vec3 scatter_min,
-                              glm::vec3 scatter_max,
-                              std::string name,
-                              glm::vec3 box_dim)
-{
-    if(!scene || !boid_meshes) {
-        return;
-    }
-    srand(time(NULL));
-    for(int i = 0; i < boid_count; i++) {
-        std::stringstream ss;
-        ss << name << "_" << i;
-        vt::Mesh* mesh = vt::PrimitiveFactory::create_box(ss.str());
-        scene->add_mesh(mesh);
-        mesh->center_axis();
-        glm::vec3 rand_vec(static_cast<float>(rand()) / RAND_MAX,
-                           static_cast<float>(rand()) / RAND_MAX,
-                           static_cast<float>(rand()) / RAND_MAX);
-        mesh->set_origin(scatter_min + rand_vec * (scatter_max - scatter_min));
-        mesh->set_scale(box_dim);
-        mesh->rebase();
-        mesh->center_axis();
-        boid_meshes->push_back(mesh);
     }
 }
 
@@ -165,10 +134,6 @@ int init_resources()
     scene->set_skybox(mesh_skybox);
 
     create_linked_boxes(scene, &ik_meshes, IK_SEGMENT_COUNT, "ik_box", glm::vec3(0.25, 0.25, 1));
-
-    glm::vec3 scatter_min(-10, -10, -10);
-    glm::vec3 scatter_max( 10,  10,  10);
-    create_boid_boxes(scene, &boid_meshes, BOID_COUNT, scatter_min, scatter_max, "boid_box", glm::vec3(0.0625, 0.0625, 0.25));
 
     vt::Material* ambient_material = new vt::Material(
             "ambient",
@@ -230,22 +195,20 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
+    int i = 0;
     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
         (*p)->set_material(bump_mapped_material);
         (*p)->set_texture_index(     (*p)->get_material()->get_texture_index_by_name("chesterfield_color"));
         (*p)->set_bump_texture_index((*p)->get_material()->get_texture_index_by_name("chesterfield_normal"));
         (*p)->set_ambient_color(glm::vec3(0, 0, 0));
-#if 0
-        // lock roll
-        (*p)->set_enable_orient_constraints(glm::ivec3(1, 0, 0));
-        (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 0, 0));
-#endif
+        if(i) {
+            (*p)->set_enable_orient_constraints(glm::ivec3(1, 0, 0));
+            (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 0, 0));
+        }
+        i++;
     }
 
-    for(std::vector<vt::Mesh*>::iterator q = boid_meshes.begin(); q != boid_meshes.end(); q++) {
-        (*q)->set_material(phong_material);
-        (*q)->set_ambient_color(glm::vec3(0, 0, 0));
-    }
+    vt::Scene::instance()->m_debug_target = targets[target_index];
 
     return 1;
 }
@@ -286,34 +249,31 @@ void onTick()
     //ik_meshes[0]->set_orient(glm::vec3(0, 0, angle));
     if(left_key) {
         ik_meshes[0]->rotate(-angle_delta, ik_meshes[0]->get_abs_up_direction());
-        ik_changed = true;
+        user_input = true;
     }
     if(right_key) {
         ik_meshes[0]->rotate(angle_delta, ik_meshes[0]->get_abs_up_direction());
-        ik_changed = true;
+        user_input = true;
     }
     if(up_key) {
         ik_meshes[0]->rotate(-angle_delta, ik_meshes[0]->get_abs_left_direction());
-        ik_changed = true;
+        user_input = true;
     }
     if(down_key) {
         ik_meshes[0]->rotate(angle_delta, ik_meshes[0]->get_abs_left_direction());
-        ik_changed = true;
+        user_input = true;
     }
     if(page_up_key) {
         ik_meshes[0]->rotate(angle_delta, ik_meshes[0]->get_abs_heading());
-        ik_changed = true;
+        user_input = true;
     }
     if(page_down_key) {
         ik_meshes[0]->rotate(-angle_delta, ik_meshes[0]->get_abs_heading());
-        ik_changed = true;
+        user_input = true;
     }
-    if(ik_changed) {
+    if(user_input) {
         ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[1], glm::vec3(0, 0, 1), targets[target_index], IK_ITERS, ACCEPT_DISTANCE);
-        ik_changed = false;
-    }
-    for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
-        (*p)->update_boid(targets[target_index], 0.025, 2.5, 1);
+        user_input = false;
     }
     angle = (angle + angle_delta) % 360;
 }
@@ -386,16 +346,10 @@ void onKeyboard(unsigned char key, int x, int y)
                 for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                     (*p)->set_ambient_color(glm::vec3(1, 1, 1));
                 }
-                for(std::vector<vt::Mesh*>::iterator q = boid_meshes.begin(); q != boid_meshes.end(); q++) {
-                    (*q)->set_ambient_color(glm::vec3(1, 1, 1));
-                }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
                 for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                     (*p)->set_ambient_color(glm::vec3(0, 0, 0));
-                }
-                for(std::vector<vt::Mesh*>::iterator q = boid_meshes.begin(); q != boid_meshes.end(); q++) {
-                    (*q)->set_ambient_color(glm::vec3(0, 0, 0));
                 }
             }
             break;
@@ -431,8 +385,8 @@ void onSpecial(int key, int x, int y)
                 size_t target_count = sizeof(targets)/sizeof(targets[0]);
                 target_index = (target_index + 1) % target_count;
                 std::cout << "target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
-                ik_changed = true;
                 vt::Scene::instance()->m_debug_target = targets[target_index];
+                user_input = true;
             }
             break;
         case GLUT_KEY_LEFT:
