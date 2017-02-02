@@ -131,10 +131,6 @@ int init_resources()
     mesh_skybox = vt::PrimitiveFactory::create_viewport_quad("grid");
     scene->set_skybox(mesh_skybox);
 
-    glm::vec3 scatter_min(-10, -10, -10);
-    glm::vec3 scatter_max( 10,  10,  10);
-    create_boid_boxes(scene, &boid_meshes, BOID_COUNT, scatter_min, scatter_max, "boid_box", glm::vec3(0.0625, 0.0625, 0.25));
-
     vt::Material* ambient_material = new vt::Material(
             "ambient",
             "src/shaders/ambient.v.glsl",
@@ -195,6 +191,7 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
+    create_boid_boxes(scene, &boid_meshes, BOID_COUNT, glm::vec3(-10, -10, -10), glm::vec3(10, 10, 10), "boid_box", glm::vec3(0.0625, 0.0625, 0.25));
     for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0, 0, 0));
