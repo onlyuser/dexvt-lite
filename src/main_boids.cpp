@@ -95,13 +95,13 @@ glm::vec3 targets[] = {glm::vec3( 1,  1,  1),
 
 std::vector<vt::Mesh*> boid_meshes;
 
-static void create_boid_boxes(vt::Scene* scene,
+static void create_boid_boxes(vt::Scene*              scene,
                               std::vector<vt::Mesh*>* boid_meshes,
-                              int boid_count,
-                              glm::vec3 scatter_min,
-                              glm::vec3 scatter_max,
-                              std::string name,
-                              glm::vec3 box_dim)
+                              int                     boid_count,
+                              glm::vec3               scatter_min,
+                              glm::vec3               scatter_max,
+                              std::string             name,
+                              glm::vec3               box_dim)
 {
     if(!scene || !boid_meshes) {
         return;
@@ -191,10 +191,10 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    create_boid_boxes(scene, &boid_meshes, BOID_COUNT, glm::vec3(-10, -10, -10), glm::vec3(10, 10, 10), "boid_box", glm::vec3(0.0625, 0.0625, 0.25));
+    create_boid_boxes(scene, &boid_meshes, BOID_COUNT, glm::vec3(-10), glm::vec3(10), "boid_box", glm::vec3(0.0625, 0.0625, 0.25));
     for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
         (*p)->set_material(phong_material);
-        (*p)->set_ambient_color(glm::vec3(0, 0, 0));
+        (*p)->set_ambient_color(glm::vec3(0));
     }
 
     vt::Scene::instance()->m_debug_target = targets[target_index];
@@ -217,10 +217,10 @@ void onTick()
     static unsigned int prev_tick = 0;
     static unsigned int frames = 0;
     unsigned int tick = glutGet(GLUT_ELAPSED_TIME);
-    unsigned int delta_time = tick-prev_tick;
+    unsigned int delta_time = tick - prev_tick;
     static float fps = 0;
     if(delta_time > 1000) {
-        fps = 1000.0*frames/delta_time;
+        fps = 1000.0 * frames / delta_time;
         frames = 0;
         prev_tick = tick;
     }
@@ -253,7 +253,7 @@ void onDisplay()
     }
     vt::Scene* scene = vt::Scene::instance();
     glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if(wireframe_mode) {
         scene->render(true, false, false, vt::Scene::use_material_type_t::USE_WIREFRAME_MATERIAL);
     } else {
@@ -307,12 +307,12 @@ void onKeyboard(unsigned char key, int x, int y)
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
                 for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
-                    (*p)->set_ambient_color(glm::vec3(1, 1, 1));
+                    (*p)->set_ambient_color(glm::vec3(1));
                 }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
                 for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
-                    (*p)->set_ambient_color(glm::vec3(0, 0, 0));
+                    (*p)->set_ambient_color(glm::vec3(0));
                 }
             }
             break;
@@ -345,7 +345,7 @@ void onSpecial(int key, int x, int y)
             break;
         case GLUT_KEY_HOME: // target
             {
-                size_t target_count = sizeof(targets)/sizeof(targets[0]);
+                size_t target_count = sizeof(targets) / sizeof(targets[0]);
                 target_index = (target_index + 1) % target_count;
                 std::cout << "target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
                 vt::Scene::instance()->m_debug_target = targets[target_index];
@@ -449,7 +449,7 @@ void onReshape(int width, int height)
 int main(int argc, char* argv[])
 {
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_RGBA|GLUT_ALPHA|GLUT_DOUBLE|GLUT_DEPTH/*|GLUT_STENCIL*/);
+    glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH /*| GLUT_STENCIL*/);
     glutInitWindowSize(init_screen_width, init_screen_height);
     glutCreateWindow(DEFAULT_CAPTION);
 
@@ -464,7 +464,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    char* s = (char*)glGetString(GL_SHADING_LANGUAGE_VERSION);
+    const char* s = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
     printf("GLSL version %s\n", s);
 
     if(init_resources()) {
