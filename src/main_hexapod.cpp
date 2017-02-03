@@ -94,12 +94,12 @@ glm::vec3 targets[] = {glm::vec3( 1,  1,  1),
                        glm::vec3(-1, -1, -1),
                        glm::vec3(-1, -1,  1)};
 
-struct Leg
+struct IK_Leg
 {
     std::vector<vt::Mesh*> m_ik_meshes;
 };
 
-std::vector<Leg*> ik_legs;
+std::vector<IK_Leg*> ik_legs;
 
 static void create_linked_boxes(vt::Scene*              scene,
                                 std::vector<vt::Mesh*>* ik_meshes,
@@ -197,9 +197,9 @@ int init_resources()
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
     for(int j = 0; j < IK_LEG_COUNT; j++) {
-        ik_legs.push_back(new Leg());
+        ik_legs.push_back(new IK_Leg());
     }
-    for(std::vector<Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
+    for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
         std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
         create_linked_boxes(scene, &ik_meshes, IK_SEGMENT_COUNT, "ik_box", glm::vec3(0.25, 0.25, 1));
         if(ik_meshes.size()) {
@@ -257,7 +257,7 @@ void onTick()
     }
     frames++;
     static int angle = 0;
-    for(std::vector<Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
+    for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
         std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
         //ik_meshes[0]->set_orient(glm::vec3(0, 0, angle));
         if(user_input) {
@@ -333,7 +333,7 @@ void onKeyboard(unsigned char key, int x, int y)
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
-                for(std::vector<Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
+                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
                     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                         (*p)->set_ambient_color(glm::vec3(1));
@@ -341,7 +341,7 @@ void onKeyboard(unsigned char key, int x, int y)
                 }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
-                for(std::vector<Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
+                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
                     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                         (*p)->set_ambient_color(glm::vec3(0));

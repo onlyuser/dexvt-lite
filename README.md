@@ -81,16 +81,23 @@ Controls
 Keyboard:
 
 <table>
-    <tr><th> key </th><th> purpose                 </th></tr>
-    <tr><td> b   </td><td> toggle bounding-box     </td></tr>
-    <tr><td> f   </td><td> toggle frame rate       </td></tr>
-    <tr><td> l   </td><td> toggle lights           </td></tr>
-    <tr><td> n   </td><td> toggle normals          </td></tr>
-    <tr><td> p   </td><td> toggle ortho-projection </td></tr>
-    <tr><td> t   </td><td> toggle texture          </td></tr>
-    <tr><td> w   </td><td> toggle wireframe        </td></tr>
-    <tr><td> x   </td><td> toggle axis             </td></tr>
-    <tr><td> esc </td><td> exit                    </td></tr>
+    <tr><th> key         </th><th> purpose                 </th></tr>
+    <tr><td> b           </td><td> toggle bounding-box     </td></tr>
+    <tr><td> f           </td><td> toggle frame rate       </td></tr>
+    <tr><td> g           </td><td> toggle guide wires      </td></tr>
+    <tr><td> h           </td><td> toggle HUD              </td></tr>
+    <tr><td> l           </td><td> toggle lights           </td></tr>
+    <tr><td> n           </td><td> toggle normals          </td></tr>
+    <tr><td> p           </td><td> toggle ortho-projection </td></tr>
+    <tr><td> t           </td><td> toggle texture          </td></tr>
+    <tr><td> w           </td><td> toggle wireframe        </td></tr>
+    <tr><td> x           </td><td> toggle axis             </td></tr>
+    <tr><td> z           </td><td> toggle labels           </td></tr>
+    <tr><td> up/down     </td><td> pitch                   </td></tr>
+    <tr><td> left/right  </td><td> yaw                     </td></tr>
+    <tr><td> pg-up/pg-dn </td><td> roll                    </td></tr>
+    <tr><td> home        </td><td> toggle target           </td></tr>
+    <tr><td> esc         </td><td> exit                    </td></tr>
 </table>
 
 Mouse:
