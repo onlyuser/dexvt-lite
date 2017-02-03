@@ -3,6 +3,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/euler_angles.hpp>
 #include <glm/glm.hpp>
 #include <vector>
 #include <string>
@@ -25,9 +26,13 @@
 #if GLM_VERSION >= 96
     // glm::rotate changed from degrees to radians in GLM 0.9.6
     // https://glm.g-truc.net/0.9.6/updates.html
-    #define GLM_ROTATE(m, a, v) glm::rotate((m), glm::radians(a), (v))
+    #define GLM_ROTATE(m, a, v)       glm::rotate((m), glm::radians(a), (v))
+    #define GLM_EULER(y, p, r)        glm::eulerAngleYXZ(glm::radians(y), glm::radians(p), glm::radians(r))
+    #define GLM_EULER_SANS_ROLL(y, p) glm::eulerAngleYX(glm::radians(y), glm::radians(p))
 #else
-    #define GLM_ROTATE(m, a, v) glm::rotate((m), (a), (v))
+    #define GLM_ROTATE(m, a, v)       glm::rotate((m), (a), (v))
+    #define GLM_EULER(y, p, r)        glm::eulerAngleYXZ((y), (p), (r))
+    #define GLM_EULER_SANS_ROLL(y, p) glm::eulerAngleYX((y), (p))
 #endif
 
 #define ORIENT_ROLL(v)  v[0]
@@ -43,10 +48,10 @@ namespace vt {
 class Mesh;
 
 void print_bitmap_string(void* font, const char* s);
-glm::vec3 orient_to_offset(glm::vec3 orient,
+glm::vec3 orient_to_offset(glm::vec3  orient,
                            glm::vec3* up_direction); // out
 glm::vec3 orient_to_offset(glm::vec3 orient);
-glm::vec3 offset_to_orient(glm::vec3 offset,
+glm::vec3 offset_to_orient(glm::vec3  offset,
                            glm::vec3* up_direction); // in
 glm::vec3 offset_to_orient(glm::vec3 offset);
 glm::vec3 orient_modulo(glm::vec3 orient);

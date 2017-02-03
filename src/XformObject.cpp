@@ -262,9 +262,7 @@ const glm::mat4 &XformObject::get_normal_xform()
 
 glm::mat4 XformObject::get_local_rotate_xform() const
 {
-    return GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_YAW(m_orient)),   VEC_UP) *
-           GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_PITCH(m_orient)), VEC_LEFT) *
-           GLM_ROTATE(glm::mat4(1), static_cast<float>(ORIENT_ROLL(m_orient)),  VEC_FORWARD);
+    return GLM_EULER(ORIENT_YAW(m_orient), ORIENT_PITCH(m_orient), ORIENT_ROLL(m_orient));
 }
 
 void XformObject::update_xform_hier()
