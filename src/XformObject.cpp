@@ -7,7 +7,7 @@
 #include <set>
 #include <map>
 
-//#define DEBUG
+#define DEBUG
 
 namespace vt {
 
@@ -59,7 +59,7 @@ void XformObject::reset_xform()
     mark_dirty_xform();
 }
 
-bool XformObject::is_orient_within_limits() const
+bool XformObject::is_violate_constraints() const
 {
     static glm::vec3 min_orient(-180, -90, -180);
     static glm::vec3 max_orient( 180,  90,  180);
@@ -72,6 +72,31 @@ bool XformObject::is_orient_within_limits() const
         }
     }
     return true;
+}
+
+bool XformObject::force_apply_constraints()
+{
+    bool result = false;
+    static glm::vec3 min_orient(-180, -90, -180);
+    static glm::vec3 max_orient( 180,  90,  180);
+    for(int i = 0; i < 3; i++) {
+        if(!m_enable_orient_constraints[i]) {
+            continue;
+        }
+        if(angle_distance(m_orient[i], m_orient_constraints_center[i], min_orient[i], max_orient[i]) > m_orient_constraints_max_deviation[i]) {
+            float min_angle = m_orient_constraints_center[i] - m_orient_constraints_max_deviation[i];
+            float max_angle = m_orient_constraints_center[i] + m_orient_constraints_max_deviation[i];
+            float distance_to_lower_bound = angle_distance(m_orient[i], min_angle, min_orient[i], max_orient[i]);
+            float distance_to_upper_bound = angle_distance(m_orient[i], max_angle, min_orient[i], max_orient[i]);
+            if(distance_to_lower_bound < distance_to_upper_bound) {
+                m_orient[i] = min_angle;
+            } else {
+                m_orient[i] = max_angle;
+            }
+            result = true;
+        }
+    }
+    return result;
 }
 
 glm::vec3 XformObject::map_to_abs_coord(glm::vec3 local_point)
@@ -185,7 +210,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
                                float        accept_distance)
 {
     bool result = false;
-#if 1
+#if 0
     // TODO: fix-me!
     std::map<XformObject*, glm::vec3> orient_backup;
     for(XformObject* current_segment = this; current_segment && current_segment != root->get_parent(); current_segment = current_segment->get_parent()) {
@@ -214,6 +239,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             glm::vec3 new_current_segment_up_direction = glm::vec3(new_current_segment_xform * glm::vec4(VEC_UP, 1));
             if(i < iters - 1) { // reserve last iter for updating guide wires
                 current_segment->point_at_local(new_current_segment_heading, &new_current_segment_up_direction);
+                current_segment->force_apply_constraints();
             }
             current_segment->m_debug_target_dir           = local_target_dir;
             current_segment->m_debug_end_effector_tip_dir = local_end_effector_tip_dir;
@@ -240,8 +266,8 @@ bool XformObject::solve_ik_ccd(XformObject* root,
 CHECK_CONSTRAINTS:
     // TODO: fix-me!
     for(XformObject* current_segment = this; current_segment && current_segment != root->get_parent(); current_segment = current_segment->get_parent()) {
-#if 1
-        if(!current_segment->is_orient_within_limits()) {
+#if 0
+        if(!current_segment->is_violate_constraints()) {
             current_segment->set_orient(orient_backup[current_segment]);
             current_segment->m_debug_target_dir           = glm::vec3(0);
             current_segment->m_debug_end_effector_tip_dir = glm::vec3(0);

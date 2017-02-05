@@ -123,29 +123,6 @@ float angle_distance(float angle1, float angle2, float min_angle, float max_angl
     return angle_diff;
 }
 
-glm::vec3 orient_limit(glm::vec3 orient, glm::ivec3 enable_orient_constraints, glm::vec3 orient_constraints_center, glm::vec3 orient_constraints_max_deviation)
-{
-    static glm::vec3 min_orient(-180, -90, -180);
-    static glm::vec3 max_orient( 180,  90,  180);
-    for(int i = 0; i < 3; i++) {
-        if(!enable_orient_constraints[i]) {
-            continue;
-        }
-        if(angle_distance(orient[i], orient_constraints_center[i], min_orient[i], max_orient[i]) > orient_constraints_max_deviation[i]) {
-            float min_angle = orient_constraints_center[i] - orient_constraints_max_deviation[i];
-            float max_angle = orient_constraints_center[i] + orient_constraints_max_deviation[i];
-            float distance_to_lower_bound = angle_distance(orient[i], min_angle, min_orient[i], max_orient[i]);
-            float distance_to_upper_bound = angle_distance(orient[i], max_angle, min_orient[i], max_orient[i]);
-            if(distance_to_lower_bound < distance_to_upper_bound) {
-                orient[i] = min_angle;
-            } else {
-                orient[i] = max_angle;
-            }
-        }
-    }
-    return orient;
-}
-
 void mesh_apply_ripple(Mesh* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase)
 {
     for(int i = 0; i < static_cast<int>(mesh->get_num_vertex()); i++) {
