@@ -5,6 +5,7 @@
 #include <glm/gtx/vector_angle.hpp>
 #include <glm/glm.hpp>
 #include <set>
+#include <map>
 
 //#define DEBUG
 
@@ -40,7 +41,7 @@ void XformObject::set_origin(glm::vec3 origin)
 
 void XformObject::set_orient(glm::vec3 orient)
 {
-    m_orient = orient_limit(orient, m_enable_orient_constraints, m_orient_constraints_center, m_orient_constraints_max_deviation);
+    m_orient = orient;
     mark_dirty_xform();
 }
 
@@ -56,6 +57,21 @@ void XformObject::reset_xform()
     set_orient(glm::vec3(0));
     m_scale  = glm::vec3(1);
     mark_dirty_xform();
+}
+
+bool XformObject::is_orient_within_limits() const
+{
+    static glm::vec3 min_orient(-180, -90, -180);
+    static glm::vec3 max_orient( 180,  90,  180);
+    for(int i = 0; i < 3; i++) {
+        if(!m_enable_orient_constraints[i]) {
+            continue;
+        }
+        if(angle_distance(m_orient[i], m_orient_constraints_center[i], min_orient[i], max_orient[i]) > m_orient_constraints_max_deviation[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 glm::vec3 XformObject::map_to_abs_coord(glm::vec3 local_point)
@@ -163,11 +179,20 @@ bool XformObject::solve_ik_ccd(XformObject* root,
                                int          iters,
                                float        accept_distance)
 {
+    bool result = false;
+#if 0
+    // TODO: fix-me!
+    std::map<XformObject*, glm::vec3> orient_backup;
+    for(XformObject* current_segment = this; current_segment && current_segment != root->get_parent(); current_segment = current_segment->get_parent()) {
+        orient_backup[current_segment] = current_segment->get_orient();
+    }
+#endif
     for(int i = 0; i < iters; i++) {
         for(XformObject* current_segment = this; current_segment && current_segment != root->get_parent(); current_segment = current_segment->get_parent()) {
             glm::vec3 end_effector_tip = map_to_abs_coord(local_end_effector_tip);
             if(glm::distance(end_effector_tip, target) < accept_distance) {
-                return true;
+                result = true;
+                goto CHECK_CONSTRAINTS;
             }
 #if 1
             glm::vec3 local_target_dir           = glm::normalize(current_segment->map_to_origin_in_parent_coord(target));
@@ -191,9 +216,9 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             current_segment->m_debug_local_target         = current_segment->map_to_origin_in_parent_coord(target);
         #ifdef DEBUG
             std::cout << "NAME: " << current_segment->get_name() << ", ORIENT: " << glm::to_string(current_segment->get_orient()) << std::endl;
-            std::cout << "TARGET: " << glm::to_string(local_target_dir) << ", END_EFF: " << glm::to_string(local_end_effector_tip_dir) << ", ANGLE: " << angle_delta << std::endl;
-            std::cout << "BEFORE: " << glm::to_string(current_segment_rotate_xform * glm::vec4(VEC_FORWARD, 1)) << ", AFTER: " << glm::to_string(new_current_segment_heading) << std::endl;
-            std::cout << "PIVOT: " << glm::to_string(local_arc_pivot) << std::endl;
+            //std::cout << "TARGET: " << glm::to_string(local_target_dir) << ", END_EFF: " << glm::to_string(local_end_effector_tip_dir) << ", ANGLE: " << angle_delta << std::endl;
+            //std::cout << "BEFORE: " << glm::to_string(current_segment_rotate_xform * glm::vec4(VEC_FORWARD, 1)) << ", AFTER: " << glm::to_string(new_current_segment_heading) << std::endl;
+            //std::cout << "PIVOT: " << glm::to_string(local_arc_pivot) << std::endl;
         #endif
     #else
             // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
@@ -211,7 +236,21 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             //return true;
         }
     }
-    return false;
+CHECK_CONSTRAINTS:
+#if 0
+    // TODO: fix-me!
+    for(XformObject* current_segment = this; current_segment && current_segment != root->get_parent(); current_segment = current_segment->get_parent()) {
+        if(!current_segment->is_orient_within_limits()) {
+            current_segment->set_orient(orient_backup[current_segment]);
+            current_segment->m_debug_target_dir           = glm::vec3(0);
+            current_segment->m_debug_end_effector_tip_dir = glm::vec3(0);
+            current_segment->m_debug_local_pivot          = glm::vec3(0);
+            current_segment->m_debug_local_target         = glm::vec3(0);
+        }
+        std::cout << "NAME: " << current_segment->get_name() << ", ORIENT: " << glm::to_string(current_segment->get_orient()) << std::endl;
+    }
+#endif
+    return result;
 }
 
 void XformObject::update_boid(glm::vec3 target, float forward_speed, float angle_delta, float avoid_radius)
