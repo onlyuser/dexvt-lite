@@ -68,15 +68,14 @@ bool XformObject::is_violate_constraints() const
             continue;
         }
         if(angle_distance(m_orient[i], m_orient_constraints_center[i], min_orient[i], max_orient[i]) > m_orient_constraints_max_deviation[i]) {
-            return false;
+            return true;
         }
     }
-    return true;
+    return false;
 }
 
-bool XformObject::force_apply_constraints()
+void XformObject::apply_constraints()
 {
-    bool result = false;
     static glm::vec3 min_orient(-180, -90, -180);
     static glm::vec3 max_orient( 180,  90,  180);
     for(int i = 0; i < 3; i++) {
@@ -93,10 +92,8 @@ bool XformObject::force_apply_constraints()
             } else {
                 m_orient[i] = max_angle;
             }
-            result = true;
         }
     }
-    return result;
 }
 
 glm::vec3 XformObject::map_to_abs_coord(glm::vec3 local_point)
@@ -209,20 +206,11 @@ bool XformObject::solve_ik_ccd(XformObject* root,
                                int          iters,
                                float        accept_distance)
 {
-    bool result = false;
-#if 0
-    // TODO: fix-me!
-    std::map<XformObject*, glm::vec3> orient_backup;
-    for(XformObject* current_segment = this; current_segment && current_segment != root->get_parent(); current_segment = current_segment->get_parent()) {
-        orient_backup[current_segment] = current_segment->get_orient();
-    }
-#endif
     for(int i = 0; i < iters; i++) {
         for(XformObject* current_segment = this; current_segment && current_segment != root->get_parent(); current_segment = current_segment->get_parent()) {
             glm::vec3 end_effector_tip = map_to_abs_coord(local_end_effector_tip);
             if(glm::distance(end_effector_tip, target) < accept_distance) {
-                result = true;
-                goto CHECK_CONSTRAINTS;
+                return true;
             }
 #if 1
             glm::vec3 local_target_dir           = glm::normalize(current_segment->map_to_origin_in_parent_coord(target));
@@ -232,14 +220,13 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             float     angle_delta                = glm::degrees(glm::angle(local_target_dir, local_end_effector_tip_dir));
             glm::vec3 local_arc_pivot            = glm::cross(local_arc_dir, local_arc_midpoint_dir);
             glm::mat4 local_arc_rotate_xform     = GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot);
-    #if 1
+    #if 0
             // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
             glm::mat4 new_current_segment_xform        = local_arc_rotate_xform * current_segment->get_local_rotate_xform();
             glm::vec3 new_current_segment_heading      = glm::vec3(new_current_segment_xform * glm::vec4(VEC_FORWARD, 1));
             glm::vec3 new_current_segment_up_direction = glm::vec3(new_current_segment_xform * glm::vec4(VEC_UP, 1));
             if(i < iters - 1) { // reserve last iter for updating guide wires
                 current_segment->point_at_local(new_current_segment_heading, &new_current_segment_up_direction);
-                current_segment->force_apply_constraints();
             }
             current_segment->m_debug_target_dir           = local_target_dir;
             current_segment->m_debug_end_effector_tip_dir = local_end_effector_tip_dir;
@@ -260,26 +247,14 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             glm::vec3 local_end_effector_tip_orient = offset_to_orient(current_segment->map_to_origin_in_parent_coord(end_effector_tip));
             current_segment->set_orient(orient_modulo(current_segment->get_orient() + orient_modulo(local_target_orient - local_end_effector_tip_orient)));
 #endif
+#ifdef DEBUG
+            std::cout << "NAME: " << current_segment->get_name() << ", ORIENT: " << glm::to_string(current_segment->get_orient()) << std::endl;
+#endif
+            current_segment->apply_constraints();
             //return true;
         }
     }
-CHECK_CONSTRAINTS:
-    // TODO: fix-me!
-    for(XformObject* current_segment = this; current_segment && current_segment != root->get_parent(); current_segment = current_segment->get_parent()) {
-#if 0
-        if(!current_segment->is_violate_constraints()) {
-            current_segment->set_orient(orient_backup[current_segment]);
-            current_segment->m_debug_target_dir           = glm::vec3(0);
-            current_segment->m_debug_end_effector_tip_dir = glm::vec3(0);
-            current_segment->m_debug_local_pivot          = glm::vec3(0);
-            current_segment->m_debug_local_target         = glm::vec3(0);
-        }
-#endif
-#ifdef DEBUG
-        std::cout << "NAME: " << current_segment->get_name() << ", ORIENT: " << glm::to_string(current_segment->get_orient()) << std::endl;
-#endif
-    }
-    return result;
+    return false;
 }
 
 void XformObject::update_boid(glm::vec3 target, float forward_speed, float angle_delta, float avoid_radius)

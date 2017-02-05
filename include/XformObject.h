@@ -40,7 +40,7 @@ public:
     const glm::vec3 &get_orient_constraints_max_deviation() const                         { return m_orient_constraints_max_deviation; }
     void set_orient_constraints_max_deviation(glm::vec3 orient_constraints_max_deviation) { m_orient_constraints_max_deviation = orient_constraints_max_deviation; }
     bool is_violate_constraints() const;
-    bool force_apply_constraints();
+    void apply_constraints();
 
     // coordinate system conversions
     glm::vec3 map_to_abs_coord(glm::vec3 local_point = glm::vec3(0));

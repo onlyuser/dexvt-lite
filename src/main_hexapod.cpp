@@ -213,7 +213,7 @@ int init_resources()
             (*p)->set_ambient_color(glm::vec3(0));
             if(i) {
                 (*p)->set_enable_orient_constraints(glm::ivec3(1, 1, 0));
-                (*p)->set_orient_constraints_max_deviation(glm::vec3(0));
+                (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 0, 0));
             }
             i++;
         }
