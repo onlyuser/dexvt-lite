@@ -209,9 +209,9 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             glm::mat4 local_arc_rotate_xform     = GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot);
     #if 1
             // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
-            glm::mat4 current_segment_rotate_xform     = current_segment->get_local_rotate_xform();
-            glm::vec3 new_current_segment_heading      = glm::vec3(local_arc_rotate_xform * current_segment_rotate_xform * glm::vec4(VEC_FORWARD, 1));
-            glm::vec3 new_current_segment_up_direction = glm::vec3(local_arc_rotate_xform * current_segment_rotate_xform * glm::vec4(VEC_UP, 1));
+            glm::mat4 new_current_segment_xform        = local_arc_rotate_xform * current_segment->get_local_rotate_xform();
+            glm::vec3 new_current_segment_heading      = glm::vec3(new_current_segment_xform * glm::vec4(VEC_FORWARD, 1));
+            glm::vec3 new_current_segment_up_direction = glm::vec3(new_current_segment_xform * glm::vec4(VEC_UP, 1));
             if(i < iters - 1) { // reserve last iter for updating guide wires
                 current_segment->point_at_local(new_current_segment_heading, new_current_segment_up_direction);
             }
@@ -268,9 +268,9 @@ void XformObject::update_boid(glm::vec3 target, float forward_speed, float angle
     glm::mat4 local_arc_rotate_xform = GLM_ROTATE(glm::mat4(1), -angle_delta * ((glm::distance(target, m_origin) < avoid_radius) ? -1 : 1), local_arc_pivot);
 #if 1
     // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
-    glm::mat4 current_segment_rotate_xform     = get_local_rotate_xform();
-    glm::vec3 new_current_segment_heading      = glm::vec3(local_arc_rotate_xform * current_segment_rotate_xform * glm::vec4(VEC_FORWARD, 1));
-    glm::vec3 new_current_segment_up_direction = glm::vec3(local_arc_rotate_xform * current_segment_rotate_xform * glm::vec4(VEC_UP, 1));
+    glm::mat4 new_current_segment_xform        = local_arc_rotate_xform * get_local_rotate_xform();
+    glm::vec3 new_current_segment_heading      = glm::vec3(new_current_segment_xform * glm::vec4(VEC_FORWARD, 1));
+    glm::vec3 new_current_segment_up_direction = glm::vec3(new_current_segment_xform * glm::vec4(VEC_UP, 1));
     point_at_local(new_current_segment_heading, new_current_segment_up_direction);
 #else
     // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
