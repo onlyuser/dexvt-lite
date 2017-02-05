@@ -158,9 +158,14 @@ void XformObject::unlink_children()
     }
 }
 
+void XformObject::point_at_local(glm::vec3 local_target, glm::vec3 up_direction)
+{
+    set_orient(offset_to_orient(local_target, &up_direction));
+}
+
 void XformObject::point_at(glm::vec3 target, glm::vec3 up_direction)
 {
-    set_orient(offset_to_orient(map_to_origin_in_parent_coord(target), &up_direction));
+    point_at_local(map_to_origin_in_parent_coord(target), up_direction);
 }
 
 void XformObject::rotate(float angle_delta, glm::vec3 pivot)
@@ -169,7 +174,7 @@ void XformObject::rotate(float angle_delta, glm::vec3 pivot)
     glm::vec3 abs_origin             = map_to_abs_coord();
     glm::vec3 local_new_heading      = map_to_origin_in_parent_coord(abs_origin + glm::vec3(rotate_xform * glm::vec4(get_abs_heading(), 1)));
     glm::vec3 local_new_up_direction = map_to_origin_in_parent_coord(abs_origin + glm::vec3(rotate_xform * glm::vec4(get_abs_up_direction(), 1)));
-    set_orient(offset_to_orient(local_new_heading, &local_new_up_direction));
+    point_at_local(local_new_heading, local_new_up_direction);
 }
 
 // http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/
@@ -208,7 +213,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             glm::vec3 new_current_segment_heading      = glm::vec3(local_arc_rotate_xform * current_segment_rotate_xform * glm::vec4(VEC_FORWARD, 1));
             glm::vec3 new_current_segment_up_direction = glm::vec3(local_arc_rotate_xform * current_segment_rotate_xform * glm::vec4(VEC_UP, 1));
             if(i < iters - 1) { // reserve last iter for updating guide wires
-                current_segment->set_orient(offset_to_orient(new_current_segment_heading, &new_current_segment_up_direction));
+                current_segment->point_at_local(new_current_segment_heading, new_current_segment_up_direction);
             }
             current_segment->m_debug_target_dir           = local_target_dir;
             current_segment->m_debug_end_effector_tip_dir = local_end_effector_tip_dir;
@@ -222,7 +227,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
         #endif
     #else
             // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
-            current_segment->set_orient(offset_to_orient(glm::vec3(local_arc_rotate_xform * glm::vec4(orient_to_offset(current_segment->get_orient()), 1))));
+            current_segment->point_at_local(glm::vec3(local_arc_rotate_xform * glm::vec4(orient_to_offset(current_segment->get_orient()), 1)));
         #ifdef DEBUG
             std::cout << "NAME: " << current_segment->get_name() << ", ORIENT: " << glm::to_string(current_segment->get_orient()) << std::endl;
         #endif
@@ -266,10 +271,10 @@ void XformObject::update_boid(glm::vec3 target, float forward_speed, float angle
     glm::mat4 current_segment_rotate_xform     = get_local_rotate_xform();
     glm::vec3 new_current_segment_heading      = glm::vec3(local_arc_rotate_xform * current_segment_rotate_xform * glm::vec4(VEC_FORWARD, 1));
     glm::vec3 new_current_segment_up_direction = glm::vec3(local_arc_rotate_xform * current_segment_rotate_xform * glm::vec4(VEC_UP, 1));
-    set_orient(offset_to_orient(new_current_segment_heading, &new_current_segment_up_direction));
+    point_at_local(new_current_segment_heading, new_current_segment_up_direction);
 #else
     // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
-    set_orient(offset_to_orient(glm::vec3(local_arc_rotate_xform * glm::vec4(orient_to_offset(get_orient()), 1))));
+    point_at_local(glm::vec3(local_arc_rotate_xform * glm::vec4(orient_to_offset(get_orient()), 1)));
 #endif
     set_origin(map_to_abs_coord(VEC_FORWARD * forward_speed));
 }

@@ -56,6 +56,7 @@ public:
     void unlink_children();
 
     // advanced features
+    void point_at_local(glm::vec3 local_target, glm::vec3 up_direction = VEC_UP);
     void point_at(glm::vec3 target, glm::vec3 up_direction = VEC_UP);
     void rotate(float angle_delta, glm::vec3 pivot);
     bool solve_ik_ccd(XformObject* root,
