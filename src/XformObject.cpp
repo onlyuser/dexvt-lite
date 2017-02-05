@@ -61,13 +61,11 @@ void XformObject::reset_xform()
 
 bool XformObject::is_violate_constraints() const
 {
-    static glm::vec3 min_orient(-180, -90, -180);
-    static glm::vec3 max_orient( 180,  90,  180);
     for(int i = 0; i < 3; i++) {
         if(!m_enable_orient_constraints[i]) {
             continue;
         }
-        if(angle_distance(m_orient[i], m_orient_constraints_center[i], min_orient[i], max_orient[i]) > m_orient_constraints_max_deviation[i]) {
+        if(angle_distance(m_orient[i], m_orient_constraints_center[i]) > m_orient_constraints_max_deviation[i]) {
             return true;
         }
     }
@@ -76,17 +74,15 @@ bool XformObject::is_violate_constraints() const
 
 void XformObject::apply_constraints()
 {
-    static glm::vec3 min_orient(-180, -90, -180);
-    static glm::vec3 max_orient( 180,  90,  180);
     for(int i = 0; i < 3; i++) {
         if(!m_enable_orient_constraints[i]) {
             continue;
         }
-        if(angle_distance(m_orient[i], m_orient_constraints_center[i], min_orient[i], max_orient[i]) > m_orient_constraints_max_deviation[i]) {
+        if(angle_distance(m_orient[i], m_orient_constraints_center[i]) > m_orient_constraints_max_deviation[i]) {
             float min_angle = m_orient_constraints_center[i] - m_orient_constraints_max_deviation[i];
             float max_angle = m_orient_constraints_center[i] + m_orient_constraints_max_deviation[i];
-            float distance_to_lower_bound = angle_distance(m_orient[i], min_angle, min_orient[i], max_orient[i]);
-            float distance_to_upper_bound = angle_distance(m_orient[i], max_angle, min_orient[i], max_orient[i]);
+            float distance_to_lower_bound = angle_distance(m_orient[i], min_angle);
+            float distance_to_upper_bound = angle_distance(m_orient[i], max_angle);
             if(distance_to_lower_bound < distance_to_upper_bound) {
                 m_orient[i] = min_angle;
             } else {
