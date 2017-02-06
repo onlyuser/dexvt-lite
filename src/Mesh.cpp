@@ -354,7 +354,7 @@ void Mesh::set_axis(glm::vec3 axis)
 {
     glm::vec3 local_axis = glm::vec3(glm::inverse(get_xform()) * glm::vec4(axis, 1));
     xform_vertices(glm::translate(glm::mat4(1), -local_axis));
-    m_origin = map_to_parent_coord(axis);
+    m_origin = in_parent_system(axis);
     mark_dirty_xform();
 }
 
@@ -365,7 +365,7 @@ void Mesh::center_axis(align_t align)
 
 void Mesh::update_xform()
 {
-    m_xform = glm::translate(glm::mat4(1), m_origin) * get_local_rotate_xform() * glm::scale(glm::mat4(1), m_scale);
+    m_xform = glm::translate(glm::mat4(1), m_origin) * get_local_orient_xform() * glm::scale(glm::mat4(1), m_scale);
 }
 
 MeshIFace* alloc_meshiface(std::string name, size_t num_vertex, size_t num_tri)

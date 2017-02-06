@@ -43,9 +43,9 @@ public:
     void apply_constraints();
 
     // coordinate system conversions
-    glm::vec3 map_to_abs_coord(glm::vec3 local_point = glm::vec3(0));
-    glm::vec3 map_to_parent_coord(glm::vec3 abs_point) const;
-    glm::vec3 map_to_origin_in_parent_coord(glm::vec3 abs_point) const;
+    glm::vec3 in_abs_system(glm::vec3 local_point = glm::vec3(0));
+    glm::vec3 in_parent_system(glm::vec3 abs_point) const;
+    glm::vec3 from_origin_in_parent_system(glm::vec3 abs_point) const;
     glm::vec3 get_abs_left_direction();
     glm::vec3 get_abs_up_direction();
     glm::vec3 get_abs_heading();
@@ -70,7 +70,7 @@ public:
     // basic features
     const glm::mat4 &get_xform(bool trace_down = true);
     const glm::mat4 &get_normal_xform();
-    glm::mat4 get_local_rotate_xform() const;
+    glm::mat4 get_local_orient_xform() const;
 
 protected:
     // basic features
