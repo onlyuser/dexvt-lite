@@ -219,7 +219,6 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             glm::vec3 local_arc_pivot            = glm::cross(local_arc_dir, local_arc_midpoint_dir);
             float     angle_delta                = glm::degrees(glm::angle(local_target_dir, local_end_effector_tip_dir));
             glm::mat4 local_arc_rotate_xform     = GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot);
-            sum_angle += angle_delta;
     #if 1
             // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
             glm::mat4 new_current_segment_orient_xform = local_arc_rotate_xform * current_segment->get_local_orient_xform();
@@ -245,17 +244,22 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
             current_segment->point_at_local(glm::vec3(local_arc_rotate_xform * glm::vec4(orient_to_offset(current_segment->get_orient()), 1)));
     #endif
+            sum_angle += angle_delta;
 #else
             // attempt #1 -- do rotations in Euler coordinates (poor man's ik)
             glm::vec3 local_target_orient           = offset_to_orient(current_segment->from_origin_in_parent_system(target));
             glm::vec3 local_end_effector_tip_orient = offset_to_orient(current_segment->from_origin_in_parent_system(end_effector_tip));
             current_segment->set_orient(orient_modulo(current_segment->get_orient() + orient_modulo(local_target_orient - local_end_effector_tip_orient)));
+            sum_angle += accept_avg_angle_distance;
 #endif
-            //current_segment->apply_constraints();
+            current_segment->apply_constraints();
 #ifdef DEBUG
             std::cout << "NAME: " << current_segment->get_name() << ", ORIENT: " << glm::to_string(current_segment->get_orient()) << std::endl;
 #endif
             segment_count++;
+        }
+        if(!segment_count) {
+            continue;
         }
         float average_angle = sum_angle / segment_count;
         if(average_angle < accept_avg_angle_distance) {
