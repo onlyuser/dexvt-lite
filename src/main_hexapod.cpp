@@ -259,8 +259,6 @@ void onTick()
         glutSetWindowTitle(ss.str().c_str());
     }
     frames++;
-    static int angle = 0;
-    angle = (angle + angle_delta) % 360;
     if(user_input) {
         for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
             std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
@@ -274,6 +272,8 @@ void onTick()
         }
         user_input = false;
     }
+    static int angle = 0;
+    angle = (angle + angle_delta) % 360;
 }
 
 char* get_help_string()

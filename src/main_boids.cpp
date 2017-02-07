@@ -230,10 +230,10 @@ void onTick()
         glutSetWindowTitle(ss.str().c_str());
     }
     frames++;
-    static int angle = 0;
     for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
         (*p)->update_boid(targets[target_index], 0.025, 2.5, 1);
     }
+    static int angle = 0;
     angle = (angle + angle_delta) % 360;
 }
 

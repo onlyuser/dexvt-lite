@@ -243,8 +243,6 @@ void onTick()
         glutSetWindowTitle(ss.str().c_str());
     }
     frames++;
-    static int angle = 0;
-    //ik_meshes[0]->set_orient(glm::vec3(0, 0, angle));
     if(left_key) {
         ik_meshes[0]->rotate(-angle_delta, ik_meshes[0]->get_abs_up_direction());
         user_input = true;
@@ -279,6 +277,7 @@ void onTick()
                 ACCEPT_ANGLE_DISTANCE);
         user_input = false;
     }
+    static int angle = 0;
     angle = (angle + angle_delta) % 360;
 }
 
