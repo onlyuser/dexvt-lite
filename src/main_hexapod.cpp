@@ -43,7 +43,7 @@
 #include <iomanip> // std::setprecision
 
 #define IK_SEGMENT_COUNT                 3
-#define IK_LEG_COUNT                     8
+#define IK_LEG_COUNT                     6
 #define IK_LEG_RADIUS                    2
 #define IK_ITERS                        50
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
@@ -196,7 +196,7 @@ int init_resources()
     for(int i = 0; i < IK_LEG_COUNT; i++) {
         IK_Leg* ik_leg = new IK_Leg();
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
-        create_linked_boxes(scene, &ik_meshes, IK_SEGMENT_COUNT, "ik_box", glm::vec3(0.125, 0.25, 1));
+        create_linked_boxes(scene, &ik_meshes, IK_SEGMENT_COUNT, "ik_box", glm::vec3(0.25, 0.25, 1));
         if(ik_meshes.size()) {
             ik_meshes[0]->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
         }
