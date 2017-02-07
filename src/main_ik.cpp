@@ -388,7 +388,7 @@ void onSpecial(int key, int x, int y)
             {
                 size_t target_count = sizeof(targets) / sizeof(targets[0]);
                 target_index = (target_index + 1) % target_count;
-                std::cout << "target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
+                std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
                 vt::Scene::instance()->m_debug_target = targets[target_index];
                 user_input = true;
             }

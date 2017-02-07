@@ -613,6 +613,7 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
         }
 
         if(draw_axis_labels) {
+            glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
             std::string axis_label;
 #if 1
             axis_label = (*p)->get_name();

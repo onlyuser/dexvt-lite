@@ -225,6 +225,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             glm::vec3 new_current_segment_heading      = glm::vec3(new_current_segment_orient_xform * glm::vec4(VEC_FORWARD, 1));
             glm::vec3 new_current_segment_up_direction = glm::vec3(new_current_segment_orient_xform * glm::vec4(VEC_UP, 1));
             current_segment->point_at_local(new_current_segment_heading, &new_current_segment_up_direction);
+            current_segment->apply_constraints();
             local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(target));
             local_end_effector_tip_dir = glm::normalize(current_segment->from_origin_in_parent_system(end_effector_tip));
             local_arc_dir              = glm::normalize(local_target_dir - local_end_effector_tip_dir);
@@ -243,6 +244,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
     #else
             // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
             current_segment->point_at_local(glm::vec3(local_arc_rotate_xform * glm::vec4(orient_to_offset(current_segment->get_orient()), 1)));
+            current_segment->apply_constraints();
     #endif
             sum_angle += angle_delta;
 #else
@@ -250,9 +252,9 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             glm::vec3 local_target_orient           = offset_to_orient(current_segment->from_origin_in_parent_system(target));
             glm::vec3 local_end_effector_tip_orient = offset_to_orient(current_segment->from_origin_in_parent_system(end_effector_tip));
             current_segment->set_orient(orient_modulo(current_segment->get_orient() + orient_modulo(local_target_orient - local_end_effector_tip_orient)));
+            current_segment->apply_constraints();
             sum_angle += accept_avg_angle_distance;
 #endif
-            current_segment->apply_constraints();
 #ifdef DEBUG
             std::cout << "NAME: " << current_segment->get_name() << ", ORIENT: " << glm::to_string(current_segment->get_orient()) << std::endl;
 #endif

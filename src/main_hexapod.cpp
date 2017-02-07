@@ -43,7 +43,8 @@
 #include <iomanip> // std::setprecision
 
 #define IK_SEGMENT_COUNT                 3
-#define IK_LEG_COUNT                     6
+#define IK_LEG_COUNT                     8
+#define IK_LEG_RADIUS                    2
 #define IK_ITERS                        50
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define ACCEPT_ANGLE_DISTANCE        0.001
@@ -60,13 +61,13 @@ bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
 glm::vec3 prev_orient, orient, orbit_speed = glm::vec3(0, -0.5, -0.5);
 float prev_orbit_radius = 0, orbit_radius = 8, dolly_speed = 0.1, light_distance = 4;
-bool show_bbox = false;
+bool show_bbox = true;
 bool show_fps = false;
 bool show_help = false;
 bool show_lights = false;
 bool show_normals = false;
 bool wireframe_mode = false;
-bool show_guide_wires = true;
+bool show_guide_wires = false;
 bool show_axis = false;
 bool show_axis_labels = false;
 bool do_animation = true;
@@ -84,11 +85,7 @@ float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 int angle_delta = 1;
 
 int target_index = 0;
-glm::vec3 targets[] = {glm::vec3( 1,  1,  1),
-                       glm::vec3( 1,  1, -1),
-                       glm::vec3(-1,  1, -1),
-                       glm::vec3(-1,  1,  1),
-                       glm::vec3( 1, -1,  1),
+glm::vec3 targets[] = {glm::vec3( 1, -1,  1),
                        glm::vec3( 1, -1, -1),
                        glm::vec3(-1, -1, -1),
                        glm::vec3(-1, -1,  1)};
@@ -195,27 +192,34 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    for(int j = 0; j < IK_LEG_COUNT; j++) {
-        ik_legs.push_back(new IK_Leg());
-    }
-    for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
-        std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-        create_linked_boxes(scene, &ik_meshes, IK_SEGMENT_COUNT, "ik_box", glm::vec3(0.25, 0.25, 1));
+    int angle = 0;
+    for(int i = 0; i < IK_LEG_COUNT; i++) {
+        IK_Leg* ik_leg = new IK_Leg();
+        std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
+        create_linked_boxes(scene, &ik_meshes, IK_SEGMENT_COUNT, "ik_box", glm::vec3(0.125, 0.25, 1));
         if(ik_meshes.size()) {
-            ik_meshes[0]->set_origin(glm::vec3(0));
+            ik_meshes[0]->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
         }
-        int i = 0;
+        int leg_segment_index = 0;
         for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
             (*p)->set_material(bump_mapped_material);
             (*p)->set_texture_index(     (*p)->get_material()->get_texture_index_by_name("chesterfield_color"));
             (*p)->set_bump_texture_index((*p)->get_material()->get_texture_index_by_name("chesterfield_normal"));
             (*p)->set_ambient_color(glm::vec3(0));
-            if(i) {
+            if(leg_segment_index == 0) {
                 (*p)->set_enable_orient_constraints(glm::ivec3(1, 1, 0));
-                (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 0, 0));
+                (*p)->set_orient_constraints_center(glm::vec3(0, -45, 0));
+                (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 45, 0));
             }
-            i++;
+            if(leg_segment_index >= 1) {
+                (*p)->set_enable_orient_constraints(glm::ivec3(1, 1, 1));
+                (*p)->set_orient_constraints_center(glm::vec3(0, 45, 0));
+                (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 45, 0));
+            }
+            leg_segment_index++;
         }
+        ik_legs.push_back(ik_leg);
+        angle += (360 / IK_LEG_COUNT);
     }
 
     vt::Scene::instance()->m_debug_target = targets[target_index];
@@ -256,21 +260,20 @@ void onTick()
     }
     frames++;
     static int angle = 0;
-    for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
-        std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-        //ik_meshes[0]->set_orient(glm::vec3(0, 0, angle));
-        if(user_input) {
+    angle = (angle + angle_delta) % 360;
+    if(user_input) {
+        for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
+            std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
             ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(
-                    ik_meshes[1],
+                    ik_meshes[0],
                     glm::vec3(0, 0, 1),
                     targets[target_index],
                     IK_ITERS,
                     ACCEPT_END_EFFECTOR_DISTANCE,
                     ACCEPT_ANGLE_DISTANCE);
-            user_input = false;
         }
+        user_input = false;
     }
-    angle = (angle + angle_delta) % 360;
 }
 
 char* get_help_string()
@@ -385,7 +388,7 @@ void onSpecial(int key, int x, int y)
             {
                 size_t target_count = sizeof(targets) / sizeof(targets[0]);
                 target_index = (target_index + 1) % target_count;
-                std::cout << "target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
+                std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
                 vt::Scene::instance()->m_debug_target = targets[target_index];
                 user_input = true;
             }
