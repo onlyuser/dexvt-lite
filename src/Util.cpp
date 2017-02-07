@@ -92,12 +92,12 @@ glm::vec3 offset_to_orient(glm::vec3 offset)
 
 glm::vec3 orient_modulo(glm::vec3 orient)
 {
-    if(fabs(ORIENT_YAW(orient)) >= 180) {
+    if(fabs(ORIENT_YAW(orient)) > 180) {
         // yaw:  181 ==> -179
         // yaw: -181 ==>  179
         ORIENT_YAW(orient) = -SIGN(ORIENT_YAW(orient)) * (360 - fabs(ORIENT_YAW(orient)));
     }
-    if(fabs(ORIENT_PITCH(orient)) >= 90) {
+    if(fabs(ORIENT_PITCH(orient)) > 90) {
         // pitch:  91 ==>  89
         // pitch: -91 ==> -89
         ORIENT_PITCH(orient) = SIGN(ORIENT_PITCH(orient)) * (180 - fabs(ORIENT_PITCH(orient)));
@@ -105,7 +105,7 @@ glm::vec3 orient_modulo(glm::vec3 orient)
         // yaw: -179 ==>  1
         ORIENT_YAW(orient) = -SIGN(ORIENT_YAW(orient)) * (180 - fabs(ORIENT_YAW(orient)));
     }
-    if(fabs(ORIENT_ROLL(orient)) >= 180) {
+    if(fabs(ORIENT_ROLL(orient)) > 180) {
         // roll:  181 ==> -179
         // roll: -181 ==>  179
         ORIENT_ROLL(orient) = -SIGN(ORIENT_ROLL(orient)) * (360 - fabs(ORIENT_YAW(orient)));

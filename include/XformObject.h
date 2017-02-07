@@ -64,7 +64,8 @@ public:
                       glm::vec3    local_end_effector_tip,
                       glm::vec3    target,
                       int          iters,
-                      float        accept_distance);
+                      float        accept_end_effector_distance,
+                      float        accept_avg_angle_distance);
     void update_boid(glm::vec3 target, float forward_speed, float angle_delta, float avoid_radius);
 
     // basic features

@@ -200,30 +200,37 @@ bool XformObject::solve_ik_ccd(XformObject* root,
                                glm::vec3    local_end_effector_tip,
                                glm::vec3    target,
                                int          iters,
-                               float        accept_distance)
+                               float        accept_end_effector_distance,
+                               float        accept_avg_angle_distance)
 {
-    for(int i = 0; i < iters; i++) {
+    bool converge = false;
+    bool find_solution = false;
+    for(int i = 0; i < iters && !converge; i++) {
+        int segment_count = 0;
+        float sum_angle = 0;
         for(XformObject* current_segment = this; current_segment && current_segment != root->get_parent(); current_segment = current_segment->get_parent()) {
             glm::vec3 end_effector_tip = in_abs_system(local_end_effector_tip);
-            if(glm::distance(end_effector_tip, target) < accept_distance) {
-                return true;
-            }
+            find_solution = (glm::distance(end_effector_tip, target) < accept_end_effector_distance);
 #if 1
             glm::vec3 local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(target));
             glm::vec3 local_end_effector_tip_dir = glm::normalize(current_segment->from_origin_in_parent_system(end_effector_tip));
             glm::vec3 local_arc_dir              = glm::normalize(local_target_dir - local_end_effector_tip_dir);
             glm::vec3 local_arc_midpoint_dir     = glm::normalize((local_target_dir + local_end_effector_tip_dir) * 0.5f);
-            float     angle_delta                = glm::degrees(glm::angle(local_target_dir, local_end_effector_tip_dir));
             glm::vec3 local_arc_pivot            = glm::cross(local_arc_dir, local_arc_midpoint_dir);
+            float     angle_delta                = glm::degrees(glm::angle(local_target_dir, local_end_effector_tip_dir));
             glm::mat4 local_arc_rotate_xform     = GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot);
+            sum_angle += angle_delta;
     #if 1
             // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
             glm::mat4 new_current_segment_orient_xform = local_arc_rotate_xform * current_segment->get_local_orient_xform();
             glm::vec3 new_current_segment_heading      = glm::vec3(new_current_segment_orient_xform * glm::vec4(VEC_FORWARD, 1));
             glm::vec3 new_current_segment_up_direction = glm::vec3(new_current_segment_orient_xform * glm::vec4(VEC_UP, 1));
-            if(i < iters - 1) { // reserve last iter for updating guide wires
-                current_segment->point_at_local(new_current_segment_heading, &new_current_segment_up_direction);
-            }
+            current_segment->point_at_local(new_current_segment_heading, &new_current_segment_up_direction);
+            local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(target));
+            local_end_effector_tip_dir = glm::normalize(current_segment->from_origin_in_parent_system(end_effector_tip));
+            local_arc_dir              = glm::normalize(local_target_dir - local_end_effector_tip_dir);
+            local_arc_midpoint_dir     = glm::normalize((local_target_dir + local_end_effector_tip_dir) * 0.5f);
+            local_arc_pivot            = glm::cross(local_arc_dir, local_arc_midpoint_dir);
             current_segment->m_debug_target_dir           = local_target_dir;
             current_segment->m_debug_end_effector_tip_dir = local_end_effector_tip_dir;
             current_segment->m_debug_local_pivot          = local_arc_pivot;
@@ -244,14 +251,18 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             glm::vec3 local_end_effector_tip_orient = offset_to_orient(current_segment->from_origin_in_parent_system(end_effector_tip));
             current_segment->set_orient(orient_modulo(current_segment->get_orient() + orient_modulo(local_target_orient - local_end_effector_tip_orient)));
 #endif
+            //current_segment->apply_constraints();
 #ifdef DEBUG
             std::cout << "NAME: " << current_segment->get_name() << ", ORIENT: " << glm::to_string(current_segment->get_orient()) << std::endl;
 #endif
-            current_segment->apply_constraints();
-            //return true;
+            segment_count++;
+        }
+        float average_angle = sum_angle / segment_count;
+        if(average_angle < accept_avg_angle_distance) {
+            converge = true;
         }
     }
-    return false;
+    return converge && find_solution;
 }
 
 void XformObject::update_boid(glm::vec3 target, float forward_speed, float angle_delta, float avoid_radius)
