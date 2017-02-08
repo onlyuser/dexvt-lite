@@ -42,6 +42,7 @@ void XformObject::set_origin(glm::vec3 origin)
 void XformObject::set_orient(glm::vec3 orient)
 {
     m_orient = orient;
+    apply_constraints();
     mark_dirty_xform();
 }
 
@@ -57,19 +58,6 @@ void XformObject::reset_xform()
     set_orient(glm::vec3(0));
     m_scale  = glm::vec3(1);
     mark_dirty_xform();
-}
-
-bool XformObject::is_violate_constraints() const
-{
-    for(int i = 0; i < 3; i++) {
-        if(!m_enable_orient_constraints[i]) {
-            continue;
-        }
-        if(angle_distance(m_orient[i], m_orient_constraints_center[i]) > m_orient_constraints_max_deviation[i]) {
-            return true;
-        }
-    }
-    return false;
 }
 
 void XformObject::apply_constraints()
@@ -225,7 +213,8 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             glm::vec3 new_current_segment_heading      = glm::vec3(new_current_segment_orient_xform * glm::vec4(VEC_FORWARD, 1));
             glm::vec3 new_current_segment_up_direction = glm::vec3(new_current_segment_orient_xform * glm::vec4(VEC_UP, 1));
             current_segment->point_at_local(new_current_segment_heading, &new_current_segment_up_direction);
-            current_segment->apply_constraints();
+
+            // update guide wires
             local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(target));
             local_end_effector_tip_dir = glm::normalize(current_segment->from_origin_in_parent_system(end_effector_tip));
             local_arc_dir              = glm::normalize(local_target_dir - local_end_effector_tip_dir);
@@ -244,7 +233,6 @@ bool XformObject::solve_ik_ccd(XformObject* root,
     #else
             // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
             current_segment->point_at_local(glm::vec3(local_arc_rotate_xform * glm::vec4(orient_to_offset(current_segment->get_orient()), 1)));
-            current_segment->apply_constraints();
     #endif
             sum_angle += angle_delta;
 #else
@@ -252,8 +240,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             glm::vec3 local_target_orient           = offset_to_orient(current_segment->from_origin_in_parent_system(target));
             glm::vec3 local_end_effector_tip_orient = offset_to_orient(current_segment->from_origin_in_parent_system(end_effector_tip));
             current_segment->set_orient(orient_modulo(current_segment->get_orient() + orient_modulo(local_target_orient - local_end_effector_tip_orient)));
-            current_segment->apply_constraints();
-            sum_angle += accept_avg_angle_distance;
+            sum_angle += accept_avg_angle_distance; // to avoid convergence
 #endif
 #ifdef DEBUG
             std::cout << "NAME: " << current_segment->get_name() << ", ORIENT: " << glm::to_string(current_segment->get_orient()) << std::endl;

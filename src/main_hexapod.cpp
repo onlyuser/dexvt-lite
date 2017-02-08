@@ -47,7 +47,7 @@
 #define IK_LEG_RADIUS                    2
 #define IK_ITERS                        50
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
-#define ACCEPT_ANGLE_DISTANCE        0.001
+#define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
@@ -268,7 +268,7 @@ void onTick()
                     targets[target_index],
                     IK_ITERS,
                     ACCEPT_END_EFFECTOR_DISTANCE,
-                    ACCEPT_ANGLE_DISTANCE);
+                    ACCEPT_AVG_ANGLE_DISTANCE);
         }
         user_input = false;
     }
