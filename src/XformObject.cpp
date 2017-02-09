@@ -306,7 +306,7 @@ const glm::mat4 &XformObject::get_normal_xform()
 
 glm::mat4 XformObject::get_local_orient_xform() const
 {
-    return GLM_ORIENT(ORIENT_YAW(m_orient), ORIENT_PITCH(m_orient), ORIENT_ROLL(m_orient));
+    return GLM_EULER_ANGLE(ORIENT_YAW(m_orient), ORIENT_PITCH(m_orient), ORIENT_ROLL(m_orient));
 }
 
 void XformObject::update_xform_hier()

@@ -90,8 +90,7 @@ protected:
     std::set<XformObject*> m_children;
 
     // caching
-    void mark_dirty_xform()
-    {
+    void mark_dirty_xform() {
         m_is_dirty_xform        = true;
         m_is_dirty_normal_xform = true;
     }

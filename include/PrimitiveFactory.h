@@ -9,10 +9,18 @@
 namespace vt {
 
 class Mesh;
+class MeshIFace;
 
 class PrimitiveFactory
 {
 public:
+    enum tessellate_style_t {
+        TESSELLATE_STYLE_EDGE_CENTER,
+        TESSELLATE_STYLE_TRI_CENTER
+    };
+
+    static Mesh* tessellate(MeshIFace*         mesh,
+                            tessellate_style_t tessellate_style);
     static Mesh* create_grid(
             std::string name             = "",
             int         cols             = 1,

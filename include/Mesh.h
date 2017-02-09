@@ -21,11 +21,12 @@ class Mesh : public XformObject,
              public MeshIFace
 {
 public:
-    Mesh(
-            std::string name       = "",
-            size_t      num_vertex = 0,
-            size_t      num_tri    = 0);
+    Mesh(std::string name,
+         size_t      num_vertex,
+         size_t      num_tri);
     virtual ~Mesh();
+    void realloc(size_t num_vertex,
+                 size_t num_tri);
 
     size_t get_num_vertex() const
     {

@@ -11,10 +11,9 @@
 
 namespace vt {
 
-Mesh::Mesh(
-        std::string name,
-        size_t      num_vertex,
-        size_t      num_tri)
+Mesh::Mesh(std::string name,
+           size_t      num_vertex,
+           size_t      num_tri)
     : XformObject(name),
       m_num_vertex(num_vertex),
       m_num_tri(num_tri),
@@ -66,6 +65,31 @@ Mesh::~Mesh()
     if(m_normal_shader_context)    { delete m_normal_shader_context; }
     if(m_wireframe_shader_context) { delete m_wireframe_shader_context; }
     if(m_ssao_shader_context)      { delete m_ssao_shader_context; }
+}
+
+void Mesh::realloc(size_t num_vertex,
+                   size_t num_tri)
+{
+    if(m_vert_coords)              { delete []m_vert_coords; }
+    if(m_vert_normal)              { delete []m_vert_normal; }
+    if(m_vert_tangent)             { delete []m_vert_tangent; }
+    if(m_tex_coords)               { delete []m_tex_coords; }
+    if(m_tri_indices)              { delete []m_tri_indices; }
+    if(m_vbo_vert_coords)          { delete m_vbo_vert_coords; }
+    if(m_vbo_vert_normal)          { delete m_vbo_vert_normal; }
+    if(m_vbo_vert_tangent)         { delete m_vbo_vert_tangent; }
+    if(m_vbo_tex_coords)           { delete m_vbo_tex_coords; }
+    if(m_ibo_tri_indices)          { delete m_ibo_tri_indices; }
+    if(m_shader_context)           { delete m_shader_context; }
+    if(m_normal_shader_context)    { delete m_normal_shader_context; }
+    if(m_wireframe_shader_context) { delete m_wireframe_shader_context; }
+    if(m_ssao_shader_context)      { delete m_ssao_shader_context; }
+    m_vert_coords   = new GLfloat[ num_vertex * 3];
+    m_vert_normal   = new GLfloat[ num_vertex * 3];
+    m_vert_tangent  = new GLfloat[ num_vertex * 3];
+    m_tex_coords    = new GLfloat[ num_vertex * 2];
+    m_tri_indices   = new GLushort[num_tri    * 3];
+    m_buffers_already_init = false;
 }
 
 glm::vec3 Mesh::get_vert_coord(int index) const
