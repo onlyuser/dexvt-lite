@@ -15,18 +15,18 @@ class Mesh;
 Mesh* _mesh(MeshIFace* mesh);
 MeshIFace* _meshiface(Mesh* mesh);
 
-Mesh* PrimitiveFactory::tessellate(MeshIFace*         mesh,
-                                   tessellate_style_t tessellate_style)
+Mesh* PrimitiveFactory::tessellate(MeshIFace*     mesh,
+                                   tessellation_t tessellation)
 {
-    switch(tessellate_style) {
-        case TESSELLATE_STYLE_EDGE_CENTER:
+    switch(tessellation) {
+        case TESSELLATION_EDGE_CENTER:
             {
                 int num_vertex = mesh->get_num_vertex() * 2;
                 int num_tri    = mesh->get_num_tri() * 4;
                 mesh->realloc(num_vertex, num_tri);
             }
             break;
-        case TESSELLATE_STYLE_TRI_CENTER:
+        case TESSELLATION_TRI_CENTER:
             {
                 int num_vertex = mesh->get_num_vertex() + mesh->get_num_tri();
                 int num_tri    = mesh->get_num_tri() * 3;

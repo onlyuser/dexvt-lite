@@ -14,13 +14,13 @@ class MeshIFace;
 class PrimitiveFactory
 {
 public:
-    enum tessellate_style_t {
-        TESSELLATE_STYLE_EDGE_CENTER,
-        TESSELLATE_STYLE_TRI_CENTER
+    enum tessellation_t {
+        TESSELLATION_EDGE_CENTER,
+        TESSELLATION_TRI_CENTER
     };
 
-    static Mesh* tessellate(MeshIFace*         mesh,
-                            tessellate_style_t tessellate_style);
+    static Mesh* tessellate(MeshIFace*     mesh,
+                            tessellation_t tessellation);
     static Mesh* create_grid(
             std::string name             = "",
             int         cols             = 1,
