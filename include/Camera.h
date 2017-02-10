@@ -28,7 +28,7 @@ public:
            glm::vec3         origin          = glm::vec3(0),
            glm::vec3         target          = glm::vec3(-1),
            float             fov             = 45,
-           glm::vec2         offset          = glm::vec2(0, 0),
+           glm::vec2         offset          = glm::vec2(0),
            glm::vec2         dim             = glm::vec2(DEFAULT_VIEWPORT_WIDTH,
                                                          DEFAULT_VIEWPORT_HEIGHT),
            float             near_plane      = 4,

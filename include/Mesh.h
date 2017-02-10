@@ -54,8 +54,8 @@ public:
     void       set_vert_tangent(int index, glm::vec3 tangent);
     glm::vec2  get_tex_coord(int index) const;
     void       set_tex_coord(int index, glm::vec2 coord);
-    glm::uvec3 get_tri_indices(int index) const;
-    void       set_tri_indices(int index, glm::uvec3 indices);
+    glm::ivec3 get_tri_indices(int index) const;
+    void       set_tri_indices(int index, glm::ivec3 indices);
 
     void update_bbox();
     void update_normals_and_tangents();

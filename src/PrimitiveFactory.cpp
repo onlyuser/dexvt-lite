@@ -91,8 +91,8 @@ Mesh* PrimitiveFactory::create_grid(
             int lower_right = lower_left + 1;
             int upper_left  = (row + 1) * (cols + 1) + col;
             int upper_right = upper_left + 1;
-            mesh->set_tri_indices(tri_index++, glm::uvec3(lower_left, lower_right, upper_right));
-            mesh->set_tri_indices(tri_index++, glm::uvec3(upper_right, upper_left, lower_left));
+            mesh->set_tri_indices(tri_index++, glm::ivec3(lower_left, lower_right, upper_right));
+            mesh->set_tri_indices(tri_index++, glm::ivec3(upper_right, upper_left, lower_left));
         }
     }
 
@@ -455,28 +455,28 @@ Mesh* PrimitiveFactory::create_box(
     // ==========================
 
     // right
-    mesh->set_tri_indices(0, glm::uvec3(0, 1, 2));
-    mesh->set_tri_indices(1, glm::uvec3(2, 3, 0));
+    mesh->set_tri_indices(0, glm::ivec3(0, 1, 2));
+    mesh->set_tri_indices(1, glm::ivec3(2, 3, 0));
 
     // front
-    mesh->set_tri_indices(2, glm::uvec3(4, 5, 6));
-    mesh->set_tri_indices(3, glm::uvec3(6, 7, 4));
+    mesh->set_tri_indices(2, glm::ivec3(4, 5, 6));
+    mesh->set_tri_indices(3, glm::ivec3(6, 7, 4));
 
     // left
-    mesh->set_tri_indices(4, glm::uvec3(8,  9, 10));
-    mesh->set_tri_indices(5, glm::uvec3(10, 11, 8));
+    mesh->set_tri_indices(4, glm::ivec3(8,  9, 10));
+    mesh->set_tri_indices(5, glm::ivec3(10, 11, 8));
 
     // back
-    mesh->set_tri_indices(6, glm::uvec3(12, 13, 14));
-    mesh->set_tri_indices(7, glm::uvec3(14, 15, 12));
+    mesh->set_tri_indices(6, glm::ivec3(12, 13, 14));
+    mesh->set_tri_indices(7, glm::ivec3(14, 15, 12));
 
     // top
-    mesh->set_tri_indices(8, glm::uvec3(16, 17, 18));
-    mesh->set_tri_indices(9, glm::uvec3(18, 19, 16));
+    mesh->set_tri_indices(8, glm::ivec3(16, 17, 18));
+    mesh->set_tri_indices(9, glm::ivec3(18, 19, 16));
 
     // bottom
-    mesh->set_tri_indices(10, glm::uvec3(20, 21, 22));
-    mesh->set_tri_indices(11, glm::uvec3(22, 23, 20));
+    mesh->set_tri_indices(10, glm::ivec3(20, 21, 22));
+    mesh->set_tri_indices(11, glm::ivec3(22, 23, 20));
 
     mesh->update_bbox();
 
@@ -511,10 +511,10 @@ Mesh* PrimitiveFactory::create_tetrahedron(
     mesh->set_vert_coord(10, glm::vec3(1, 0, 0));
     mesh->set_vert_coord(11, glm::vec3(1, 1, 1));
 
-    mesh->set_tri_indices(0, glm::uvec3(0, 1,  2));
-    mesh->set_tri_indices(1, glm::uvec3(3, 4,  5));
-    mesh->set_tri_indices(2, glm::uvec3(6, 7,  8));
-    mesh->set_tri_indices(3, glm::uvec3(9, 10, 11));
+    mesh->set_tri_indices(0, glm::ivec3(0, 1,  2));
+    mesh->set_tri_indices(1, glm::ivec3(3, 4,  5));
+    mesh->set_tri_indices(2, glm::ivec3(6, 7,  8));
+    mesh->set_tri_indices(3, glm::ivec3(9, 10, 11));
 
     mesh->update_normals_and_tangents();
     mesh->update_bbox();
@@ -586,7 +586,7 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         mesh->set_vert_coord( vert_index + 0, p1);
         mesh->set_vert_coord( vert_index + 1, p2);
         mesh->set_vert_coord( vert_index + 2, p3);
-        mesh->set_tri_indices(tri_index++, glm::uvec3(vert_index + 0, vert_index + 1, vert_index + 2));
+        mesh->set_tri_indices(tri_index++, glm::ivec3(vert_index + 0, vert_index + 1, vert_index + 2));
         vert_index += 3;
     }
 
@@ -613,7 +613,7 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         mesh->set_vert_coord( vert_index + 0, p1);
         mesh->set_vert_coord( vert_index + 1, p2);
         mesh->set_vert_coord( vert_index + 2, p3);
-        mesh->set_tri_indices(tri_index++, glm::uvec3(vert_index + 0, vert_index + 1, vert_index + 2));
+        mesh->set_tri_indices(tri_index++, glm::ivec3(vert_index + 0, vert_index + 1, vert_index + 2));
         vert_index += 3;
     }
 
@@ -641,7 +641,7 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         mesh->set_vert_coord( vert_index + 0, p1);
         mesh->set_vert_coord( vert_index + 1, p2);
         mesh->set_vert_coord( vert_index + 2, p3);
-        mesh->set_tri_indices(tri_index++, glm::uvec3(vert_index + 0, vert_index + 1, vert_index + 2));
+        mesh->set_tri_indices(tri_index++, glm::ivec3(vert_index + 0, vert_index + 1, vert_index + 2));
         vert_index += 3;
 
         // half kite 2
@@ -666,7 +666,7 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         mesh->set_vert_coord( vert_index + 0, p4);
         mesh->set_vert_coord( vert_index + 1, p5);
         mesh->set_vert_coord( vert_index + 2, p6);
-        mesh->set_tri_indices(tri_index++, glm::uvec3(vert_index + 0, vert_index + 1, vert_index + 2));
+        mesh->set_tri_indices(tri_index++, glm::ivec3(vert_index + 0, vert_index + 1, vert_index + 2));
         vert_index += 3;
     }
 
@@ -694,7 +694,7 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         mesh->set_vert_coord( vert_index + 0, p1);
         mesh->set_vert_coord( vert_index + 1, p2);
         mesh->set_vert_coord( vert_index + 2, p3);
-        mesh->set_tri_indices(tri_index++, glm::uvec3(vert_index + 0, vert_index + 1, vert_index + 2));
+        mesh->set_tri_indices(tri_index++, glm::ivec3(vert_index + 0, vert_index + 1, vert_index + 2));
         vert_index += 3;
 
         // half upper-girdle 2
@@ -719,7 +719,7 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         mesh->set_vert_coord( vert_index + 0, p4);
         mesh->set_vert_coord( vert_index + 1, p5);
         mesh->set_vert_coord( vert_index + 2, p6);
-        mesh->set_tri_indices(tri_index++, glm::uvec3(vert_index + 0, vert_index + 1, vert_index + 2));
+        mesh->set_tri_indices(tri_index++, glm::ivec3(vert_index + 0, vert_index + 1, vert_index + 2));
         vert_index += 3;
     }
 
@@ -752,7 +752,7 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         mesh->set_vert_coord( vert_index + 0, p1);
         mesh->set_vert_coord( vert_index + 1, p2);
         mesh->set_vert_coord( vert_index + 2, p3);
-        mesh->set_tri_indices(tri_index++, glm::uvec3(vert_index + 0, vert_index + 1, vert_index + 2));
+        mesh->set_tri_indices(tri_index++, glm::ivec3(vert_index + 0, vert_index + 1, vert_index + 2));
         vert_index += 3;
 
         // bottom half
@@ -777,7 +777,7 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         mesh->set_vert_coord( vert_index + 0, p4);
         mesh->set_vert_coord( vert_index + 1, p5);
         mesh->set_vert_coord( vert_index + 2, p6);
-        mesh->set_tri_indices(tri_index++, glm::uvec3(vert_index + 0, vert_index + 1, vert_index + 2));
+        mesh->set_tri_indices(tri_index++, glm::ivec3(vert_index + 0, vert_index + 1, vert_index + 2));
         vert_index += 3;
     }
 
@@ -805,7 +805,7 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         mesh->set_vert_coord( vert_index + 0, p1);
         mesh->set_vert_coord( vert_index + 1, p2);
         mesh->set_vert_coord( vert_index + 2, p3);
-        mesh->set_tri_indices(tri_index++, glm::uvec3(vert_index + 0, vert_index + 1, vert_index + 2));
+        mesh->set_tri_indices(tri_index++, glm::ivec3(vert_index + 0, vert_index + 1, vert_index + 2));
         vert_index += 3;
 
         // half lower-girdle 2
@@ -830,14 +830,14 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         mesh->set_vert_coord( vert_index + 0, p4);
         mesh->set_vert_coord( vert_index + 1, p5);
         mesh->set_vert_coord( vert_index + 2, p6);
-        mesh->set_tri_indices(tri_index++, glm::uvec3(vert_index + 0, vert_index + 1, vert_index + 2));
+        mesh->set_tri_indices(tri_index++, glm::ivec3(vert_index + 0, vert_index + 1, vert_index + 2));
         vert_index += 3;
     }
 
     // pavilion main: 8 * 2 triangles
     for(int i = 0; i < 8; i++) {
         // half pavilion main 1
-        glm::vec3 p1 = glm::vec3(0, 0, 0);
+        glm::vec3 p1 = glm::vec3(0);
         glm::vec3 p2 = orient_to_offset(glm::vec3(
                 0,
                 0,                                      // pitch
@@ -853,11 +853,11 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         mesh->set_vert_coord( vert_index + 0, p1);
         mesh->set_vert_coord( vert_index + 1, p2);
         mesh->set_vert_coord( vert_index + 2, p3);
-        mesh->set_tri_indices(tri_index++, glm::uvec3(vert_index + 0, vert_index + 1, vert_index + 2));
+        mesh->set_tri_indices(tri_index++, glm::ivec3(vert_index + 0, vert_index + 1, vert_index + 2));
         vert_index += 3;
 
         // half pavilion main 2
-        glm::vec3 p4 = glm::vec3(0, 0, 0);
+        glm::vec3 p4 = glm::vec3(0);
         glm::vec3 p5 = orient_to_offset(glm::vec3(
                 0,
                 0,                                    // pitch
@@ -873,7 +873,7 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
         mesh->set_vert_coord( vert_index + 0, p4);
         mesh->set_vert_coord( vert_index + 1, p5);
         mesh->set_vert_coord( vert_index + 2, p6);
-        mesh->set_tri_indices(tri_index++, glm::uvec3(vert_index + 0, vert_index + 1, vert_index + 2));
+        mesh->set_tri_indices(tri_index++, glm::ivec3(vert_index + 0, vert_index + 1, vert_index + 2));
         vert_index += 3;
     }
 

@@ -19,7 +19,7 @@ Texture::Texture(std::string          name,
                  bool                 smooth,
                  bool                 random)
     : NamedObject(name),
-      FrameObject(glm::ivec2(0, 0), dim),
+      FrameObject(glm::ivec2(0), dim),
       m_skybox(false),
       m_type(type)
 {
@@ -27,22 +27,22 @@ Texture::Texture(std::string          name,
         m_id = gen_texture_internal(dim.x, dim.y, pixel_data, type, smooth);
     } else {
         if(type == Texture::DEPTH) {
-            float* _pixel_data = new float[dim.x*dim.y*sizeof(float)];
-            memset(_pixel_data, 0, dim.x*dim.y*sizeof(float));
+            float* _pixel_data = new float[dim.x * dim.y * sizeof(float)];
+            memset(_pixel_data, 0, dim.x * dim.y * sizeof(float));
             for(int i = 0; i < static_cast<int>(std::min(dim.x, dim.y)); i++) {
-                _pixel_data[i*dim.x+i]       = 1;
-                _pixel_data[i*dim.x+dim.x-i] = 1;
+                _pixel_data[i * dim.x + i]         = 1;
+                _pixel_data[i * dim.x + dim.x - i] = 1;
             }
             m_id = gen_texture_internal(dim.x, dim.y, _pixel_data, type, smooth);
             delete[] _pixel_data;
         } else {
             if(random) {
                 srand(time(NULL));
-                unsigned char* _pixel_data = new unsigned char[dim.x*dim.y*sizeof(unsigned char)*3];
-                memset(_pixel_data, 0, dim.x*dim.y*sizeof(unsigned char)*3);
+                unsigned char* _pixel_data = new unsigned char[dim.x * dim.y * sizeof(unsigned char) * 3];
+                memset(_pixel_data, 0, dim.x * dim.y * sizeof(unsigned char) * 3);
                 for(int i = 0; i < static_cast<int>(dim.y); i++) {
                     for(int j = 0; j < static_cast<int>(dim.x); j++) {
-                        int pixel_offset = (i*dim.x + j)*3;
+                        int pixel_offset = (i * dim.x + j) * 3;
                         _pixel_data[pixel_offset + 0] = rand() % 256;
                         _pixel_data[pixel_offset + 1] = rand() % 256;
                         _pixel_data[pixel_offset + 2] = rand() % 256;
@@ -52,11 +52,11 @@ Texture::Texture(std::string          name,
                 delete[] _pixel_data;
             } else {
                 // draw big red 'x'
-                unsigned char* _pixel_data = new unsigned char[dim.x*dim.y*sizeof(unsigned char)*3];
-                memset(_pixel_data, 0, dim.x*dim.y*sizeof(unsigned char)*3);
+                unsigned char* _pixel_data = new unsigned char[dim.x * dim.y * sizeof(unsigned char) * 3];
+                memset(_pixel_data, 0, dim.x * dim.y * sizeof(unsigned char) * 3);
                 for(int i = 0; i < static_cast<int>(std::min(dim.x, dim.y)); i++) {
-                    int pixel_offset_scanline_start = (i*dim.x + i)*3;
-                    int pixel_offset_scanline_end   = (i*dim.x + (dim.x - i))*3;
+                    int pixel_offset_scanline_start = (i * dim.x + i) * 3;
+                    int pixel_offset_scanline_end   = (i * dim.x + (dim.x - i)) * 3;
                     _pixel_data[pixel_offset_scanline_start + 0] = 255;
                     _pixel_data[pixel_offset_scanline_start + 1] = 0;
                     _pixel_data[pixel_offset_scanline_start + 2] = 0;
@@ -75,7 +75,7 @@ Texture::Texture(std::string name,
                  std::string png_filename,
                  bool        smooth)
     : NamedObject(name),
-      FrameObject(glm::ivec2(0, 0), glm::ivec2(0, 0)),
+      FrameObject(glm::ivec2(0), glm::ivec2(0)),
       m_skybox(false),
       m_type(Texture::RGB)
 {
@@ -102,7 +102,7 @@ Texture::Texture(
         std::string png_filename_pos_z,
         std::string png_filename_neg_z)
     : NamedObject(name),
-      FrameObject(glm::ivec2(0, 0), glm::ivec2(0, 0)),
+      FrameObject(glm::ivec2(0), glm::ivec2(0)),
       m_skybox(true),
       m_type(Texture::RGB)
 {
@@ -398,8 +398,8 @@ bool Texture::read_png(std::string png_filename,
         return false;
     }
     // set the individual row_pointers to point at the correct offsets of image_data
-    for(int i = 0; i < static_cast<int>(theight); ++i) {
-        row_pointers[theight-1-i] = image_data+i*rowbytes;
+    for(int i = 0; i < static_cast<int>(theight); i++) {
+        row_pointers[theight - 1 - i] = image_data + i * rowbytes;
     }
 
     //read the png into image_data through row_pointers

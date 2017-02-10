@@ -21,8 +21,8 @@ public:
     virtual void       set_vert_tangent(int index, glm::vec3 tangent) = 0;
     virtual glm::vec2  get_tex_coord(int index) const = 0;
     virtual void       set_tex_coord(int index, glm::vec2 coord) = 0;
-    virtual glm::uvec3 get_tri_indices(int index) const = 0;
-    virtual void       set_tri_indices(int index, glm::uvec3 indices) = 0;
+    virtual glm::ivec3 get_tri_indices(int index) const = 0;
+    virtual void       set_tri_indices(int index, glm::ivec3 indices) = 0;
     virtual void       update_bbox() = 0;
     virtual void       update_normals_and_tangents() = 0;
     virtual void       get_min_max(glm::vec3* min, glm::vec3* max) const = 0;

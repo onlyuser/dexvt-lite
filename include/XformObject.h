@@ -82,8 +82,8 @@ protected:
 
     // constraints
     glm::ivec3 m_enable_orient_constraints;
-    glm::vec3 m_orient_constraints_center;
-    glm::vec3 m_orient_constraints_max_deviation;
+    glm::vec3  m_orient_constraints_center;
+    glm::vec3  m_orient_constraints_max_deviation;
 
     // hierarchy related
     XformObject* m_parent;

@@ -20,9 +20,9 @@ XformObject::XformObject(
       m_origin(origin),
       m_orient(orient),
       m_scale(scale),
-      m_enable_orient_constraints(       glm::ivec3(  0,  0,   0)),
-      m_orient_constraints_center(       glm::ivec3(  0,  0,   0)),
-      m_orient_constraints_max_deviation(glm::ivec3(180, 90, 180)),
+      m_enable_orient_constraints(       glm::ivec3(0)),
+      m_orient_constraints_center(       glm::vec3(0)),
+      m_orient_constraints_max_deviation(glm::vec3(180, 90, 180)),
       m_parent(NULL),
       m_is_dirty_xform(true),
       m_is_dirty_normal_xform(true)

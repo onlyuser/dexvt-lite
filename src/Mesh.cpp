@@ -158,16 +158,16 @@ void Mesh::set_tex_coord(int index, glm::vec2 coord)
     m_tex_coords[offset+1] = coord.y;
 }
 
-glm::uvec3 Mesh::get_tri_indices(int index) const
+glm::ivec3 Mesh::get_tri_indices(int index) const
 {
     int offset = index * 3;
-    return glm::uvec3(
+    return glm::ivec3(
             m_tri_indices[offset + 0],
             m_tri_indices[offset + 1],
             m_tri_indices[offset + 2]);
 }
 
-void Mesh::set_tri_indices(int index, glm::uvec3 indices)
+void Mesh::set_tri_indices(int index, glm::ivec3 indices)
 {
     int offset = index * 3;
     m_tri_indices[offset + 0] = indices[0];
@@ -188,7 +188,7 @@ void Mesh::update_bbox()
 void Mesh::update_normals_and_tangents()
 {
     for(int i=0; i<static_cast<int>(m_num_tri); i++) {
-        glm::uvec3 tri_indices = get_tri_indices(i);
+        glm::ivec3 tri_indices = get_tri_indices(i);
         glm::vec3 p0 = get_vert_coord(tri_indices[0]);
         glm::vec3 p1 = get_vert_coord(tri_indices[1]);
         glm::vec3 p2 = get_vert_coord(tri_indices[2]);

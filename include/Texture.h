@@ -15,7 +15,7 @@
 namespace vt {
 
 class Texture : public NamedObject,
-                public FrameObject<glm::ivec2, size_t>,
+                public FrameObject<glm::ivec2, int>,
                 public IdentObject,
                 public BindableObjectIFace
 {

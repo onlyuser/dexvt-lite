@@ -147,7 +147,7 @@ void File3ds::read_faces(FILE* stream, MeshIFace* mesh)
     size_t num_tri = mesh->get_num_tri();
     for(int i = 0; i < static_cast<int>(num_tri); i++) {
         fread(tri_indices, sizeof(uint16_t), 3, stream);
-        mesh->set_tri_indices(i, glm::uvec3(tri_indices[0], tri_indices[2], tri_indices[1]));
+        mesh->set_tri_indices(i, glm::ivec3(tri_indices[0], tri_indices[2], tri_indices[1]));
         fseek(stream, sizeof(uint16_t), SEEK_CUR); // skip tri_indices info
     }
     delete []tri_indices;
