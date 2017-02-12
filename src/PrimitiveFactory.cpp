@@ -15,28 +15,6 @@ class Mesh;
 Mesh* _mesh(MeshIFace* mesh);
 MeshIFace* _meshiface(Mesh* mesh);
 
-Mesh* PrimitiveFactory::tessellate(MeshIFace*     mesh,
-                                   tessellation_t tessellation)
-{
-    switch(tessellation) {
-        case TESSELLATION_EDGE_CENTER:
-            {
-                int num_vertex = mesh->get_num_vertex() * 2;
-                int num_tri    = mesh->get_num_tri() * 4;
-                mesh->realloc(num_vertex, num_tri);
-            }
-            break;
-        case TESSELLATION_TRI_CENTER:
-            {
-                int num_vertex = mesh->get_num_vertex() + mesh->get_num_tri();
-                int num_tri    = mesh->get_num_tri() * 3;
-                mesh->realloc(num_vertex, num_tri);
-            }
-            break;
-    }
-    return _mesh(mesh);
-}
-
 Mesh* PrimitiveFactory::create_grid(
         std::string name,
         int         cols,
@@ -374,7 +352,7 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_vert_coord(2, glm::vec3(0, 1, 1));
     mesh->set_vert_coord(3, glm::vec3(0, 1, 0));
     for(int i = 0; i < 4; i++) {
-        mesh->set_vert_normal( 0 * 4 + i, glm::vec3( - 1, 0, 0));
+        mesh->set_vert_normal( 0 * 4 + i, glm::vec3(-1, 0, 0));
         mesh->set_vert_tangent(0 * 4 + i, glm::vec3( 0, 0, 1));
     }
 
@@ -405,7 +383,7 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_vert_coord(15, glm::vec3(1, 1, 0));
     for(int i = 0; i < 4; i++) {
         mesh->set_vert_normal( 3 * 4 + i, glm::vec3( 0, 0, -1));
-        mesh->set_vert_tangent(3 * 4 + i, glm::vec3( - 1, 0,  0));
+        mesh->set_vert_tangent(3 * 4 + i, glm::vec3(-1, 0,  0));
     }
 
     // top
@@ -415,7 +393,7 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_vert_coord(19, glm::vec3(1, 1, 1));
     for(int i = 0; i < 4; i++) {
         mesh->set_vert_normal( 4 * 4 + i, glm::vec3( 0, 1, 0));
-        mesh->set_vert_tangent(4 * 4 + i, glm::vec3( - 1, 0, 0));
+        mesh->set_vert_tangent(4 * 4 + i, glm::vec3(-1, 0, 0));
     }
 
     // bottom

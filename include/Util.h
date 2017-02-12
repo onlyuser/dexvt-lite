@@ -46,6 +46,12 @@
 namespace vt {
 
 class Mesh;
+class MeshIFace;
+
+enum tessellation_t {
+    TESSELLATION_EDGE_CENTER,
+    TESSELLATION_TRI_CENTER
+};
 
 void print_bitmap_string(void* font, const char* s);
 glm::vec3 orient_to_offset(glm::vec3  orient,
@@ -56,7 +62,8 @@ glm::vec3 offset_to_orient(glm::vec3  offset,
 glm::vec3 offset_to_orient(glm::vec3 offset);
 glm::vec3 orient_modulo(glm::vec3 orient);
 float angle_distance(float angle1, float angle2);
-void mesh_apply_ripple(Mesh* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase);
+void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase);
+void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation);
 bool read_file(std::string filename, std::string &s);
 bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups, size_t* start_pos);
 bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups);
