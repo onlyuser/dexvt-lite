@@ -507,7 +507,7 @@ Mesh* PrimitiveFactory::create_geosphere(
         float       radius,
         int         tessellation_iters)
 {
-    MeshIFace* mesh = _meshiface(/*create_tetrahedron(name, 1, 1, 1)*/ create_sphere(name, 4, 2, radius));
+    MeshIFace* mesh = _meshiface(create_sphere(name, 4, 2, radius));
     mesh->center_axis();
     for(int i = 0; i < tessellation_iters; i++) {
         mesh_tessellate(mesh, TESSELLATION_EDGE_CENTER);

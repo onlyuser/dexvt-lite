@@ -12,11 +12,10 @@
 
 namespace vt {
 
-Material::Material(
-        std::string name,
-        std::string vertex_shader_file,
-        std::string fragment_shader_file,
-        bool use_overlay)
+Material::Material(std::string name,
+                   std::string vertex_shader_file,
+                   std::string fragment_shader_file,
+                   bool        use_overlay)
     : NamedObject(name),
       m_program(NULL),
       m_vertex_shader(NULL),

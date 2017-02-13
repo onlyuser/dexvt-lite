@@ -19,11 +19,10 @@ class Material : public NamedObject
 public:
     typedef std::vector<Texture*> textures_t;
 
-    Material(
-            std::string name                 = "",
-            std::string vertex_shader_file   = "",
-            std::string fragment_shader_file = "",
-            bool use_overlay                 = false);
+    Material(std::string name                 = "",
+             std::string vertex_shader_file   = "",
+             std::string fragment_shader_file = "",
+             bool        use_overlay          = false);
     virtual ~Material();
     Program* get_program() const
     {
