@@ -515,9 +515,10 @@ Mesh* PrimitiveFactory::create_geosphere(
         for(int j = 0; j < static_cast<int>(num_vertex); j++) {
             mesh->set_vert_coord(j, glm::normalize(mesh->get_vert_coord(j)) * radius);
         }
+        mesh->update_bbox();
+        mesh->center_axis();
     }
     mesh->update_normals_and_tangents();
-    mesh->update_bbox();
     return _mesh(mesh);
 }
 
