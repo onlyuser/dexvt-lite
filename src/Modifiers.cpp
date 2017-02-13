@@ -8,8 +8,8 @@ namespace vt {
 
 void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase)
 {
-    int num_vertex = mesh->get_num_vertex();
-    for(int i = 0; i < num_vertex; i++) {
+    size_t num_vertex = mesh->get_num_vertex();
+    for(int i = 0; i < static_cast<int>(num_vertex); i++) {
         glm::vec3 pos = mesh->get_vert_coord(i);
         glm::vec3 new_pos = pos;
         new_pos.y = origin.y + static_cast<float>(sin(glm::distance(glm::vec2(origin.x, origin.z),
@@ -22,8 +22,8 @@ void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float
 
 void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
 {
-    int prev_num_vert = mesh->get_num_vertex();
-    int prev_num_tri  = mesh->get_num_tri();
+    size_t prev_num_vert = mesh->get_num_vertex();
+    size_t prev_num_tri  = mesh->get_num_tri();
     switch(tessellation) {
         case TESSELLATION_EDGE_CENTER:
             {
@@ -32,7 +32,7 @@ void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
                 glm::vec3 new_vert_coord[new_num_vertex];
                 glm::vec2 new_tex_coord[new_num_vertex];
                 glm::ivec3 new_tri_indices[new_num_tri];
-                for(int i = 0; i < prev_num_vert; i++) {
+                for(int i = 0; i < static_cast<int>(prev_num_vert); i++) {
                     new_vert_coord[i] = mesh->get_vert_coord(i);
                     new_tex_coord[i]  = mesh->get_tex_coord(i);
                 }
@@ -40,7 +40,7 @@ void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
                 int current_vert_index = prev_num_vert;
                 int current_face_index = 0;
                 std::map<uint32_t, int> shared_vert_map;
-                for(int j = 0; j < prev_num_tri; j++) {
+                for(int j = 0; j < static_cast<int>(prev_num_tri); j++) {
                     glm::ivec3 tri_indices = mesh->get_tri_indices(j);
                     glm::vec3 vert_a_coord = mesh->get_vert_coord(tri_indices[0]);
                     glm::vec3 vert_b_coord = mesh->get_vert_coord(tri_indices[1]);
@@ -110,7 +110,7 @@ void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
                 glm::vec3 new_vert_coord[new_num_vertex];
                 glm::vec2 new_tex_coord[new_num_vertex];
                 glm::ivec3 new_tri_indices[new_num_tri];
-                for(int i = 0; i < prev_num_vert; i++) {
+                for(int i = 0; i < static_cast<int>(prev_num_vert); i++) {
                     new_vert_coord[i] = mesh->get_vert_coord(i);
                     new_tex_coord[i]  = mesh->get_tex_coord(i);
                 }
@@ -118,7 +118,7 @@ void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
                 int current_vert_index = prev_num_vert;
                 int current_face_index = 0;
                 std::map<uint32_t, int> shared_vert_map;
-                for(int j = 0; j < prev_num_tri; j++) {
+                for(int j = 0; j < static_cast<int>(prev_num_tri); j++) {
                     glm::ivec3 tri_indices = mesh->get_tri_indices(j);
                     glm::vec3 vert_a_coord = mesh->get_vert_coord(tri_indices[0]);
                     glm::vec3 vert_b_coord = mesh->get_vert_coord(tri_indices[1]);

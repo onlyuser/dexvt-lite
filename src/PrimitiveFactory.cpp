@@ -1,4 +1,5 @@
 #include <PrimitiveFactory.h>
+#include <Modifiers.h>
 #include <MeshIFace.h>
 #include <Util.h>
 #include <glm/glm.hpp>
@@ -361,9 +362,9 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_vert_coord(5, glm::vec3(1, 0, 1));
     mesh->set_vert_coord(6, glm::vec3(1, 1, 1));
     mesh->set_vert_coord(7, glm::vec3(0, 1, 1));
-    for(int i = 0; i < 4; i++) {
-        mesh->set_vert_normal( 1 * 4 + i, glm::vec3(0, 0, 1));
-        mesh->set_vert_tangent(1 * 4 + i, glm::vec3(1, 0, 0));
+    for(int j = 0; j < 4; j++) {
+        mesh->set_vert_normal( 1 * 4 + j, glm::vec3(0, 0, 1));
+        mesh->set_vert_tangent(1 * 4 + j, glm::vec3(1, 0, 0));
     }
 
     // left
@@ -371,9 +372,9 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_vert_coord( 9, glm::vec3(1, 0, 0));
     mesh->set_vert_coord(10, glm::vec3(1, 1, 0));
     mesh->set_vert_coord(11, glm::vec3(1, 1, 1));
-    for(int i = 0; i < 4; i++) {
-        mesh->set_vert_normal( 2 * 4 + i, glm::vec3(1, 0,  0));
-        mesh->set_vert_tangent(2 * 4 + i, glm::vec3(0, 0, -1));
+    for(int k = 0; k < 4; k++) {
+        mesh->set_vert_normal( 2 * 4 + k, glm::vec3(1, 0,  0));
+        mesh->set_vert_tangent(2 * 4 + k, glm::vec3(0, 0, -1));
     }
 
     // back
@@ -381,9 +382,9 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_vert_coord(13, glm::vec3(0, 0, 0));
     mesh->set_vert_coord(14, glm::vec3(0, 1, 0));
     mesh->set_vert_coord(15, glm::vec3(1, 1, 0));
-    for(int i = 0; i < 4; i++) {
-        mesh->set_vert_normal( 3 * 4 + i, glm::vec3( 0, 0, -1));
-        mesh->set_vert_tangent(3 * 4 + i, glm::vec3(-1, 0,  0));
+    for(int p = 0; p < 4; p++) {
+        mesh->set_vert_normal( 3 * 4 + p, glm::vec3( 0, 0, -1));
+        mesh->set_vert_tangent(3 * 4 + p, glm::vec3(-1, 0,  0));
     }
 
     // top
@@ -391,9 +392,9 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_vert_coord(17, glm::vec3(0, 1, 0));
     mesh->set_vert_coord(18, glm::vec3(0, 1, 1));
     mesh->set_vert_coord(19, glm::vec3(1, 1, 1));
-    for(int i = 0; i < 4; i++) {
-        mesh->set_vert_normal( 4 * 4 + i, glm::vec3( 0, 1, 0));
-        mesh->set_vert_tangent(4 * 4 + i, glm::vec3(-1, 0, 0));
+    for(int q = 0; q < 4; q++) {
+        mesh->set_vert_normal( 4 * 4 + q, glm::vec3( 0, 1, 0));
+        mesh->set_vert_tangent(4 * 4 + q, glm::vec3(-1, 0, 0));
     }
 
     // bottom
@@ -401,15 +402,15 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_vert_coord(21, glm::vec3(1, 0, 0));
     mesh->set_vert_coord(22, glm::vec3(1, 0, 1));
     mesh->set_vert_coord(23, glm::vec3(0, 0, 1));
-    for(int i = 0; i < 4; i++) {
-        mesh->set_vert_normal( 5 * 4 + i, glm::vec3(0, -1, 0));
-        mesh->set_vert_tangent(5 * 4 + i, glm::vec3(1,  0, 0));
+    for(int r = 0; r < 4; r++) {
+        mesh->set_vert_normal( 5 * 4 + r, glm::vec3(0, -1, 0));
+        mesh->set_vert_tangent(5 * 4 + r, glm::vec3(1,  0, 0));
     }
 
     glm::mat4 scale_xform = glm::scale(glm::mat4(1), glm::vec3(width, height, length));
-    int num_vertex = mesh->get_num_vertex();
-    for(int i = 1; i < num_vertex; i++) {
-        mesh->set_vert_coord(i, glm::vec3(glm::vec4(mesh->get_vert_coord(i), 1) * scale_xform));
+    size_t num_vertex = mesh->get_num_vertex();
+    for(int t = 1; t < static_cast<int>(num_vertex); t++) {
+        mesh->set_vert_coord(t, glm::vec3(glm::vec4(mesh->get_vert_coord(t), 1) * scale_xform));
     }
 
     // ========================
@@ -422,11 +423,11 @@ Mesh* PrimitiveFactory::create_box(
     mesh->set_tex_coord(2, glm::vec2(1, 1));
     mesh->set_tex_coord(3, glm::vec2(0, 1));
 
-    for(int i = 1; i < 6; i++) {
-        mesh->set_tex_coord(i * 4 + 0, mesh->get_tex_coord(0));
-        mesh->set_tex_coord(i * 4 + 1, mesh->get_tex_coord(1));
-        mesh->set_tex_coord(i * 4 + 2, mesh->get_tex_coord(2));
-        mesh->set_tex_coord(i * 4 + 3, mesh->get_tex_coord(3));
+    for(int u = 1; u < 6; u++) {
+        mesh->set_tex_coord(u * 4 + 0, mesh->get_tex_coord(0));
+        mesh->set_tex_coord(u * 4 + 1, mesh->get_tex_coord(1));
+        mesh->set_tex_coord(u * 4 + 2, mesh->get_tex_coord(2));
+        mesh->set_tex_coord(u * 4 + 3, mesh->get_tex_coord(3));
     }
 
     // ==========================
@@ -498,6 +499,25 @@ Mesh* PrimitiveFactory::create_tetrahedron(
     mesh->update_normals_and_tangents();
     mesh->update_bbox();
 
+    return _mesh(mesh);
+}
+
+Mesh* PrimitiveFactory::create_geosphere(
+        std::string name,
+        float       radius,
+        int         tessellation_iters)
+{
+    MeshIFace* mesh = _meshiface(create_tetrahedron(name, 1, 1, 1));
+    mesh->center_axis();
+    for(int i = 0; i < tessellation_iters; i++) {
+        mesh_tessellate(mesh, TESSELLATION_EDGE_CENTER);
+        size_t num_vertex = mesh->get_num_vertex();
+        for(int j = 0; j < static_cast<int>(num_vertex); j++) {
+            mesh->set_vert_coord(j, glm::normalize(mesh->get_vert_coord(j)) * radius);
+        }
+    }
+    mesh->update_normals_and_tangents();
+    mesh->update_bbox();
     return _mesh(mesh);
 }
 

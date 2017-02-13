@@ -575,11 +575,11 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
             glLineWidth(normal_line_width);
             glBegin(GL_LINES);
 
-            int num_vertex = (*p)->get_num_vertex();
+            size_t num_vertex = (*p)->get_num_vertex();
 
             // normal
             glColor3f(0, 0, 1);
-            for(int i = 0; i < num_vertex; i++) {
+            for(int i = 0; i < static_cast<int>(num_vertex); i++) {
                 glm::vec3 v = (*p)->get_vert_coord(i);
                 v += (*p)->get_vert_normal(i) * normal_surface_distance;
                 glVertex3fv(&v.x);
@@ -589,7 +589,7 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
 
             // tangent
             glColor3f(1, 0, 0);
-            for(int j = 0; j < num_vertex; j++) {
+            for(int j = 0; j < static_cast<int>(num_vertex); j++) {
                 glm::vec3 v = (*p)->get_vert_coord(j);
                 v += (*p)->get_vert_normal(j) * normal_surface_distance;
                 glVertex3fv(&v.x);
@@ -599,7 +599,7 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
 
             // bitangent
             glColor3f(0, 1, 0);
-            for(int k = 0; k < num_vertex; k++) {
+            for(int k = 0; k < static_cast<int>(num_vertex); k++) {
                 glm::vec3 v = (*p)->get_vert_coord(k);
                 v += (*p)->get_vert_normal(k) * normal_surface_distance;
                 glVertex3fv(&v.x);

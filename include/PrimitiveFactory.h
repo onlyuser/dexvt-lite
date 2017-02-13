@@ -58,6 +58,10 @@ public:
             float       width  = 1,
             float       height = 1,
             float       length = 1);
+    static Mesh* create_geosphere(
+            std::string name               = "",
+            float       radius             = 1,
+            int         tessellation_iters = 3);
     static Mesh* create_diamond_brilliant_cut(
             std::string name,
             float       radius                                     = 0.5,

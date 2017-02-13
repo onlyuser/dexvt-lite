@@ -1,6 +1,7 @@
 #ifndef VT_MESH_IFACE_H_
 #define VT_MESH_IFACE_H_
 
+#include <BBoxObject.h>
 #include <glm/glm.hpp>
 
 namespace vt {
@@ -26,6 +27,7 @@ public:
     virtual void       update_normals_and_tangents() = 0;
     virtual void       get_min_max(glm::vec3* min, glm::vec3* max) const = 0;
     virtual void       set_axis(glm::vec3 axis) = 0;
+    virtual void       center_axis(BBoxObject::align_t align = BBoxObject::ALIGN_CENTER) = 0;
 };
 
 }
