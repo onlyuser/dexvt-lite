@@ -9,7 +9,7 @@ LIB_PATH = $(EXTERN_LIB_PATH)
 SRC_PATH = src
 BUILD_PATH = build
 BIN_PATH = bin
-BIN_STEMS = main_ik main_boids main_hexapod
+BIN_STEMS = main_ik main_boids main_hexapod main_terrain
 BINARIES = $(patsubst %, $(BIN_PATH)/%, $(BIN_STEMS))
 
 INCLUDE_PATHS = $(INCLUDE_PATH) $(EXTERN_INCLUDE_PATH)
@@ -70,9 +70,11 @@ clean_objects :
 CPP_STEMS_IK      = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_ik      Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 CPP_STEMS_BOIDS   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_boids   Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 CPP_STEMS_HEXAPOD = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_hexapod Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_TERRAIN = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_terrain Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 OBJECTS_IK      = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK))
 OBJECTS_BOIDS   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_BOIDS))
 OBJECTS_HEXAPOD = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_HEXAPOD))
+OBJECTS_TERRAIN = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_TERRAIN))
 
 $(BIN_PATH)/main_ik : $(OBJECTS_IK)
 	mkdir -p $(BIN_PATH)
@@ -81,6 +83,9 @@ $(BIN_PATH)/main_boids : $(OBJECTS_BOIDS)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 $(BIN_PATH)/main_hexapod : $(OBJECTS_HEXAPOD)
+	mkdir -p $(BIN_PATH)
+	$(CXX) -o $@ $^ $(LDFLAGS)
+$(BIN_PATH)/main_terrain : $(OBJECTS_TERRAIN)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 

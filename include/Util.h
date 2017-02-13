@@ -63,6 +63,10 @@ bool read_file(std::string filename, std::string &s);
 bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups, size_t* start_pos);
 bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups);
 bool regexp(std::string &s, std::string pattern, int nmatch, ...);
+bool read_png(std::string png_filename,
+              void**      pixel_data,
+              size_t*     width,
+              size_t*     height);
 
 }
 
