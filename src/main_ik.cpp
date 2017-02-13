@@ -23,17 +23,17 @@
 
 #include <Buffer.h>
 #include <Camera.h>
+#include <File3ds.h>
 #include <FrameBuffer.h>
-#include <ShaderContext.h>
 #include <Light.h>
 #include <Material.h>
 #include <Mesh.h>
 #include <Modifiers.h>
 #include <PrimitiveFactory.h>
-#include <File3ds.h>
 #include <Program.h>
-#include <Shader.h>
 #include <Scene.h>
+#include <Shader.h>
+#include <ShaderContext.h>
 #include <Texture.h>
 #include <Util.h>
 #include <VarAttribute.h>
