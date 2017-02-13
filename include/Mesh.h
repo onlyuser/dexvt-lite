@@ -25,7 +25,7 @@ public:
          size_t      num_vertex,
          size_t      num_tri);
     virtual ~Mesh();
-    void realloc(size_t num_vertex, size_t num_tri);
+    void resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_data = false);
 
     size_t get_num_vertex() const
     {

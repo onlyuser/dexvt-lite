@@ -67,8 +67,27 @@ Mesh::~Mesh()
     if(m_ssao_shader_context)      { delete m_ssao_shader_context; }
 }
 
-void Mesh::realloc(size_t num_vertex, size_t num_tri)
+void Mesh::resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_data)
 {
+    glm::vec3* new_vert_coord  = NULL;
+    glm::vec2* new_tex_coord   = NULL;
+    glm::vec3* new_tri_indices = NULL;
+    if(preserve_mesh_data) {
+        new_vert_coord  = new glm::vec3[num_vertex];
+        new_tex_coord   = new glm::vec2[num_vertex];
+        new_tri_indices = new glm::vec3[num_tri];
+        if(new_vert_coord && new_tex_coord) {
+            for(int i = 0; i < static_cast<int>(num_vertex); i++) {
+                new_vert_coord[i] = get_vert_coord(i);
+                new_tex_coord[i]  = get_tex_coord(i);
+            }
+        }
+        if(new_tri_indices) {
+            for(int i = 0; i < static_cast<int>(num_tri); i++) {
+                new_tri_indices[i] = get_tri_indices(i);
+            }
+        }
+    }
     if(m_vert_coords)              { delete []m_vert_coords; }
     if(m_vert_normal)              { delete []m_vert_normal; }
     if(m_vert_tangent)             { delete []m_vert_tangent; }
@@ -83,14 +102,27 @@ void Mesh::realloc(size_t num_vertex, size_t num_tri)
     if(m_normal_shader_context)    { delete m_normal_shader_context;    m_normal_shader_context = NULL; }
     if(m_wireframe_shader_context) { delete m_wireframe_shader_context; m_wireframe_shader_context = NULL; }
     if(m_ssao_shader_context)      { delete m_ssao_shader_context;      m_ssao_shader_context = NULL;}
-    m_vert_coords   = new GLfloat[ num_vertex * 3];
-    m_vert_normal   = new GLfloat[ num_vertex * 3];
-    m_vert_tangent  = new GLfloat[ num_vertex * 3];
-    m_tex_coords    = new GLfloat[ num_vertex * 2];
-    m_tri_indices   = new GLushort[num_tri    * 3];
-    m_num_vertex = num_vertex;
-    m_num_tri    = num_tri;
+    m_vert_coords  = new GLfloat[ num_vertex * 3];
+    m_vert_normal  = new GLfloat[ num_vertex * 3];
+    m_vert_tangent = new GLfloat[ num_vertex * 3];
+    m_tex_coords   = new GLfloat[ num_vertex * 2];
+    m_tri_indices  = new GLushort[num_tri    * 3];
+    m_num_vertex   = num_vertex;
+    m_num_tri      = num_tri;
     m_buffers_already_init = false;
+    if(preserve_mesh_data) {
+        if(new_vert_coord && new_tex_coord) {
+            for(int i = 0; i < static_cast<int>(num_vertex); i++) {
+                set_vert_coord(i, new_vert_coord[i]);
+                set_tex_coord(i, new_tex_coord[i]);
+            }
+        }
+        if(new_tri_indices) {
+            for(int i = 0; i < static_cast<int>(num_tri); i++) {
+                set_tri_indices(i, new_tri_indices[i]);
+            }
+        }
+    }
 }
 
 glm::vec3 Mesh::get_vert_coord(int index) const

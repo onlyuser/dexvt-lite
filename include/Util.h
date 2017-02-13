@@ -13,6 +13,9 @@
 
 #define SIGN(x) (!(x) ? 0 : (((x) > 0) ? 1 : -1))
 
+#define MAKEWORD(a, b) ((uint16_t)(((uint8_t)(a))  | (((uint16_t)((uint8_t)(b))) << 8)))
+#define MAKELONG(a, b) ((uint32_t)(((uint16_t)(a)) | (((uint32_t)((uint16_t)(b))) << 16)))
+
 #ifdef NO_GLM_CONSTANTS
     #warning "Disabling glm header <glm/gtx/constants.hpp>"
     #define PI      3.1415926
@@ -46,12 +49,6 @@
 namespace vt {
 
 class Mesh;
-class MeshIFace;
-
-enum tessellation_t {
-    TESSELLATION_EDGE_CENTER,
-    TESSELLATION_TRI_CENTER
-};
 
 void print_bitmap_string(void* font, const char* s);
 glm::vec3 orient_to_offset(glm::vec3  orient,
@@ -62,8 +59,6 @@ glm::vec3 offset_to_orient(glm::vec3  offset,
 glm::vec3 offset_to_orient(glm::vec3 offset);
 glm::vec3 orient_modulo(glm::vec3 orient);
 float angle_distance(float angle1, float angle2);
-void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase);
-void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation);
 bool read_file(std::string filename, std::string &s);
 bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups, size_t* start_pos);
 bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups);

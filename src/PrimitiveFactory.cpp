@@ -407,7 +407,8 @@ Mesh* PrimitiveFactory::create_box(
     }
 
     glm::mat4 scale_xform = glm::scale(glm::mat4(1), glm::vec3(width, height, length));
-    for(int i = 1; i < static_cast<int>(mesh->get_num_vertex()); i++) {
+    int num_vertex = mesh->get_num_vertex();
+    for(int i = 1; i < num_vertex; i++) {
         mesh->set_vert_coord(i, glm::vec3(glm::vec4(mesh->get_vert_coord(i), 1) * scale_xform));
     }
 

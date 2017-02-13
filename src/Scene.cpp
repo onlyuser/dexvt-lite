@@ -575,9 +575,11 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
             glLineWidth(normal_line_width);
             glBegin(GL_LINES);
 
+            int num_vertex = (*p)->get_num_vertex();
+
             // normal
             glColor3f(0, 0, 1);
-            for (int i = 0; i < static_cast<int>((*p)->get_num_vertex()); i++) {
+            for(int i = 0; i < num_vertex; i++) {
                 glm::vec3 v = (*p)->get_vert_coord(i);
                 v += (*p)->get_vert_normal(i) * normal_surface_distance;
                 glVertex3fv(&v.x);
@@ -587,21 +589,21 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
 
             // tangent
             glColor3f(1, 0, 0);
-            for (int i = 0; i < static_cast<int>((*p)->get_num_vertex()); i++) {
-                glm::vec3 v = (*p)->get_vert_coord(i);
-                v += (*p)->get_vert_normal(i) * normal_surface_distance;
+            for(int j = 0; j < num_vertex; j++) {
+                glm::vec3 v = (*p)->get_vert_coord(j);
+                v += (*p)->get_vert_normal(j) * normal_surface_distance;
                 glVertex3fv(&v.x);
-                v += (*p)->get_vert_tangent(i) * normal_arm_length;
+                v += (*p)->get_vert_tangent(j) * normal_arm_length;
                 glVertex3fv(&v.x);
             }
 
             // bitangent
             glColor3f(0, 1, 0);
-            for (int i = 0; i < static_cast<int>((*p)->get_num_vertex()); i++) {
-                glm::vec3 v = (*p)->get_vert_coord(i);
-                v += (*p)->get_vert_normal(i) * normal_surface_distance;
+            for(int k = 0; k < num_vertex; k++) {
+                glm::vec3 v = (*p)->get_vert_coord(k);
+                v += (*p)->get_vert_normal(k) * normal_surface_distance;
                 glVertex3fv(&v.x);
-                glm::vec3 bitangent = glm::normalize(glm::cross((*p)->get_vert_normal(i), (*p)->get_vert_tangent(i)));
+                glm::vec3 bitangent = glm::normalize(glm::cross((*p)->get_vert_normal(k), (*p)->get_vert_tangent(k)));
                 v += bitangent * normal_arm_length;
                 glVertex3fv(&v.x);
             }

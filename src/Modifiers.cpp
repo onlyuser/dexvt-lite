@@ -1,0 +1,154 @@
+#include <Modifiers.h>
+#include <MeshIFace.h>
+#include <Util.h>
+#include <glm/glm.hpp>
+#include <map>
+
+namespace vt {
+
+void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase)
+{
+    int num_vertex = mesh->get_num_vertex();
+    for(int i = 0; i < num_vertex; i++) {
+        glm::vec3 pos = mesh->get_vert_coord(i);
+        glm::vec3 new_pos = pos;
+        new_pos.y = origin.y + static_cast<float>(sin(glm::distance(glm::vec2(origin.x, origin.z),
+                               glm::vec2(pos.x, pos.z)) / (wavelength / (PI * 2)) + phase)) * amplitude;
+        mesh->set_vert_coord(i, new_pos);
+    }
+    mesh->update_normals_and_tangents();
+    mesh->update_bbox();
+}
+
+void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
+{
+    int prev_num_vert = mesh->get_num_vertex();
+    int prev_num_tri  = mesh->get_num_tri();
+    switch(tessellation) {
+        case TESSELLATION_EDGE_CENTER:
+            {
+                int new_num_vertex = prev_num_vert + prev_num_tri * 3;
+                int new_num_tri    = prev_num_tri * 4;
+                glm::vec3 new_vert_coord[new_num_vertex];
+                glm::vec2 new_tex_coord[new_num_vertex];
+                glm::vec3 new_tri_indices[new_num_tri];
+                for(int i = 0; i < prev_num_vert; i++) {
+                    new_vert_coord[i] = mesh->get_vert_coord(i);
+                    new_tex_coord[i]  = mesh->get_tex_coord(i);
+                }
+
+                int current_vert_index = prev_num_vert;
+                int current_face_index = 0;
+                std::map<uint32_t, int> shared_vert_map;
+                for(int i = 0; i < prev_num_tri; i++) {
+                    glm::ivec3 tri_indices = mesh->get_tri_indices(i);
+                    glm::vec3 vert_a_coord = mesh->get_vert_coord(tri_indices[0]);
+                    glm::vec3 vert_b_coord = mesh->get_vert_coord(tri_indices[1]);
+                    glm::vec3 vert_c_coord = mesh->get_vert_coord(tri_indices[2]);
+                    glm::vec2 tex_a_coord = mesh->get_tex_coord(tri_indices[0]);
+                    glm::vec2 tex_b_coord = mesh->get_tex_coord(tri_indices[1]);
+                    glm::vec2 tex_c_coord = mesh->get_tex_coord(tri_indices[2]);
+
+                    uint32_t new_vert_shared_ab_key = MAKELONG(std::min(tri_indices[0], tri_indices[1]), std::max(tri_indices[0], tri_indices[1]));
+                    int new_vert_shared_ab_index = 0;
+                    std::map<uint32_t, int>::iterator p = shared_vert_map.find(new_vert_shared_ab_key);
+                    if(p == shared_vert_map.end()) {
+                        new_vert_shared_ab_index = current_vert_index++;
+                        shared_vert_map.insert(std::pair<uint32_t, int>(new_vert_shared_ab_key, new_vert_shared_ab_index));
+                    } else {
+                        new_vert_shared_ab_index = (*p).second;
+                    }
+                    new_vert_coord[new_vert_shared_ab_index] = (vert_a_coord + vert_b_coord) * 0.5f;
+                    new_tex_coord[new_vert_shared_ab_index]  = (tex_a_coord + tex_b_coord) * 0.5f;
+
+                    uint32_t new_vert_shared_bc_key = MAKELONG(std::min(tri_indices[1], tri_indices[2]), std::max(tri_indices[1], tri_indices[2]));
+                    int new_vert_shared_bc_index = 0;
+                    std::map<uint32_t, int>::iterator q = shared_vert_map.find(new_vert_shared_bc_key);
+                    if(q == shared_vert_map.end()) {
+                        new_vert_shared_bc_index = current_vert_index++;
+                        shared_vert_map.insert(std::pair<uint32_t, int>(new_vert_shared_bc_key, new_vert_shared_bc_index));
+                    } else {
+                        new_vert_shared_bc_index = (*q).second;
+                    }
+                    new_vert_coord[new_vert_shared_bc_index] = (vert_b_coord + vert_c_coord) * 0.5f;
+                    new_tex_coord[new_vert_shared_bc_index]  = (tex_b_coord + tex_c_coord) * 0.5f;
+
+                    uint32_t new_vert_shared_ca_key = MAKELONG(std::min(tri_indices[2], tri_indices[0]), std::max(tri_indices[2], tri_indices[0]));
+                    int new_vert_shared_ca_index = 0;
+                    std::map<uint32_t, int>::iterator r = shared_vert_map.find(new_vert_shared_ca_key);
+                    if(r == shared_vert_map.end()) {
+                        new_vert_shared_ca_index = current_vert_index++;
+                        shared_vert_map.insert(std::pair<uint32_t, int>(new_vert_shared_ca_key, new_vert_shared_ca_index));
+                    } else {
+                        new_vert_shared_ca_index = (*r).second;
+                    }
+                    new_vert_coord[new_vert_shared_ca_index] = (vert_c_coord + vert_a_coord) * 0.5f;
+                    new_tex_coord[new_vert_shared_ca_index]  = (tex_c_coord + tex_a_coord) * 0.5f;
+
+                    new_tri_indices[current_face_index++] = glm::ivec3(tri_indices[0], new_vert_shared_ab_index, new_vert_shared_ca_index);
+                    new_tri_indices[current_face_index++] = glm::ivec3(tri_indices[1], new_vert_shared_bc_index, new_vert_shared_ab_index);
+                    new_tri_indices[current_face_index++] = glm::ivec3(tri_indices[2], new_vert_shared_ca_index, new_vert_shared_bc_index);
+                    new_tri_indices[current_face_index++] = glm::ivec3(new_vert_shared_ab_index, new_vert_shared_bc_index, new_vert_shared_ca_index);
+                }
+
+                new_num_vertex = current_vert_index;
+                new_num_tri    = current_face_index;
+                mesh->resize(new_num_vertex, new_num_tri);
+                for(int i = 0; i < new_num_vertex; i++) {
+                    mesh->set_vert_coord(i, new_vert_coord[i]);
+                    mesh->set_tex_coord(i, new_tex_coord[i]);
+                }
+                for(int i = 0; i < new_num_tri; i++) {
+                    mesh->set_tri_indices(i, new_tri_indices[i]);
+                }
+            }
+            break;
+        case TESSELLATION_TRI_CENTER:
+            {
+                int new_num_vertex = prev_num_vert + prev_num_tri;
+                int new_num_tri    = prev_num_tri * 3;
+                glm::vec3 new_vert_coord[new_num_vertex];
+                glm::vec2 new_tex_coord[new_num_vertex];
+                glm::vec3 new_tri_indices[new_num_tri];
+                for(int i = 0; i < prev_num_vert; i++) {
+                    new_vert_coord[i] = mesh->get_vert_coord(i);
+                    new_tex_coord[i]  = mesh->get_tex_coord(i);
+                }
+
+                int current_vert_index = prev_num_vert;
+                int current_face_index = 0;
+                std::map<uint32_t, int> shared_vert_map;
+                for(int i = 0; i < prev_num_tri; i++) {
+                    glm::ivec3 tri_indices = mesh->get_tri_indices(i);
+                    glm::vec3 vert_a_coord = mesh->get_vert_coord(tri_indices[0]);
+                    glm::vec3 vert_b_coord = mesh->get_vert_coord(tri_indices[1]);
+                    glm::vec3 vert_c_coord = mesh->get_vert_coord(tri_indices[2]);
+                    glm::vec2 tex_a_coord = mesh->get_tex_coord(tri_indices[0]);
+                    glm::vec2 tex_b_coord = mesh->get_tex_coord(tri_indices[1]);
+                    glm::vec2 tex_c_coord = mesh->get_tex_coord(tri_indices[2]);
+
+                    int new_vert_index = current_vert_index;
+                    new_vert_coord[new_vert_index] = (vert_a_coord + vert_b_coord + vert_c_coord) * (1.0f / 3);
+                    new_tex_coord[new_vert_index]  = (tex_a_coord + tex_b_coord + tex_c_coord) * (1.0f / 3);
+                    current_vert_index++;
+
+                    new_tri_indices[current_face_index++] = glm::ivec3(tri_indices[0], tri_indices[1], new_vert_index);
+                    new_tri_indices[current_face_index++] = glm::ivec3(tri_indices[1], tri_indices[2], new_vert_index);
+                    new_tri_indices[current_face_index++] = glm::ivec3(tri_indices[2], tri_indices[0], new_vert_index);
+                }
+
+                mesh->resize(new_num_vertex, new_num_tri);
+                for(int i = 0; i < new_num_vertex; i++) {
+                    mesh->set_vert_coord(i, new_vert_coord[i]);
+                    mesh->set_tex_coord(i, new_tex_coord[i]);
+                }
+                for(int i = 0; i < new_num_tri; i++) {
+                    mesh->set_tri_indices(i, new_tri_indices[i]);
+                }
+            }
+            break;
+    }
+    mesh->update_normals_and_tangents();
+}
+
+}

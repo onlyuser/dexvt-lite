@@ -9,7 +9,7 @@ class MeshIFace
 {
 public:
     virtual ~MeshIFace() {}
-    virtual void realloc(size_t num_vertex, size_t num_tri) = 0;
+    virtual void       resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_data = false) = 0;
     virtual size_t     get_num_vertex() const = 0;
     virtual size_t     get_num_tri() const = 0;
     virtual glm::vec3  get_vert_coord(int index) const = 0;

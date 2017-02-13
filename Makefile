@@ -67,9 +67,9 @@ clean_objects :
 # binaries
 #==================
 
-CPP_STEMS_IK      = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light main_ik      Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
-CPP_STEMS_BOIDS   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light main_boids   Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
-CPP_STEMS_HEXAPOD = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light main_hexapod Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_IK      = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_ik      Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_BOIDS   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_boids   Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_HEXAPOD = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_hexapod Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 OBJECTS_IK      = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK))
 OBJECTS_BOIDS   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_BOIDS))
 OBJECTS_HEXAPOD = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_HEXAPOD))

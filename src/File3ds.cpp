@@ -1,13 +1,11 @@
 #include <File3ds.h>
 #include <MeshIFace.h>
+#include <Util.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 #include <string>
 #include <stdint.h>
 #include <stdio.h>
-
-#define MAKEWORD(a, b) ((uint16_t)(((uint8_t)(a))  | (((uint16_t)((uint8_t)(b))) << 8)))
-#define MAKELONG(a, b) ((uint32_t)(((uint16_t)(a)) | (((uint32_t)((uint16_t)(b))) << 16)))
 
 namespace vt {
 
