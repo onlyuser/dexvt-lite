@@ -31,7 +31,7 @@ void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
                 int new_num_tri    = prev_num_tri * 4;
                 glm::vec3 new_vert_coord[new_num_vertex];
                 glm::vec2 new_tex_coord[new_num_vertex];
-                glm::vec3 new_tri_indices[new_num_tri];
+                glm::ivec3 new_tri_indices[new_num_tri];
                 for(int i = 0; i < prev_num_vert; i++) {
                     new_vert_coord[i] = mesh->get_vert_coord(i);
                     new_tex_coord[i]  = mesh->get_tex_coord(i);
@@ -40,8 +40,8 @@ void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
                 int current_vert_index = prev_num_vert;
                 int current_face_index = 0;
                 std::map<uint32_t, int> shared_vert_map;
-                for(int i = 0; i < prev_num_tri; i++) {
-                    glm::ivec3 tri_indices = mesh->get_tri_indices(i);
+                for(int j = 0; j < prev_num_tri; j++) {
+                    glm::ivec3 tri_indices = mesh->get_tri_indices(j);
                     glm::vec3 vert_a_coord = mesh->get_vert_coord(tri_indices[0]);
                     glm::vec3 vert_b_coord = mesh->get_vert_coord(tri_indices[1]);
                     glm::vec3 vert_c_coord = mesh->get_vert_coord(tri_indices[2]);
@@ -94,12 +94,12 @@ void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
                 new_num_vertex = current_vert_index;
                 new_num_tri    = current_face_index;
                 mesh->resize(new_num_vertex, new_num_tri);
-                for(int i = 0; i < new_num_vertex; i++) {
-                    mesh->set_vert_coord(i, new_vert_coord[i]);
-                    mesh->set_tex_coord(i, new_tex_coord[i]);
+                for(int k = 0; k < new_num_vertex; k++) {
+                    mesh->set_vert_coord(k, new_vert_coord[k]);
+                    mesh->set_tex_coord(k, new_tex_coord[k]);
                 }
-                for(int i = 0; i < new_num_tri; i++) {
-                    mesh->set_tri_indices(i, new_tri_indices[i]);
+                for(int t = 0; t < new_num_tri; t++) {
+                    mesh->set_tri_indices(t, new_tri_indices[t]);
                 }
             }
             break;
@@ -109,7 +109,7 @@ void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
                 int new_num_tri    = prev_num_tri * 3;
                 glm::vec3 new_vert_coord[new_num_vertex];
                 glm::vec2 new_tex_coord[new_num_vertex];
-                glm::vec3 new_tri_indices[new_num_tri];
+                glm::ivec3 new_tri_indices[new_num_tri];
                 for(int i = 0; i < prev_num_vert; i++) {
                     new_vert_coord[i] = mesh->get_vert_coord(i);
                     new_tex_coord[i]  = mesh->get_tex_coord(i);
@@ -118,8 +118,8 @@ void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
                 int current_vert_index = prev_num_vert;
                 int current_face_index = 0;
                 std::map<uint32_t, int> shared_vert_map;
-                for(int i = 0; i < prev_num_tri; i++) {
-                    glm::ivec3 tri_indices = mesh->get_tri_indices(i);
+                for(int j = 0; j < prev_num_tri; j++) {
+                    glm::ivec3 tri_indices = mesh->get_tri_indices(j);
                     glm::vec3 vert_a_coord = mesh->get_vert_coord(tri_indices[0]);
                     glm::vec3 vert_b_coord = mesh->get_vert_coord(tri_indices[1]);
                     glm::vec3 vert_c_coord = mesh->get_vert_coord(tri_indices[2]);
@@ -137,13 +137,15 @@ void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
                     new_tri_indices[current_face_index++] = glm::ivec3(tri_indices[2], tri_indices[0], new_vert_index);
                 }
 
+                new_num_vertex = current_vert_index;
+                new_num_tri    = current_face_index;
                 mesh->resize(new_num_vertex, new_num_tri);
-                for(int i = 0; i < new_num_vertex; i++) {
-                    mesh->set_vert_coord(i, new_vert_coord[i]);
-                    mesh->set_tex_coord(i, new_tex_coord[i]);
+                for(int k = 0; k < new_num_vertex; k++) {
+                    mesh->set_vert_coord(k, new_vert_coord[k]);
+                    mesh->set_tex_coord(k, new_tex_coord[k]);
                 }
-                for(int i = 0; i < new_num_tri; i++) {
-                    mesh->set_tri_indices(i, new_tri_indices[i]);
+                for(int t = 0; t < new_num_tri; t++) {
+                    mesh->set_tri_indices(t, new_tri_indices[t]);
                 }
             }
             break;

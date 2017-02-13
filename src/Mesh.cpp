@@ -67,15 +67,15 @@ Mesh::~Mesh()
     if(m_ssao_shader_context)      { delete m_ssao_shader_context; }
 }
 
-void Mesh::resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_data)
+void Mesh::resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry)
 {
     glm::vec3* new_vert_coord  = NULL;
     glm::vec2* new_tex_coord   = NULL;
-    glm::vec3* new_tri_indices = NULL;
-    if(preserve_mesh_data) {
+    glm::ivec3* new_tri_indices = NULL;
+    if(preserve_mesh_geometry) {
         new_vert_coord  = new glm::vec3[num_vertex];
         new_tex_coord   = new glm::vec2[num_vertex];
-        new_tri_indices = new glm::vec3[num_tri];
+        new_tri_indices = new glm::ivec3[num_tri];
         if(new_vert_coord && new_tex_coord) {
             for(int i = 0; i < static_cast<int>(num_vertex); i++) {
                 new_vert_coord[i] = get_vert_coord(i);
@@ -110,17 +110,20 @@ void Mesh::resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_data)
     m_num_vertex   = num_vertex;
     m_num_tri      = num_tri;
     m_buffers_already_init = false;
-    if(preserve_mesh_data) {
+    if(preserve_mesh_geometry) {
         if(new_vert_coord && new_tex_coord) {
             for(int i = 0; i < static_cast<int>(num_vertex); i++) {
                 set_vert_coord(i, new_vert_coord[i]);
                 set_tex_coord(i, new_tex_coord[i]);
             }
+            delete []new_vert_coord;
+            delete []new_tex_coord;
         }
         if(new_tri_indices) {
             for(int i = 0; i < static_cast<int>(num_tri); i++) {
                 set_tri_indices(i, new_tri_indices[i]);
             }
+            delete []new_tri_indices;
         }
     }
 }
