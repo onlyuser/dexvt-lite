@@ -43,6 +43,12 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
+#define TERRAIN_COLS   100
+#define TERRAIN_ROWS   100
+#define TERRAIN_WIDTH  10
+#define TERRAIN_LENGTH 10
+#define TERRAIN_HEIGHT 1
+
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
 int init_screen_width = 800, init_screen_height = 600;
@@ -60,7 +66,7 @@ bool show_fps = false;
 bool show_help = false;
 bool show_lights = false;
 bool show_normals = false;
-bool wireframe_mode = false;
+bool wireframe_mode = true;
 bool show_guide_wires = false;
 bool show_axis = false;
 bool show_axis_labels = false;
@@ -105,19 +111,21 @@ static vt::Mesh* create_terrain(std::string name,
         return NULL;
     }
     vt::Mesh* mesh_terrain = vt::PrimitiveFactory::create_grid(name, cols, rows, width, length);
-    mesh_terrain->center_axis();
-    mesh_terrain->set_origin(glm::vec3(0));
     size_t num_vertex = mesh_terrain->get_num_vertex();
     for(int i = 0; i < static_cast<int>(num_vertex); i++) {
         glm::vec3 vertex = mesh_terrain->get_vert_coord(i);
         glm::ivec2 tex_coord;
-        tex_coord.x = static_cast<int>(tex_width * vertex.x / width);
-        tex_coord.y = static_cast<int>(tex_height * vertex.z / length);
-        vertex.y = 0; //pixel_data[tex_coord.y * tex_width + tex_coord.x];
+        tex_coord.x = static_cast<int>((tex_width - 1) * (static_cast<float>(vertex.x) / width));
+        tex_coord.y = static_cast<int>((tex_height - 1) * (static_cast<float>(vertex.z) / length));
+        int shade = pixel_data[tex_coord.y * tex_width + tex_coord.x];
+        vertex.y = static_cast<float>(shade) / 255 * height;
         mesh_terrain->set_vert_coord(i, vertex);
     }
+    delete []pixel_data;
     mesh_terrain->update_normals_and_tangents();
     mesh_terrain->update_bbox();
+    mesh_terrain->center_axis();
+    mesh_terrain->set_origin(glm::vec3(0));
     return mesh_terrain;
 }
 
@@ -190,16 +198,18 @@ int init_resources()
 
     mesh_terrain = create_terrain("terrain",
                                   "data/heightmap.png",
-                                  100,
-                                  100,
-                                  10,
-                                  10,
-                                  2);
+                                  TERRAIN_COLS,
+                                  TERRAIN_ROWS,
+                                  TERRAIN_WIDTH,
+                                  TERRAIN_LENGTH,
+                                  TERRAIN_HEIGHT);
     mesh_terrain->set_material(phong_material);
     mesh_terrain->set_ambient_color(glm::vec3(0));
     scene->add_mesh(mesh_terrain);
 
     vt::Scene::instance()->m_debug_target = targets[target_index];
+    glPolygonMode(GL_FRONT, GL_LINE);
+    mesh_terrain->set_ambient_color(glm::vec3(1));
 
     return 1;
 }

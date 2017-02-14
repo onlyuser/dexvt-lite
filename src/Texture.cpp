@@ -144,15 +144,14 @@ Texture::Texture(std::string name,
        pixel_data_pos_z &&
        pixel_data_neg_z)
     {
-        m_id = gen_texture_skybox_internal(
-                width,
-                height,
-                pixel_data_pos_x,
-                pixel_data_neg_x,
-                pixel_data_pos_y,
-                pixel_data_neg_y,
-                pixel_data_pos_z,
-                pixel_data_neg_z);
+        m_id = gen_texture_skybox_internal(width,
+                                           height,
+                                           pixel_data_pos_x,
+                                           pixel_data_neg_x,
+                                           pixel_data_pos_y,
+                                           pixel_data_neg_y,
+                                           pixel_data_pos_z,
+                                           pixel_data_neg_z);
         m_dim.x = width;
         m_dim.y = height;
         delete[] pixel_data_pos_x;
