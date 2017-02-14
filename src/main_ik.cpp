@@ -111,11 +111,13 @@ static void create_linked_boxes(vt::Scene*              scene,
         ss << name << "_" << i;
         vt::Mesh* mesh = vt::PrimitiveFactory::create_box(ss.str());
         scene->add_mesh(mesh);
-        mesh->center_axis();
+        mesh->update_bbox();
+        mesh->center_axis(); // NOTE: must go after update_bbox
         mesh->set_origin(glm::vec3(0, 0, z_offset));
         mesh->set_scale(box_dim);
         mesh->rebase();
-        mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
+        mesh->update_bbox();
+        mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN); // NOTE: must go after update_bbox
         mesh->link_parent(prev_mesh, true);
         ik_meshes->push_back(mesh);
         prev_mesh = mesh;

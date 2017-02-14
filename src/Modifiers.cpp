@@ -16,7 +16,7 @@ void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float
                                glm::vec2(pos.x, pos.z)) / (wavelength / (PI * 2)) + phase)) * amplitude;
         mesh->set_vert_coord(i, new_pos);
     }
-    mesh->update_normals_and_tangents();
+    mesh->update_normals_and_tangents(); // NOTE: must go after center_axis
     mesh->update_bbox();
 }
 
@@ -150,7 +150,7 @@ void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
             }
             break;
     }
-    mesh->update_normals_and_tangents();
+    mesh->update_normals_and_tangents(); // NOTE: must go after center_axis
 }
 
 }
