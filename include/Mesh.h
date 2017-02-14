@@ -57,7 +57,7 @@ public:
     void       set_tri_indices(int index, glm::ivec3 indices);
 
     void update_bbox();
-    void update_normals_and_tangents();
+    void update_normals_and_tangents(bool smooth = false);
 
     // NOTE: strangely required by pure virtual (already defined in base class!)
     void get_min_max(glm::vec3* min, glm::vec3* max) const;

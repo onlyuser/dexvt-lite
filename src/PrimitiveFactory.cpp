@@ -518,7 +518,7 @@ Mesh* PrimitiveFactory::create_geosphere(
         mesh->update_bbox();
         mesh->center_axis();
     }
-    mesh->update_normals_and_tangents();
+    mesh->update_normals_and_tangents(true);
     return _mesh(mesh);
 }
 

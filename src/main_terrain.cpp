@@ -120,9 +120,10 @@ static vt::Mesh* create_terrain(std::string name,
         int shade = pixel_data[tex_coord.y * tex_width + tex_coord.x];
         vertex.y = static_cast<float>(shade) / 255 * height;
         mesh_terrain->set_vert_coord(i, vertex);
+        //mesh_terrain->set_vert_normal(i, glm::vec3(1, 0, 0)); // FIX-ME!
     }
     delete []pixel_data;
-    mesh_terrain->update_normals_and_tangents();
+    mesh_terrain->update_normals_and_tangents(true);
     mesh_terrain->update_bbox();
     mesh_terrain->center_axis();
     mesh_terrain->set_origin(glm::vec3(0));
