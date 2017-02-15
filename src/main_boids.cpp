@@ -332,13 +332,13 @@ void onSpecial(int key, int x, int y)
 {
     switch(key) {
         case GLUT_KEY_F1:
-            light->set_enabled(!light->get_enabled());
+            light->set_enabled(!light->is_enabled());
             break;
         case GLUT_KEY_F2:
-            light2->set_enabled(!light2->get_enabled());
+            light2->set_enabled(!light2->is_enabled());
             break;
         case GLUT_KEY_F3:
-            light3->set_enabled(!light3->get_enabled());
+            light3->set_enabled(!light3->is_enabled());
             break;
         case GLUT_KEY_HOME: // target
             {
