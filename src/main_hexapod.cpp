@@ -94,6 +94,7 @@ glm::vec3 targets[] = {glm::vec3( 1, -1,  1),
 struct IK_Leg
 {
     std::vector<vt::Mesh*> m_ik_meshes;
+    glm::vec3 m_target;
 };
 
 std::vector<IK_Leg*> ik_legs;
@@ -261,12 +262,15 @@ void onTick()
     }
     frames++;
     if(user_input) {
+        for(std::vector<IK_Leg*>::iterator p = ik_legs.begin(); p != ik_legs.end(); p++) {
+            (*p)->m_target = targets[target_index];
+        }
         for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
             std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
             ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(
                     ik_meshes[0],
                     glm::vec3(0, 0, 1),
-                    targets[target_index],
+                    (*q)->m_target,
                     IK_ITERS,
                     ACCEPT_END_EFFECTOR_DISTANCE,
                     ACCEPT_AVG_ANGLE_DISTANCE);
