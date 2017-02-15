@@ -249,24 +249,28 @@ void onTick()
     frames++;
     if(left_key) {
         cursor.x -= cursor_x_speed;
+        cursor.x = std::max(cursor.x, static_cast<float>(-TERRAIN_WIDTH * 0.5));
         user_input = true;
     }
     if(right_key) {
         cursor.x += cursor_x_speed;
+        cursor.x = std::min(cursor.x, static_cast<float>(TERRAIN_WIDTH * 0.5));
         user_input = true;
     }
     if(up_key) {
         cursor.z -= cursor_z_speed;
+        cursor.z = std::max(cursor.z, static_cast<float>(-TERRAIN_LENGTH * 0.5));
         user_input = true;
     }
     if(down_key) {
         cursor.z += cursor_z_speed;
+        cursor.z = std::min(cursor.z, static_cast<float>(TERRAIN_LENGTH * 0.5));
         user_input = true;
     }
     if(user_input) {
         glm::ivec2 tex_coord;
-        tex_coord.x = tex_width * (cursor.x + TERRAIN_WIDTH * 0.5) / TERRAIN_WIDTH;
-        tex_coord.y = tex_length * (cursor.z + TERRAIN_LENGTH * 0.5) / TERRAIN_LENGTH;
+        tex_coord.x = (tex_width  - 1) * (cursor.x + TERRAIN_WIDTH  * 0.5) / TERRAIN_WIDTH;
+        tex_coord.y = (tex_length - 1) * (cursor.z + TERRAIN_LENGTH * 0.5) / TERRAIN_LENGTH;
         int shade = pixel_data[tex_coord.y * tex_width + tex_coord.x];
         cursor.y = -TERRAIN_HEIGHT * 0.5 + static_cast<float>(shade) / 255 * TERRAIN_HEIGHT;
         vt::Scene::instance()->m_debug_target = cursor;
