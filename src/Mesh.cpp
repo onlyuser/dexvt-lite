@@ -18,6 +18,7 @@ Mesh::Mesh(std::string name,
       m_num_vertex(num_vertex),
       m_num_tri(num_tri),
       m_visible(true),
+      m_smooth(false),
       m_vbo_vert_coords(NULL),
       m_vbo_vert_normal(NULL),
       m_vbo_vert_tangent(NULL),
@@ -35,7 +36,7 @@ Mesh::Mesh(std::string name,
       m_env_map_texture_index(-1),
       m_random_texture_index(-1),
       m_frontface_depth_overlay_texture_index(-1),
-      m_reflect_to_refract_ratio(1) // 100% reflective
+      m_reflect_to_refract_ratio(1)
 {
     m_vert_coords   = new GLfloat[ num_vertex * 3];
     m_vert_normal   = new GLfloat[ num_vertex * 3];
@@ -231,9 +232,9 @@ void Mesh::update_bbox()
     }
 }
 
-void Mesh::update_normals_and_tangents(bool smooth)
+void Mesh::update_normals_and_tangents()
 {
-    if(smooth) {
+    if(m_smooth) {
         for(int i = 0; i < static_cast<int>(m_num_tri); i++) {
             glm::ivec3 tri_indices = get_tri_indices(i);
             glm::vec3 p0 = get_vert_coord(tri_indices[0]);
@@ -452,6 +453,7 @@ void Mesh::set_axis(glm::vec3 axis)
 
 void Mesh::center_axis(align_t align)
 {
+    update_bbox();
     set_axis(glm::vec3(get_xform() * glm::vec4(get_center(align), 1)));
 }
 

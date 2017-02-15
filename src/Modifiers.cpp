@@ -6,7 +6,7 @@
 
 namespace vt {
 
-void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase)
+void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase, bool smooth)
 {
     size_t num_vertex = mesh->get_num_vertex();
     for(int i = 0; i < static_cast<int>(num_vertex); i++) {
@@ -16,11 +16,14 @@ void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float
                                glm::vec2(pos.x, pos.z)) / (wavelength / (PI * 2)) + phase)) * amplitude;
         mesh->set_vert_coord(i, new_pos);
     }
-    mesh->update_normals_and_tangents(); // NOTE: must go after center_axis
+    if(smooth) {
+        mesh->set_smooth(true);
+    }
+    mesh->update_normals_and_tangents();
     mesh->update_bbox();
 }
 
-void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
+void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation, bool smooth)
 {
     size_t prev_num_vert = mesh->get_num_vertex();
     size_t prev_num_tri  = mesh->get_num_tri();
@@ -150,7 +153,10 @@ void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation)
             }
             break;
     }
-    mesh->update_normals_and_tangents(); // NOTE: must go after center_axis
+    if(smooth) {
+        mesh->set_smooth(true);
+    }
+    mesh->update_normals_and_tangents();
 }
 
 }

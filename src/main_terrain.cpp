@@ -111,6 +111,7 @@ static vt::Mesh* create_terrain(std::string name,
         return NULL;
     }
     vt::Mesh* mesh_terrain = vt::PrimitiveFactory::create_grid(name, cols, rows, width, length);
+    mesh_terrain->set_smooth(true);
     size_t num_vertex = mesh_terrain->get_num_vertex();
     for(int i = 0; i < static_cast<int>(num_vertex); i++) {
         glm::vec3 vertex = mesh_terrain->get_vert_coord(i);
@@ -122,9 +123,7 @@ static vt::Mesh* create_terrain(std::string name,
         mesh_terrain->set_vert_coord(i, vertex);
     }
     delete []pixel_data;
-    mesh_terrain->update_bbox();
-    mesh_terrain->center_axis();                     // NOTE: must go after update_bbox
-    mesh_terrain->update_normals_and_tangents(true); // NOTE: must go after center_axis
+    mesh_terrain->center_axis();
     mesh_terrain->set_origin(glm::vec3(0));
     return mesh_terrain;
 }
@@ -340,13 +339,13 @@ void onSpecial(int key, int x, int y)
 {
     switch(key) {
         case GLUT_KEY_F1:
-            light->set_enabled(!light->get_enabled());
+            light->set_enabled(!light->is_enabled());
             break;
         case GLUT_KEY_F2:
-            light2->set_enabled(!light2->get_enabled());
+            light2->set_enabled(!light2->is_enabled());
             break;
         case GLUT_KEY_F3:
-            light3->set_enabled(!light3->get_enabled());
+            light3->set_enabled(!light3->is_enabled());
             break;
         case GLUT_KEY_HOME: // target
             {

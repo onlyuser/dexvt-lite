@@ -19,7 +19,7 @@ public:
         return m_color;
     }
 
-    bool get_enabled() const
+    bool is_enabled() const
     {
         return m_enabled;
     }

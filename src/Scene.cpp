@@ -211,7 +211,7 @@ void Scene::render(bool                clear_canvas,
         m_light_color[i * 3 + 0] = light_color.r;
         m_light_color[i * 3 + 1] = light_color.g;
         m_light_color[i * 3 + 2] = light_color.b;
-        m_light_enabled[i] = (*p)->get_enabled();
+        m_light_enabled[i] = (*p)->is_enabled();
         i++;
     }
     FrameBuffer* frame_buffer = m_camera->get_frame_buffer();
@@ -221,7 +221,7 @@ void Scene::render(bool                clear_canvas,
     }
     for(meshes_t::const_iterator q = m_meshes.begin(); q != m_meshes.end(); q++) {
         Mesh* mesh = (*q);
-        if(!mesh->get_visible()) {
+        if(!mesh->is_visible()) {
             continue;
         }
         ShaderContext* shader_context = NULL;
@@ -399,7 +399,7 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     for(meshes_t::const_iterator p = m_meshes.begin(); p != m_meshes.end(); p++) {
-        if(!(*p)->get_visible()) {
+        if(!(*p)->is_visible()) {
             continue;
         }
 

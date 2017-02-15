@@ -114,13 +114,11 @@ static void create_linked_boxes(vt::Scene*              scene,
         ss << name << "_" << i;
         vt::Mesh* mesh = vt::PrimitiveFactory::create_box(ss.str());
         scene->add_mesh(mesh);
-        mesh->update_bbox();
-        mesh->center_axis(); // NOTE: must go after update_bbox
+        mesh->center_axis();
         mesh->set_origin(glm::vec3(0, 0, z_offset));
         mesh->set_scale(box_dim);
         mesh->rebase();
-        mesh->update_bbox();
-        mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN); // NOTE: must go after update_bbox
+        mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
         mesh->link_parent(prev_mesh, true);
         ik_meshes->push_back(mesh);
         prev_mesh = mesh;
@@ -379,13 +377,13 @@ void onSpecial(int key, int x, int y)
 {
     switch(key) {
         case GLUT_KEY_F1:
-            light->set_enabled(!light->get_enabled());
+            light->set_enabled(!light->is_enabled());
             break;
         case GLUT_KEY_F2:
-            light2->set_enabled(!light2->get_enabled());
+            light2->set_enabled(!light2->is_enabled());
             break;
         case GLUT_KEY_F3:
-            light3->set_enabled(!light3->get_enabled());
+            light3->set_enabled(!light3->is_enabled());
             break;
         case GLUT_KEY_HOME: // target
             {

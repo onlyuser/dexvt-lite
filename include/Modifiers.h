@@ -12,8 +12,8 @@ enum tessellation_t {
     TESSELLATION_TRI_CENTER
 };
 
-void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase);
-void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation);
+void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase, bool smooth);
+void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation, bool smooth);
 
 }
 
