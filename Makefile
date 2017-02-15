@@ -141,7 +141,14 @@ $(CUBE_MAP_FILES) :
 	rm $(CUBE_MAP_PATH)/*.jpg
 	rm $(CUBE_MAP_PATH)/*.txt
 
-resources : $(CHESTERFIELD_MAP_FILES) $(CUBE_MAP_FILES)
+HEIGHT_MAP_PATH = $(RESOURCE_PATH)
+HEIGHT_MAP_STEMS = heightmap
+HEIGHT_MAP_FILES = $(patsubst %, $(HEIGHT_MAP_PATH)/%.png, $(HEIGHT_MAP_STEMS))
+$(HEIGHT_MAP_FILES) :
+	mkdir -p $(HEIGHT_MAP_PATH)
+	curl "https://upload.wikimedia.org/wikipedia/commons/5/57/Heightmap.png" > $(HEIGHT_MAP_PATH)/heightmap.png
+
+resources : $(CHESTERFIELD_MAP_FILES) $(CUBE_MAP_FILES) $(HEIGHT_MAP_FILES)
 
 .PHONY : clean_resources
 clean_resources :
