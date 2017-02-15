@@ -47,7 +47,7 @@
 #define TERRAIN_ROWS   100
 #define TERRAIN_WIDTH  10
 #define TERRAIN_LENGTH 10
-#define TERRAIN_HEIGHT 1
+#define TERRAIN_HEIGHT 2
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
@@ -67,7 +67,7 @@ bool show_help = false;
 bool show_lights = false;
 bool show_normals = false;
 bool wireframe_mode = true;
-bool show_guide_wires = false;
+bool show_guide_wires = true;
 bool show_axis = false;
 bool show_axis_labels = false;
 bool do_animation = true;
@@ -84,30 +84,27 @@ float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 
 int angle_delta = 1;
 
-int target_index = 0;
-glm::vec3 targets[] = {glm::vec3( 1,  1,  1),
-                       glm::vec3( 1,  1, -1),
-                       glm::vec3(-1,  1, -1),
-                       glm::vec3(-1,  1,  1),
-                       glm::vec3( 1, -1,  1),
-                       glm::vec3( 1, -1, -1),
-                       glm::vec3(-1, -1, -1),
-                       glm::vec3(-1, -1,  1)};
+glm::vec3 cursor;
+float cursor_x_speed = 0.05;
+float cursor_z_speed = 0.05;
+unsigned char* pixel_data = NULL;
+size_t tex_width = 0;
+size_t tex_length = 0;
 
 vt::Mesh* mesh_terrain;
 
-static vt::Mesh* create_terrain(std::string name,
-                                std::string heightmap_png_filename,
-                                int         cols,
-                                int         rows,
-                                float       width,
-                                float       length,
-                                float       height)
+static vt::Mesh* create_terrain(std::string     name,
+                                std::string     heightmap_png_filename,
+                                int             cols,
+                                int             rows,
+                                float           width,
+                                float           length,
+                                float           height,
+                                unsigned char** pixel_data,
+                                size_t*         tex_width,
+                                size_t*         tex_length)
 {
-    unsigned char* pixel_data = NULL;
-    size_t tex_width  = 0;
-    size_t tex_height = 0;
-    if(!vt::read_png(heightmap_png_filename, (void**)&pixel_data, &tex_width, &tex_height)) {
+    if(!vt::read_png(heightmap_png_filename, reinterpret_cast<void**>(pixel_data), tex_width, tex_length)) {
         return NULL;
     }
     vt::Mesh* mesh_terrain = vt::PrimitiveFactory::create_grid(name, cols, rows, width, length);
@@ -116,13 +113,12 @@ static vt::Mesh* create_terrain(std::string name,
     for(int i = 0; i < static_cast<int>(num_vertex); i++) {
         glm::vec3 vertex = mesh_terrain->get_vert_coord(i);
         glm::ivec2 tex_coord;
-        tex_coord.x = static_cast<int>((tex_width - 1) * (static_cast<float>(vertex.x) / width));
-        tex_coord.y = static_cast<int>((tex_height - 1) * (static_cast<float>(vertex.z) / length));
-        int shade = pixel_data[tex_coord.y * tex_width + tex_coord.x];
+        tex_coord.x = static_cast<int>((*tex_width - 1) * (static_cast<float>(vertex.x) / width));
+        tex_coord.y = static_cast<int>((*tex_length - 1) * (static_cast<float>(vertex.z) / length));
+        int shade = (*pixel_data)[tex_coord.y * (*tex_width) + tex_coord.x];
         vertex.y = static_cast<float>(shade) / 255 * height;
         mesh_terrain->set_vert_coord(i, vertex);
     }
-    delete []pixel_data;
     mesh_terrain->center_axis();
     mesh_terrain->set_origin(glm::vec3(0));
     return mesh_terrain;
@@ -201,12 +197,15 @@ int init_resources()
                                   TERRAIN_ROWS,
                                   TERRAIN_WIDTH,
                                   TERRAIN_LENGTH,
-                                  TERRAIN_HEIGHT);
+                                  TERRAIN_HEIGHT,
+                                  &pixel_data,
+                                  &tex_width,
+                                  &tex_length);
     mesh_terrain->set_material(phong_material);
     mesh_terrain->set_ambient_color(glm::vec3(0));
     scene->add_mesh(mesh_terrain);
 
-    vt::Scene::instance()->m_debug_target = targets[target_index];
+    vt::Scene::instance()->m_debug_target = cursor;
     glPolygonMode(GL_FRONT, GL_LINE);
     mesh_terrain->set_ambient_color(glm::vec3(1));
 
@@ -215,6 +214,9 @@ int init_resources()
 
 int deinit_resources()
 {
+    if(pixel_data) {
+        delete []pixel_data;
+    }
     return 1;
 }
 
@@ -245,6 +247,31 @@ void onTick()
         glutSetWindowTitle(ss.str().c_str());
     }
     frames++;
+    if(left_key) {
+        cursor.x -= cursor_x_speed;
+        user_input = true;
+    }
+    if(right_key) {
+        cursor.x += cursor_x_speed;
+        user_input = true;
+    }
+    if(up_key) {
+        cursor.z -= cursor_z_speed;
+        user_input = true;
+    }
+    if(down_key) {
+        cursor.z += cursor_z_speed;
+        user_input = true;
+    }
+    if(user_input) {
+        glm::ivec2 tex_coord;
+        tex_coord.x = tex_width * (cursor.x + TERRAIN_WIDTH * 0.5) / TERRAIN_WIDTH;
+        tex_coord.y = tex_length * (cursor.z + TERRAIN_LENGTH * 0.5) / TERRAIN_LENGTH;
+        int shade = pixel_data[tex_coord.y * tex_width + tex_coord.x];
+        cursor.y = -TERRAIN_HEIGHT * 0.5 + static_cast<float>(shade) / 255 * TERRAIN_HEIGHT;
+        vt::Scene::instance()->m_debug_target = cursor;
+        user_input = false;
+    }
     static int angle = 0;
     angle = (angle + angle_delta) % 360;
 }
@@ -291,7 +318,7 @@ void onKeyboard(unsigned char key, int x, int y)
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
             if(show_guide_wires) {
-                vt::Scene::instance()->m_debug_target = targets[target_index];
+                vt::Scene::instance()->m_debug_target = cursor;
             }
             break;
         case 'h': // help
@@ -349,10 +376,7 @@ void onSpecial(int key, int x, int y)
             break;
         case GLUT_KEY_HOME: // target
             {
-                size_t target_count = sizeof(targets) / sizeof(targets[0]);
-                target_index = (target_index + 1) % target_count;
-                std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
-                vt::Scene::instance()->m_debug_target = targets[target_index];
+                cursor = glm::vec3(0);
                 user_input = true;
             }
             break;
