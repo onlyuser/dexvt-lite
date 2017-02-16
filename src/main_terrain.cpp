@@ -17,6 +17,7 @@
 // #define GLM_MESSAGES
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/vector_angle.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <shader_utils.h>
@@ -43,13 +44,15 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
-#define TERRAIN_COLS   100
-#define TERRAIN_ROWS   100
-#define TERRAIN_WIDTH  10
-#define TERRAIN_LENGTH 10
-#define TERRAIN_HEIGHT 2
-#define BOX_WIDTH      0.5
-#define BOX_HEIGHT     0.1
+#define TERRAIN_COLS    100
+#define TERRAIN_ROWS    100
+#define TERRAIN_WIDTH   10
+#define TERRAIN_LENGTH  10
+#define TERRAIN_HEIGHT  2
+#define BOX_WIDTH       0.5
+#define BOX_HEIGHT      0.1
+#define BOX_SPEED       0.05f
+#define BOX_ANGLE_SPEED 2.0
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
@@ -146,6 +149,15 @@ static float lookup_terrain_height(glm::vec2      pos,
     return -height * 0.5 + static_cast<float>(shade) / 255 * height;
 }
 
+static glm::vec2 limit_to_within_terrain(glm::vec2 pos)
+{
+    pos.x = std::max(pos.x, static_cast<float>(-TERRAIN_WIDTH * 0.5));
+    pos.x = std::min(pos.x, static_cast<float>(TERRAIN_WIDTH * 0.5));
+    pos.y = std::max(pos.y, static_cast<float>(-TERRAIN_LENGTH * 0.5));
+    pos.y = std::min(pos.y, static_cast<float>(TERRAIN_LENGTH * 0.5));
+    return pos;
+}
+
 static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
                                        float          width,
                                        float          length,
@@ -156,7 +168,7 @@ static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
                                        float          sample_radius)
 {
     glm::vec3 point_left(pos.x - sample_radius, 0, pos.y);
-    point_left.y = lookup_terrain_height(glm::vec2(point_left.x, point_left.z),
+    point_left.y = lookup_terrain_height(limit_to_within_terrain(glm::vec2(point_left.x, point_left.z)),
                                          width,
                                          length,
                                          height,
@@ -164,7 +176,7 @@ static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
                                          tex_width,
                                          tex_length);
     glm::vec3 point_right(pos.x + sample_radius, 0, pos.y);
-    point_right.y = lookup_terrain_height(glm::vec2(point_right.x, point_right.z),
+    point_right.y = lookup_terrain_height(limit_to_within_terrain(glm::vec2(point_right.x, point_right.z)),
                                           width,
                                           length,
                                           height,
@@ -172,7 +184,7 @@ static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
                                           tex_width,
                                           tex_length);
     glm::vec3 point_back(pos.x, 0, pos.y - sample_radius);
-    point_back.y = lookup_terrain_height(glm::vec2(point_back.x, point_back.z),
+    point_back.y = lookup_terrain_height(limit_to_within_terrain(glm::vec2(point_back.x, point_back.z)),
                                          width,
                                          length,
                                          height,
@@ -180,7 +192,7 @@ static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
                                          tex_width,
                                          tex_length);
     glm::vec3 point_front(pos.x, 0, pos.y + sample_radius);
-    point_front.y = lookup_terrain_height(glm::vec2(point_front.x, point_front.z),
+    point_front.y = lookup_terrain_height(limit_to_within_terrain(glm::vec2(point_front.x, point_front.z)),
                                           width,
                                           length,
                                           height,
@@ -323,34 +335,32 @@ void onTick()
     }
     frames++;
     if(left_key) {
-        cursor.x -= cursor_x_speed;
-        cursor.x = std::max(cursor.x, static_cast<float>(-TERRAIN_WIDTH * 0.5));
+        box->rotate(BOX_ANGLE_SPEED, box->get_abs_heading());
         user_input = true;
     }
     if(right_key) {
-        cursor.x += cursor_x_speed;
-        cursor.x = std::min(cursor.x, static_cast<float>(TERRAIN_WIDTH * 0.5));
+        box->rotate(-BOX_ANGLE_SPEED, box->get_abs_heading());
         user_input = true;
     }
     if(up_key) {
-        cursor.z -= cursor_z_speed;
-        cursor.z = std::max(cursor.z, static_cast<float>(-TERRAIN_LENGTH * 0.5));
+        box->set_origin(box->get_origin() + box->get_abs_up_direction() * BOX_SPEED);
         user_input = true;
     }
     if(down_key) {
-        cursor.z += cursor_z_speed;
-        cursor.z = std::min(cursor.z, static_cast<float>(TERRAIN_LENGTH * 0.5));
+        box->set_origin(box->get_origin() - box->get_abs_up_direction() * BOX_SPEED);
         user_input = true;
     }
     if(user_input) {
-        cursor.y = lookup_terrain_height(glm::vec2(cursor.x, cursor.z),
+        cursor = box->get_origin();
+        glm::vec2 cursor_safe = limit_to_within_terrain(glm::vec2(cursor));
+        cursor.y = lookup_terrain_height(cursor_safe,
                                          TERRAIN_WIDTH,
                                          TERRAIN_LENGTH,
                                          TERRAIN_HEIGHT,
                                          height_map_pixel_data,
                                          tex_width,
                                          tex_length);
-        glm::vec3 cursor_normal = lookup_terrain_normal(glm::vec2(cursor.x, cursor.z),
+        glm::vec3 cursor_normal = lookup_terrain_normal(cursor_safe,
                                                         TERRAIN_WIDTH,
                                                         TERRAIN_LENGTH,
                                                         TERRAIN_HEIGHT,
@@ -360,7 +370,11 @@ void onTick()
                                                         BOX_WIDTH * 0.5);
         vt::Scene::instance()->m_debug_target = cursor;
         box->set_origin(cursor);
-        box->set_orient(vt::offset_to_orient(cursor_normal));
+        glm::vec3 abs_heading = box->get_abs_heading();
+        glm::vec3 pivot = glm::cross(cursor_normal, abs_heading);
+        float delta_angle = glm::degrees(glm::angle(cursor_normal, abs_heading));
+        //box->set_orient(vt::offset_to_orient(cursor_normal));
+        box->rotate(-delta_angle, pivot);
         user_input = false;
     }
     static int angle = 0;
