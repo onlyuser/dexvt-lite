@@ -48,6 +48,8 @@
 #define TERRAIN_WIDTH  10
 #define TERRAIN_LENGTH 10
 #define TERRAIN_HEIGHT 2
+#define BOX_WIDTH      0.5
+#define BOX_HEIGHT     0.1
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
@@ -66,7 +68,7 @@ bool show_fps = false;
 bool show_help = false;
 bool show_lights = false;
 bool show_normals = false;
-bool wireframe_mode = true;
+bool wireframe_mode = false;
 bool show_guide_wires = true;
 bool show_axis = false;
 bool show_axis_labels = false;
@@ -91,7 +93,8 @@ unsigned char* height_map_pixel_data = NULL;
 size_t tex_width = 0;
 size_t tex_length = 0;
 
-vt::Mesh* mesh_terrain;
+vt::Mesh* terrain;
+vt::Mesh* box;
 
 static vt::Mesh* create_terrain(std::string     name,
                                 std::string     heightmap_png_filename,
@@ -107,21 +110,21 @@ static vt::Mesh* create_terrain(std::string     name,
     if(!vt::read_png(heightmap_png_filename, reinterpret_cast<void**>(heightmap_pixel_data), tex_width, tex_length)) {
         return NULL;
     }
-    vt::Mesh* mesh_terrain = vt::PrimitiveFactory::create_grid(name, cols, rows, width, length);
-    mesh_terrain->set_smooth(true);
-    size_t num_vertex = mesh_terrain->get_num_vertex();
+    vt::Mesh* terrain = vt::PrimitiveFactory::create_grid(name, cols, rows, width, length);
+    terrain->set_smooth(true);
+    size_t num_vertex = terrain->get_num_vertex();
     for(int i = 0; i < static_cast<int>(num_vertex); i++) {
-        glm::vec3 vertex = mesh_terrain->get_vert_coord(i);
+        glm::vec3 vertex = terrain->get_vert_coord(i);
         glm::ivec2 tex_coord;
         tex_coord.x = static_cast<int>((*tex_width - 1) * (static_cast<float>(vertex.x) / width));
         tex_coord.y = static_cast<int>((*tex_length - 1) * (static_cast<float>(vertex.z) / length));
         int shade = (*heightmap_pixel_data)[tex_coord.y * (*tex_width) + tex_coord.x];
         vertex.y = static_cast<float>(shade) / 255 * height;
-        mesh_terrain->set_vert_coord(i, vertex);
+        terrain->set_vert_coord(i, vertex);
     }
-    mesh_terrain->center_axis();
-    mesh_terrain->set_origin(glm::vec3(0));
-    return mesh_terrain;
+    terrain->center_axis();
+    terrain->set_origin(glm::vec3(0));
+    return terrain;
 }
 
 static float lookup_terrain_height(glm::vec2      pos,
@@ -132,11 +135,61 @@ static float lookup_terrain_height(glm::vec2      pos,
                                    size_t         tex_width,
                                    size_t         tex_length)
 {
+    pos.x = std::max(pos.x, static_cast<float>(-width * 0.5));
+    pos.x = std::min(pos.x, static_cast<float>(width * 0.5));
+    pos.y = std::max(pos.y, static_cast<float>(-length * 0.5));
+    pos.y = std::min(pos.y, static_cast<float>(length * 0.5));
     glm::ivec2 tex_coord;
     tex_coord.x = (tex_width  - 1) * (pos.x + width  * 0.5) / width;
     tex_coord.y = (tex_length - 1) * (pos.y + length * 0.5) / length;
     int shade = height_map_pixel_data[tex_coord.y * tex_width + tex_coord.x];
     return -height * 0.5 + static_cast<float>(shade) / 255 * height;
+}
+
+static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
+                                       float          width,
+                                       float          length,
+                                       float          height,
+                                       unsigned char* heightmap_pixel_data,
+                                       size_t         tex_width,
+                                       size_t         tex_length,
+                                       float          sample_radius)
+{
+    glm::vec3 point_left(pos.x - sample_radius, 0, pos.y);
+    point_left.y = lookup_terrain_height(glm::vec2(point_left.x, point_left.z),
+                                         width,
+                                         length,
+                                         height,
+                                         height_map_pixel_data,
+                                         tex_width,
+                                         tex_length);
+    glm::vec3 point_right(pos.x + sample_radius, 0, pos.y);
+    point_right.y = lookup_terrain_height(glm::vec2(point_right.x, point_right.z),
+                                          width,
+                                          length,
+                                          height,
+                                          height_map_pixel_data,
+                                          tex_width,
+                                          tex_length);
+    glm::vec3 point_back(pos.x, 0, pos.y - sample_radius);
+    point_back.y = lookup_terrain_height(glm::vec2(point_back.x, point_back.z),
+                                         width,
+                                         length,
+                                         height,
+                                         height_map_pixel_data,
+                                         tex_width,
+                                         tex_length);
+    glm::vec3 point_front(pos.x, 0, pos.y + sample_radius);
+    point_front.y = lookup_terrain_height(glm::vec2(point_front.x, point_front.z),
+                                          width,
+                                          length,
+                                          height,
+                                          height_map_pixel_data,
+                                          tex_width,
+                                          tex_length);
+    glm::vec3 x_dir = glm::normalize(point_right - point_left);
+    glm::vec3 z_dir = glm::normalize(point_front - point_back);
+    return glm::normalize(glm::cross(z_dir, x_dir));
 }
 
 int init_resources()
@@ -206,23 +259,30 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    mesh_terrain = create_terrain("terrain",
-                                  "data/heightmap.png",
-                                  TERRAIN_COLS,
-                                  TERRAIN_ROWS,
-                                  TERRAIN_WIDTH,
-                                  TERRAIN_LENGTH,
-                                  TERRAIN_HEIGHT,
-                                  &height_map_pixel_data,
-                                  &tex_width,
-                                  &tex_length);
-    mesh_terrain->set_material(phong_material);
-    mesh_terrain->set_ambient_color(glm::vec3(0));
-    scene->add_mesh(mesh_terrain);
+    terrain = create_terrain("terrain",
+                             "data/heightmap.png",
+                             TERRAIN_COLS,
+                             TERRAIN_ROWS,
+                             TERRAIN_WIDTH,
+                             TERRAIN_LENGTH,
+                             TERRAIN_HEIGHT,
+                             &height_map_pixel_data,
+                             &tex_width,
+                             &tex_length);
+    terrain->set_material(phong_material);
+    terrain->set_ambient_color(glm::vec3(0));
+    scene->add_mesh(terrain);
+
+    box = vt::PrimitiveFactory::create_box("box", BOX_WIDTH, BOX_WIDTH, BOX_HEIGHT);
+    box->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
+    box->set_origin(glm::vec3(0));
+    box->set_material(bump_mapped_material);
+    box->set_texture_index(     box->get_material()->get_texture_index_by_name("chesterfield_color"));
+    box->set_bump_texture_index(box->get_material()->get_texture_index_by_name("chesterfield_normal"));
+    box->set_ambient_color(glm::vec3(0));
+    scene->add_mesh(box);
 
     vt::Scene::instance()->m_debug_target = cursor;
-    glPolygonMode(GL_FRONT, GL_LINE);
-    mesh_terrain->set_ambient_color(glm::vec3(1));
 
     return 1;
 }
@@ -290,7 +350,17 @@ void onTick()
                                          height_map_pixel_data,
                                          tex_width,
                                          tex_length);
+        glm::vec3 cursor_normal = lookup_terrain_normal(glm::vec2(cursor.x, cursor.z),
+                                                        TERRAIN_WIDTH,
+                                                        TERRAIN_LENGTH,
+                                                        TERRAIN_HEIGHT,
+                                                        height_map_pixel_data,
+                                                        tex_width,
+                                                        tex_length,
+                                                        BOX_WIDTH * 0.5);
         vt::Scene::instance()->m_debug_target = cursor;
+        box->set_origin(cursor);
+        box->set_orient(vt::offset_to_orient(cursor_normal));
         user_input = false;
     }
     static int angle = 0;
@@ -362,10 +432,12 @@ void onKeyboard(unsigned char key, int x, int y)
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
-                mesh_terrain->set_ambient_color(glm::vec3(1));
+                terrain->set_ambient_color(glm::vec3(1));
+                box->set_ambient_color(    glm::vec3(1));
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
-                mesh_terrain->set_ambient_color(glm::vec3(0));
+                terrain->set_ambient_color(glm::vec3(0));
+                box->set_ambient_color(    glm::vec3(0));
             }
             break;
         case 'x': // axis
