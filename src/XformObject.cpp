@@ -257,7 +257,10 @@ bool XformObject::solve_ik_ccd(XformObject* root,
     return converge && find_solution;
 }
 
-void XformObject::update_boid(glm::vec3 target, float forward_speed, float angle_delta, float avoid_radius)
+void XformObject::update_boid(glm::vec3 target,
+                              float     forward_speed,
+                              float     angle_delta,
+                              float     avoid_radius)
 {
     glm::vec3 local_target_dir       = glm::normalize(from_origin_in_parent_system(target));
     glm::vec3 local_heading          = glm::normalize(from_origin_in_parent_system(in_abs_system(VEC_FORWARD)));

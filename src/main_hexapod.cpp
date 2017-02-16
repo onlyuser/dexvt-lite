@@ -43,10 +43,10 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
-#define IK_SEGMENT_COUNT                 3
-#define IK_LEG_COUNT                     6
-#define IK_LEG_RADIUS                    2
-#define IK_ITERS                        50
+#define IK_SEGMENT_COUNT             3
+#define IK_LEG_COUNT                 6
+#define IK_LEG_RADIUS                2
+#define IK_ITERS                     50
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 
@@ -263,17 +263,13 @@ void onTick()
     frames++;
     if(user_input) {
         for(std::vector<IK_Leg*>::iterator p = ik_legs.begin(); p != ik_legs.end(); p++) {
-            (*p)->m_target = targets[target_index];
-        }
-        for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
-            std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-            ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(
-                    ik_meshes[0],
-                    glm::vec3(0, 0, 1),
-                    (*q)->m_target,
-                    IK_ITERS,
-                    ACCEPT_END_EFFECTOR_DISTANCE,
-                    ACCEPT_AVG_ANGLE_DISTANCE);
+            std::vector<vt::Mesh*> &ik_meshes = (*p)->m_ik_meshes;
+            ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
+                                                          glm::vec3(0, 0, 1),
+                                                          (*p)->m_target = targets[target_index],
+                                                          IK_ITERS,
+                                                          ACCEPT_END_EFFECTOR_DISTANCE,
+                                                          ACCEPT_AVG_ANGLE_DISTANCE);
         }
         user_input = false;
     }

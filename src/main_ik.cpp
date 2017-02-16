@@ -43,8 +43,8 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
-#define IK_SEGMENT_COUNT                 3
-#define IK_ITERS                        50
+#define IK_SEGMENT_COUNT             3
+#define IK_ITERS                     50
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 
@@ -271,13 +271,12 @@ void onTick()
         user_input = true;
     }
     if(user_input) {
-        ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(
-                ik_meshes[1],
-                glm::vec3(0, 0, 1),
-                targets[target_index],
-                IK_ITERS,
-                ACCEPT_END_EFFECTOR_DISTANCE,
-                ACCEPT_AVG_ANGLE_DISTANCE);
+        ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[1],
+                                                      glm::vec3(0, 0, 1),
+                                                      targets[target_index],
+                                                      IK_ITERS,
+                                                      ACCEPT_END_EFFECTOR_DISTANCE,
+                                                      ACCEPT_AVG_ANGLE_DISTANCE);
         user_input = false;
     }
     static int angle = 0;

@@ -43,7 +43,10 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
-#define BOID_COUNT 50
+#define BOID_COUNT         50
+#define BOID_FORWARD_SPEED 0.025
+#define BOID_ANGLE_DELTA   2.5
+#define BOID_AVOID_RADIUS  1
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
@@ -232,7 +235,10 @@ void onTick()
     }
     frames++;
     for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
-        (*p)->update_boid(targets[target_index], 0.025, 2.5, 1);
+        (*p)->update_boid(targets[target_index],
+                          BOID_FORWARD_SPEED,
+                          BOID_ANGLE_DELTA,
+                          BOID_AVOID_RADIUS);
     }
     static int angle = 0;
     angle = (angle + angle_delta) % 360;

@@ -87,7 +87,7 @@ int angle_delta = 1;
 glm::vec3 cursor;
 float cursor_x_speed = 0.05;
 float cursor_z_speed = 0.05;
-unsigned char* pixel_data = NULL;
+unsigned char* height_map_pixel_data = NULL;
 size_t tex_width = 0;
 size_t tex_length = 0;
 
@@ -100,11 +100,11 @@ static vt::Mesh* create_terrain(std::string     name,
                                 float           width,
                                 float           length,
                                 float           height,
-                                unsigned char** pixel_data,
+                                unsigned char** heightmap_pixel_data,
                                 size_t*         tex_width,
                                 size_t*         tex_length)
 {
-    if(!vt::read_png(heightmap_png_filename, reinterpret_cast<void**>(pixel_data), tex_width, tex_length)) {
+    if(!vt::read_png(heightmap_png_filename, reinterpret_cast<void**>(heightmap_pixel_data), tex_width, tex_length)) {
         return NULL;
     }
     vt::Mesh* mesh_terrain = vt::PrimitiveFactory::create_grid(name, cols, rows, width, length);
@@ -115,13 +115,28 @@ static vt::Mesh* create_terrain(std::string     name,
         glm::ivec2 tex_coord;
         tex_coord.x = static_cast<int>((*tex_width - 1) * (static_cast<float>(vertex.x) / width));
         tex_coord.y = static_cast<int>((*tex_length - 1) * (static_cast<float>(vertex.z) / length));
-        int shade = (*pixel_data)[tex_coord.y * (*tex_width) + tex_coord.x];
+        int shade = (*heightmap_pixel_data)[tex_coord.y * (*tex_width) + tex_coord.x];
         vertex.y = static_cast<float>(shade) / 255 * height;
         mesh_terrain->set_vert_coord(i, vertex);
     }
     mesh_terrain->center_axis();
     mesh_terrain->set_origin(glm::vec3(0));
     return mesh_terrain;
+}
+
+static float lookup_terrain_height(glm::vec2      pos,
+                                   float          width,
+                                   float          length,
+                                   float          height,
+                                   unsigned char* heightmap_pixel_data,
+                                   size_t         tex_width,
+                                   size_t         tex_length)
+{
+    glm::ivec2 tex_coord;
+    tex_coord.x = (tex_width  - 1) * (pos.x + width  * 0.5) / width;
+    tex_coord.y = (tex_length - 1) * (pos.y + length * 0.5) / length;
+    int shade = height_map_pixel_data[tex_coord.y * tex_width + tex_coord.x];
+    return -height * 0.5 + static_cast<float>(shade) / 255 * height;
 }
 
 int init_resources()
@@ -198,7 +213,7 @@ int init_resources()
                                   TERRAIN_WIDTH,
                                   TERRAIN_LENGTH,
                                   TERRAIN_HEIGHT,
-                                  &pixel_data,
+                                  &height_map_pixel_data,
                                   &tex_width,
                                   &tex_length);
     mesh_terrain->set_material(phong_material);
@@ -214,8 +229,8 @@ int init_resources()
 
 int deinit_resources()
 {
-    if(pixel_data) {
-        delete []pixel_data;
+    if(height_map_pixel_data) {
+        delete []height_map_pixel_data;
     }
     return 1;
 }
@@ -268,11 +283,13 @@ void onTick()
         user_input = true;
     }
     if(user_input) {
-        glm::ivec2 tex_coord;
-        tex_coord.x = (tex_width  - 1) * (cursor.x + TERRAIN_WIDTH  * 0.5) / TERRAIN_WIDTH;
-        tex_coord.y = (tex_length - 1) * (cursor.z + TERRAIN_LENGTH * 0.5) / TERRAIN_LENGTH;
-        int shade = pixel_data[tex_coord.y * tex_width + tex_coord.x];
-        cursor.y = -TERRAIN_HEIGHT * 0.5 + static_cast<float>(shade) / 255 * TERRAIN_HEIGHT;
+        cursor.y = lookup_terrain_height(glm::vec2(cursor.x, cursor.z),
+                                         TERRAIN_WIDTH,
+                                         TERRAIN_LENGTH,
+                                         TERRAIN_HEIGHT,
+                                         height_map_pixel_data,
+                                         tex_width,
+                                         tex_length);
         vt::Scene::instance()->m_debug_target = cursor;
         user_input = false;
     }
