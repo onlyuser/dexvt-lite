@@ -48,7 +48,7 @@
 #define TERRAIN_ROWS    100
 #define TERRAIN_WIDTH   10
 #define TERRAIN_LENGTH  10
-#define TERRAIN_HEIGHT  2
+#define TERRAIN_HEIGHT  0.5
 #define BOX_WIDTH       0.25
 #define BOX_LENGTH      0.5
 #define BOX_HEIGHT      0.1
