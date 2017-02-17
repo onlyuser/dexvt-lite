@@ -425,9 +425,6 @@ void onKeyboard(unsigned char key, int x, int y)
             break;
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
-            if(show_guide_wires) {
-                vt::Scene::instance()->m_debug_target = box->get_origin();
-            }
             break;
         case 'h': // help
             show_help = !show_help;
