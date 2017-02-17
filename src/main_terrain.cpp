@@ -49,9 +49,10 @@
 #define TERRAIN_WIDTH   10
 #define TERRAIN_LENGTH  10
 #define TERRAIN_HEIGHT  2
-#define BOX_WIDTH       0.5
+#define BOX_WIDTH       0.25
+#define BOX_LENGTH      0.5
 #define BOX_HEIGHT      0.1
-#define BOX_SPEED       0.05f
+#define BOX_SPEED       0.025f
 #define BOX_ANGLE_SPEED 2.0
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
@@ -89,9 +90,6 @@ float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 
 int angle_delta = 1;
 
-glm::vec3 cursor;
-float cursor_x_speed = 0.05;
-float cursor_z_speed = 0.05;
 unsigned char* height_map_pixel_data = NULL;
 size_t tex_width = 0;
 size_t tex_length = 0;
@@ -130,6 +128,15 @@ static vt::Mesh* create_terrain(std::string     name,
     return terrain;
 }
 
+static glm::vec2 limit_to_within_terrain(glm::vec2 pos, float width, float length)
+{
+    pos.x = std::max(pos.x, static_cast<float>(-width * 0.5));
+    pos.x = std::min(pos.x, static_cast<float>(width * 0.5));
+    pos.y = std::max(pos.y, static_cast<float>(-length * 0.5));
+    pos.y = std::min(pos.y, static_cast<float>(length * 0.5));
+    return pos;
+}
+
 static float lookup_terrain_height(glm::vec2      pos,
                                    float          width,
                                    float          length,
@@ -138,24 +145,12 @@ static float lookup_terrain_height(glm::vec2      pos,
                                    size_t         tex_width,
                                    size_t         tex_length)
 {
-    pos.x = std::max(pos.x, static_cast<float>(-width * 0.5));
-    pos.x = std::min(pos.x, static_cast<float>(width * 0.5));
-    pos.y = std::max(pos.y, static_cast<float>(-length * 0.5));
-    pos.y = std::min(pos.y, static_cast<float>(length * 0.5));
+    pos = limit_to_within_terrain(pos, width, length);
     glm::ivec2 tex_coord;
     tex_coord.x = (tex_width  - 1) * (pos.x + width  * 0.5) / width;
     tex_coord.y = (tex_length - 1) * (pos.y + length * 0.5) / length;
     int shade = height_map_pixel_data[tex_coord.y * tex_width + tex_coord.x];
     return -height * 0.5 + static_cast<float>(shade) / 255 * height;
-}
-
-static glm::vec2 limit_to_within_terrain(glm::vec2 pos)
-{
-    pos.x = std::max(pos.x, static_cast<float>(-TERRAIN_WIDTH * 0.5));
-    pos.x = std::min(pos.x, static_cast<float>(TERRAIN_WIDTH * 0.5));
-    pos.y = std::max(pos.y, static_cast<float>(-TERRAIN_LENGTH * 0.5));
-    pos.y = std::min(pos.y, static_cast<float>(TERRAIN_LENGTH * 0.5));
-    return pos;
 }
 
 static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
@@ -167,32 +162,40 @@ static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
                                        size_t         tex_length,
                                        float          sample_radius)
 {
-    glm::vec3 point_left(pos.x - sample_radius, 0, pos.y);
-    point_left.y = lookup_terrain_height(limit_to_within_terrain(glm::vec2(point_left.x, point_left.z)),
+    glm::vec2 pos_left(pos.x - sample_radius, pos.y);
+    pos_left = limit_to_within_terrain(pos_left, width, length);
+    glm::vec3 point_left(pos_left.x, 0, pos_left.y);
+    point_left.y = lookup_terrain_height(pos_left,
                                          width,
                                          length,
                                          height,
                                          height_map_pixel_data,
                                          tex_width,
                                          tex_length);
-    glm::vec3 point_right(pos.x + sample_radius, 0, pos.y);
-    point_right.y = lookup_terrain_height(limit_to_within_terrain(glm::vec2(point_right.x, point_right.z)),
+    glm::vec2 pos_right(pos.x + sample_radius, pos.y);
+    pos_right = limit_to_within_terrain(pos_right, width, length);
+    glm::vec3 point_right(pos_right.x, 0, pos_right.y);
+    point_right.y = lookup_terrain_height(pos_right,
                                           width,
                                           length,
                                           height,
                                           height_map_pixel_data,
                                           tex_width,
                                           tex_length);
-    glm::vec3 point_back(pos.x, 0, pos.y - sample_radius);
-    point_back.y = lookup_terrain_height(limit_to_within_terrain(glm::vec2(point_back.x, point_back.z)),
+    glm::vec2 pos_back(pos.x, pos.y - sample_radius);
+    pos_back = limit_to_within_terrain(pos_back, width, length);
+    glm::vec3 point_back(pos_back.x, 0, pos_back.y);
+    point_back.y = lookup_terrain_height(pos_back,
                                          width,
                                          length,
                                          height,
                                          height_map_pixel_data,
                                          tex_width,
                                          tex_length);
-    glm::vec3 point_front(pos.x, 0, pos.y + sample_radius);
-    point_front.y = lookup_terrain_height(limit_to_within_terrain(glm::vec2(point_front.x, point_front.z)),
+    glm::vec2 pos_front(pos.x, pos.y + sample_radius);
+    pos_front = limit_to_within_terrain(pos_front, width, length);
+    glm::vec3 point_front(pos_front.x, 0, pos_front.y);
+    point_front.y = lookup_terrain_height(pos_front,
                                           width,
                                           length,
                                           height,
@@ -285,7 +288,7 @@ int init_resources()
     terrain->set_ambient_color(glm::vec3(0));
     scene->add_mesh(terrain);
 
-    box = vt::PrimitiveFactory::create_box("box", BOX_WIDTH, BOX_WIDTH, BOX_HEIGHT);
+    box = vt::PrimitiveFactory::create_box("box", BOX_WIDTH, BOX_LENGTH, BOX_HEIGHT);
     box->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
     box->set_origin(glm::vec3(0));
     box->set_material(bump_mapped_material);
@@ -294,7 +297,7 @@ int init_resources()
     box->set_ambient_color(glm::vec3(0));
     scene->add_mesh(box);
 
-    vt::Scene::instance()->m_debug_target = cursor;
+    vt::Scene::instance()->m_debug_target = box->get_origin();
 
     return 1;
 }
@@ -351,30 +354,30 @@ void onTick()
         user_input = true;
     }
     if(user_input) {
-        cursor = box->get_origin();
-        glm::vec2 cursor_safe = limit_to_within_terrain(glm::vec2(cursor));
-        cursor.y = lookup_terrain_height(cursor_safe,
-                                         TERRAIN_WIDTH,
-                                         TERRAIN_LENGTH,
-                                         TERRAIN_HEIGHT,
-                                         height_map_pixel_data,
-                                         tex_width,
-                                         tex_length);
-        glm::vec3 cursor_normal = lookup_terrain_normal(cursor_safe,
-                                                        TERRAIN_WIDTH,
-                                                        TERRAIN_LENGTH,
-                                                        TERRAIN_HEIGHT,
-                                                        height_map_pixel_data,
-                                                        tex_width,
-                                                        tex_length,
-                                                        BOX_WIDTH * 0.5);
-        vt::Scene::instance()->m_debug_target = cursor;
-        box->set_origin(cursor);
+        glm::vec2 pos_within_terrain = limit_to_within_terrain(glm::vec2(box->get_origin().x, box->get_origin().z),
+                                                               TERRAIN_WIDTH,
+                                                               TERRAIN_LENGTH);
+        float terrain_height = lookup_terrain_height(pos_within_terrain,
+                                                     TERRAIN_WIDTH,
+                                                     TERRAIN_LENGTH,
+                                                     TERRAIN_HEIGHT,
+                                                     height_map_pixel_data,
+                                                     tex_width,
+                                                     tex_length);
+        glm::vec3 terrain_normal = lookup_terrain_normal(pos_within_terrain,
+                                                         TERRAIN_WIDTH,
+                                                         TERRAIN_LENGTH,
+                                                         TERRAIN_HEIGHT,
+                                                         height_map_pixel_data,
+                                                         tex_width,
+                                                         tex_length,
+                                                         BOX_WIDTH * 0.5);
+        box->set_origin(glm::vec3(pos_within_terrain.x, terrain_height, pos_within_terrain.y));
         glm::vec3 abs_heading = box->get_abs_heading();
-        glm::vec3 pivot = glm::cross(cursor_normal, abs_heading);
-        float delta_angle = glm::degrees(glm::angle(cursor_normal, abs_heading));
-        //box->set_orient(vt::offset_to_orient(cursor_normal));
+        glm::vec3 pivot       = glm::cross(terrain_normal, abs_heading);
+        float     delta_angle = glm::degrees(glm::angle(terrain_normal, abs_heading));
         box->rotate(-delta_angle, pivot);
+        vt::Scene::instance()->m_debug_target = box->get_origin();
         user_input = false;
     }
     static int angle = 0;
@@ -423,7 +426,7 @@ void onKeyboard(unsigned char key, int x, int y)
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
             if(show_guide_wires) {
-                vt::Scene::instance()->m_debug_target = cursor;
+                vt::Scene::instance()->m_debug_target = box->get_origin();
             }
             break;
         case 'h': // help
@@ -483,7 +486,8 @@ void onSpecial(int key, int x, int y)
             break;
         case GLUT_KEY_HOME: // target
             {
-                cursor = glm::vec3(0);
+                box->set_origin(glm::vec3(0));
+                vt::Scene::instance()->m_debug_target = box->get_origin();
                 user_input = true;
             }
             break;
