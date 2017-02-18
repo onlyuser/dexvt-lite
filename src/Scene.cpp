@@ -22,6 +22,9 @@
 #define NUM_SSAO_SAMPLE_KERNELS 3
 //#define BLOOM_KERNEL_SIZE       5
 #define BLOOM_KERNEL_SIZE       7
+#define LIGHT_RADIUS            0.125
+#define TARGET_RADIUS           0.125
+#define TARGETS_RADIUS          0.0625
 
 namespace vt {
 
@@ -356,12 +359,12 @@ void Scene::render(bool                clear_canvas,
     }
 }
 
-void Scene::render_lines_and_text(bool draw_guide_wires,
-                                  bool draw_axis,
-                                  bool draw_axis_labels,
-                                  bool draw_bbox,
-                                  bool draw_normals,
-                                  bool draw_hud_text,
+void Scene::render_lines_and_text(bool  draw_guide_wires,
+                                  bool  draw_axis,
+                                  bool  draw_axis_labels,
+                                  bool  draw_bbox,
+                                  bool  draw_normals,
+                                  bool  draw_hud_text,
                                   char* hud_text) const
 {
     const float normal_surface_distance     = 0.05;
@@ -380,8 +383,6 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
 
     glUseProgram(0);
 
-    const float light_radius = 0.125;
-
     if(draw_guide_wires) {
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
@@ -389,8 +390,15 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
 
         // magenta
         glColor3f(1, 0, 1);
-        glutWireSphere(light_radius, 4, 2);
+        glutWireSphere(TARGET_RADIUS, 4, 2);
 
+        for(std::vector<glm::vec3>::const_iterator p = m_debug_targets.begin(); p != m_debug_targets.end(); p++) {
+            glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * glm::translate(glm::mat4(1), *p)));
+
+            // magenta
+            glColor3f(1, 0, 0);
+            glutWireSphere(TARGETS_RADIUS, 4, 2);
+        }
         glPopMatrix();
     }
 
@@ -666,8 +674,6 @@ void Scene::render_lines_and_text(bool draw_guide_wires,
 
 void Scene::render_lights() const
 {
-    const float light_radius = 0.125;
-
     glUseProgram(0);
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(glm::value_ptr(m_camera->get_projection_xform()));
@@ -676,7 +682,7 @@ void Scene::render_lights() const
     for(lights_t::const_iterator p = m_lights.begin(); p != m_lights.end(); p++) {
         glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
         glColor3f(1, 1, 0);
-        glutWireSphere(light_radius, 4, 2);
+        glutWireSphere(TARGET_RADIUS, 4, 2);
     }
     glPopMatrix();
 }
