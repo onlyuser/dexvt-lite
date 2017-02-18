@@ -17,6 +17,7 @@
 // #define GLM_MESSAGES
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/vector_angle.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <shader_utils.h>
@@ -43,11 +44,27 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
+#define TERRAIN_COLS          100
+#define TERRAIN_ROWS          100
+#define TERRAIN_WIDTH         10
+#define TERRAIN_LENGTH        10
+#define TERRAIN_HEIGHT        0.5
+#define BOX_WIDTH             0.25
+#define BOX_LENGTH            0.5
+#define BOX_HEIGHT            0.1
+#define BOX_LEVITATION_HEIGHT 0.5
+#define BOX_SPEED             0.025f
+#define BOX_ANGLE_SPEED       2.0
+#define LEG_INNER_RADIUS      0.25
+#define LEG_OUTER_RADIUS      1
+
+#define MAX_LEG_CORRECTION_SPREAD (PI * 0.5)
+
 #define IK_SEGMENT_COUNT             3
-#define IK_SEGMENT_WIDTH             0.25
-#define IK_SEGMENT_HEIGHT            0.25
-#define IK_SEGMENT_LENGTH            1
-#define IK_LEG_COUNT                 6
+#define IK_SEGMENT_WIDTH             0.05
+#define IK_SEGMENT_HEIGHT            0.05
+#define IK_SEGMENT_LENGTH            0.5
+#define IK_LEG_COUNT                 8
 #define IK_LEG_RADIUS                2
 #define IK_ITERS                     50
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
@@ -65,13 +82,13 @@ bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
 glm::vec3 prev_orient, orient, orbit_speed = glm::vec3(0, -0.5, -0.5);
 float prev_orbit_radius = 0, orbit_radius = 8, dolly_speed = 0.1, light_distance = 4;
-bool show_bbox = true;
+bool show_bbox = false;
 bool show_fps = false;
 bool show_help = false;
 bool show_lights = false;
 bool show_normals = false;
 bool wireframe_mode = false;
-bool show_guide_wires = false;
+bool show_guide_wires = true;
 bool show_axis = false;
 bool show_axis_labels = false;
 bool do_animation = true;
@@ -88,11 +105,12 @@ float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 
 int angle_delta = 1;
 
-int target_index = 0;
-glm::vec3 targets[] = {glm::vec3( 1, -1,  1),
-                       glm::vec3( 1, -1, -1),
-                       glm::vec3(-1, -1, -1),
-                       glm::vec3(-1, -1,  1)};
+unsigned char* height_map_pixel_data = NULL;
+size_t tex_width = 0;
+size_t tex_length = 0;
+
+vt::Mesh* terrain;
+vt::Mesh* box;
 
 struct IK_Leg
 {
@@ -127,6 +145,178 @@ static void create_linked_boxes(vt::Scene*              scene,
         ik_meshes->push_back(mesh);
         prev_mesh = mesh;
         z_offset += box_dim.z;
+    }
+}
+
+static vt::Mesh* create_terrain(std::string     name,
+                                std::string     heightmap_png_filename,
+                                int             cols,
+                                int             rows,
+                                float           width,
+                                float           length,
+                                float           height,
+                                unsigned char** heightmap_pixel_data,
+                                size_t*         tex_width,
+                                size_t*         tex_length)
+{
+    if(!heightmap_pixel_data || !vt::read_png(heightmap_png_filename,
+                                              reinterpret_cast<void**>(heightmap_pixel_data),
+                                              tex_width,
+                                              tex_length))
+    {
+        return NULL;
+    }
+    vt::Mesh* terrain = vt::PrimitiveFactory::create_grid(name, cols, rows, width, length);
+    terrain->set_smooth(true);
+    size_t num_vertex = terrain->get_num_vertex();
+    for(int i = 0; i < static_cast<int>(num_vertex); i++) {
+        glm::vec3 vertex = terrain->get_vert_coord(i);
+        glm::ivec2 tex_coord;
+        tex_coord.x = static_cast<int>((*tex_width - 1) * (static_cast<float>(vertex.x) / width));
+        tex_coord.y = static_cast<int>((*tex_length - 1) * (static_cast<float>(vertex.z) / length));
+        int shade = (*heightmap_pixel_data)[tex_coord.y * (*tex_width) + tex_coord.x];
+        vertex.y = static_cast<float>(shade) / 255 * height;
+        terrain->set_vert_coord(i, vertex);
+    }
+    terrain->center_axis();
+    terrain->set_origin(glm::vec3(0));
+    return terrain;
+}
+
+static glm::vec2 limit_to_within_terrain(glm::vec2 pos, float width, float length)
+{
+    pos.x = std::max(pos.x, static_cast<float>(-width * 0.5));
+    pos.x = std::min(pos.x, static_cast<float>(width * 0.5));
+    pos.y = std::max(pos.y, static_cast<float>(-length * 0.5));
+    pos.y = std::min(pos.y, static_cast<float>(length * 0.5));
+    return pos;
+}
+
+static float lookup_terrain_height(glm::vec2      pos,
+                                   float          width,
+                                   float          length,
+                                   float          height,
+                                   unsigned char* heightmap_pixel_data,
+                                   size_t         tex_width,
+                                   size_t         tex_length)
+{
+    if(!heightmap_pixel_data) {
+        return 0;
+    }
+    pos = limit_to_within_terrain(pos, width, length);
+    glm::ivec2 tex_coord;
+    tex_coord.x = (tex_width  - 1) * (pos.x + width  * 0.5) / width;
+    tex_coord.y = (tex_length - 1) * (pos.y + length * 0.5) / length;
+    int shade = height_map_pixel_data[tex_coord.y * tex_width + tex_coord.x];
+    return -height * 0.5 + static_cast<float>(shade) / 255 * height;
+}
+
+static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
+                                       float          width,
+                                       float          length,
+                                       float          height,
+                                       unsigned char* heightmap_pixel_data,
+                                       size_t         tex_width,
+                                       size_t         tex_length,
+                                       float          sample_radius)
+{
+    if(!heightmap_pixel_data) {
+        return glm::vec3(0);
+    }
+
+    glm::vec2 pos_left(pos.x - sample_radius, pos.y);
+    pos_left = limit_to_within_terrain(pos_left, width, length);
+    glm::vec3 point_left(pos_left.x, 0, pos_left.y);
+    point_left.y = lookup_terrain_height(pos_left,
+                                         width,
+                                         length,
+                                         height,
+                                         height_map_pixel_data,
+                                         tex_width,
+                                         tex_length);
+
+    glm::vec2 pos_right(pos.x + sample_radius, pos.y);
+    pos_right = limit_to_within_terrain(pos_right, width, length);
+    glm::vec3 point_right(pos_right.x, 0, pos_right.y);
+    point_right.y = lookup_terrain_height(pos_right,
+                                          width,
+                                          length,
+                                          height,
+                                          height_map_pixel_data,
+                                          tex_width,
+                                          tex_length);
+
+    glm::vec2 pos_back(pos.x, pos.y - sample_radius);
+    pos_back = limit_to_within_terrain(pos_back, width, length);
+    glm::vec3 point_back(pos_back.x, 0, pos_back.y);
+    point_back.y = lookup_terrain_height(pos_back,
+                                         width,
+                                         length,
+                                         height,
+                                         height_map_pixel_data,
+                                         tex_width,
+                                         tex_length);
+
+    glm::vec2 pos_front(pos.x, pos.y + sample_radius);
+    pos_front = limit_to_within_terrain(pos_front, width, length);
+    glm::vec3 point_front(pos_front.x, 0, pos_front.y);
+    point_front.y = lookup_terrain_height(pos_front,
+                                          width,
+                                          length,
+                                          height,
+                                          height_map_pixel_data,
+                                          tex_width,
+                                          tex_length);
+
+    glm::vec3 x_dir = glm::normalize(point_right - point_left);
+    glm::vec3 z_dir = glm::normalize(point_front - point_back);
+    return glm::normalize(glm::cross(z_dir, x_dir));
+}
+
+static void update_leg_targets(glm::vec2               center,
+                               float                   inner_radius,
+                               float                   outer_radius,
+                               std::vector<glm::vec3> *leg_targets,
+                               float                   width,
+                               float                   length,
+                               float                   height,
+                               unsigned char*          heightmap_pixel_data,
+                               size_t                  tex_width,
+                               size_t                  tex_length)
+{
+    if(!leg_targets) {
+        return;
+    }
+    glm::vec2 avg_footing;
+    for(std::vector<glm::vec3>::iterator p = leg_targets->begin(); p != leg_targets->end(); p++) {
+        avg_footing += glm::vec2((*p).x, (*p).z);
+    }
+    avg_footing *= (1.0f / leg_targets->size());
+    glm::vec2 correction_dir = glm::normalize(center - avg_footing);
+    for(std::vector<glm::vec3>::iterator p = leg_targets->begin(); p != leg_targets->end(); p++) {
+        float distance_from_center = glm::distance(glm::vec2((*p).x, (*p).z), center);
+        if(distance_from_center < inner_radius ||
+           distance_from_center > outer_radius)
+        {
+            glm::vec2 rand_dir;
+            do {
+                float rand_angle = (static_cast<float>(rand()) / RAND_MAX) * (2 * PI);
+                rand_dir = glm::normalize(glm::vec2(cos(rand_angle), sin(rand_angle)));
+            } while(glm::length(correction_dir) > 0 &&
+                    glm::angle(rand_dir, correction_dir) > MAX_LEG_CORRECTION_SPREAD);
+            float rand_radius = inner_radius + (static_cast<float>(rand()) / RAND_MAX) * (outer_radius - inner_radius);
+            glm::vec2 leg_target = center + rand_dir * rand_radius;
+            leg_target = limit_to_within_terrain(leg_target, width, length);
+            (*p).x = leg_target.x;
+            (*p).z = leg_target.y;
+            (*p).y = lookup_terrain_height(leg_target,
+                                           width,
+                                           length,
+                                           height,
+                                           height_map_pixel_data,
+                                           tex_width,
+                                           tex_length);
+        }
     }
 }
 
@@ -197,6 +387,30 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
+    terrain = create_terrain("terrain",
+                             "data/heightmap.png",
+                             TERRAIN_COLS,
+                             TERRAIN_ROWS,
+                             TERRAIN_WIDTH,
+                             TERRAIN_LENGTH,
+                             TERRAIN_HEIGHT,
+                             &height_map_pixel_data,
+                             &tex_width,
+                             &tex_length);
+    terrain->set_material(phong_material);
+    terrain->set_ambient_color(glm::vec3(0));
+    scene->add_mesh(terrain);
+
+    box = vt::PrimitiveFactory::create_box("box", BOX_WIDTH, BOX_LENGTH, BOX_HEIGHT);
+    box->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
+    box->set_origin(glm::vec3(0));
+    vt::Scene::instance()->m_debug_target = box->get_origin();
+    box->set_material(bump_mapped_material);
+    box->set_texture_index(     box->get_material()->get_texture_index_by_name("chesterfield_color"));
+    box->set_bump_texture_index(box->get_material()->get_texture_index_by_name("chesterfield_normal"));
+    box->set_ambient_color(glm::vec3(0));
+    scene->add_mesh(box);
+
     int angle = 0;
     for(int i = 0; i < IK_LEG_COUNT; i++) {
         IK_Leg* ik_leg = new IK_Leg();
@@ -229,13 +443,16 @@ int init_resources()
         angle += (360 / IK_LEG_COUNT);
     }
 
-    vt::Scene::instance()->m_debug_target = targets[target_index];
+    vt::Scene::instance()->m_debug_targets.resize(IK_LEG_COUNT);
 
     return 1;
 }
 
 int deinit_resources()
 {
+    if(height_map_pixel_data) {
+        delete []height_map_pixel_data;
+    }
     return 1;
 }
 
@@ -266,15 +483,68 @@ void onTick()
         glutSetWindowTitle(ss.str().c_str());
     }
     frames++;
+    if(left_key) {
+        box->rotate(BOX_ANGLE_SPEED, box->get_abs_heading());
+        user_input = true;
+    }
+    if(right_key) {
+        box->rotate(-BOX_ANGLE_SPEED, box->get_abs_heading());
+        user_input = true;
+    }
+    if(up_key) {
+        box->set_origin(box->get_origin() + box->get_abs_up_direction() * BOX_SPEED);
+        user_input = true;
+    }
+    if(down_key) {
+        box->set_origin(box->get_origin() - box->get_abs_up_direction() * BOX_SPEED);
+        user_input = true;
+    }
     if(user_input) {
+        glm::vec2 pos_within_terrain = limit_to_within_terrain(glm::vec2(box->get_origin().x, box->get_origin().z),
+                                                               TERRAIN_WIDTH,
+                                                               TERRAIN_LENGTH);
+        float terrain_height = lookup_terrain_height(pos_within_terrain,
+                                                     TERRAIN_WIDTH,
+                                                     TERRAIN_LENGTH,
+                                                     TERRAIN_HEIGHT,
+                                                     height_map_pixel_data,
+                                                     tex_width,
+                                                     tex_length);
+        glm::vec3 terrain_normal = lookup_terrain_normal(pos_within_terrain,
+                                                         TERRAIN_WIDTH,
+                                                         TERRAIN_LENGTH,
+                                                         TERRAIN_HEIGHT,
+                                                         height_map_pixel_data,
+                                                         tex_width,
+                                                         tex_length,
+                                                         BOX_WIDTH * 0.5);
+        box->set_origin(glm::vec3(pos_within_terrain.x, terrain_height + BOX_LEVITATION_HEIGHT, pos_within_terrain.y));
+        vt::Scene::instance()->m_debug_target = box->get_origin();
+        update_leg_targets(pos_within_terrain,
+                           LEG_INNER_RADIUS,
+                           LEG_OUTER_RADIUS,
+                           &vt::Scene::instance()->m_debug_targets,
+                           TERRAIN_WIDTH,
+                           TERRAIN_LENGTH,
+                           TERRAIN_HEIGHT,
+                           height_map_pixel_data,
+                           tex_width,
+                           tex_length);
+        glm::vec3 abs_heading = box->get_abs_heading();
+        glm::vec3 pivot       = glm::cross(terrain_normal, abs_heading);
+        float     delta_angle = glm::degrees(glm::angle(terrain_normal, abs_heading));
+        box->rotate(-delta_angle, pivot);
+        int i = 0;
         for(std::vector<IK_Leg*>::iterator p = ik_legs.begin(); p != ik_legs.end(); p++) {
             std::vector<vt::Mesh*> &ik_meshes = (*p)->m_ik_meshes;
+            ik_meshes[0]->set_origin(box->get_origin());
             ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
                                                           glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-                                                          (*p)->m_target = targets[target_index],
+                                                          (*p)->m_target = vt::Scene::instance()->m_debug_targets[i],
                                                           IK_ITERS,
                                                           ACCEPT_END_EFFECTOR_DISTANCE,
                                                           ACCEPT_AVG_ANGLE_DISTANCE);
+            i++;
         }
         user_input = false;
     }
@@ -323,9 +593,6 @@ void onKeyboard(unsigned char key, int x, int y)
             break;
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
-            if(show_guide_wires) {
-                vt::Scene::instance()->m_debug_target = targets[target_index];
-            }
             break;
         case 'h': // help
             show_help = !show_help;
@@ -347,20 +614,12 @@ void onKeyboard(unsigned char key, int x, int y)
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
-                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
-                    std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
-                        (*p)->set_ambient_color(glm::vec3(1));
-                    }
-                }
+                terrain->set_ambient_color(glm::vec3(1));
+                box->set_ambient_color(    glm::vec3(1));
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
-                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
-                    std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
-                        (*p)->set_ambient_color(glm::vec3(0));
-                    }
-                }
+                terrain->set_ambient_color(glm::vec3(0));
+                box->set_ambient_color(    glm::vec3(0));
             }
             break;
         case 'x': // axis
@@ -392,10 +651,8 @@ void onSpecial(int key, int x, int y)
             break;
         case GLUT_KEY_HOME: // target
             {
-                size_t target_count = sizeof(targets) / sizeof(targets[0]);
-                target_index = (target_index + 1) % target_count;
-                std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
-                vt::Scene::instance()->m_debug_target = targets[target_index];
+                box->set_origin(glm::vec3(0));
+                vt::Scene::instance()->m_debug_target = box->get_origin();
                 user_input = true;
             }
             break;

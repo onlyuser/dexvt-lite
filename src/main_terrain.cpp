@@ -54,11 +54,6 @@
 #define BOX_HEIGHT       0.1
 #define BOX_SPEED        0.025f
 #define BOX_ANGLE_SPEED  2.0
-#define LEG_INNER_RADIUS 0.25
-#define LEG_OUTER_RADIUS 1
-
-#define IK_LEG_COUNT              6
-#define MAX_LEG_CORRECTION_SPREAD (PI * 0.5)
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
@@ -227,53 +222,6 @@ static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
     return glm::normalize(glm::cross(z_dir, x_dir));
 }
 
-static void update_leg_targets(glm::vec2               center,
-                               float                   inner_radius,
-                               float                   outer_radius,
-                               std::vector<glm::vec3> *leg_targets,
-                               float                   width,
-                               float                   length,
-                               float                   height,
-                               unsigned char*          heightmap_pixel_data,
-                               size_t                  tex_width,
-                               size_t                  tex_length)
-{
-    if(!leg_targets) {
-        return;
-    }
-    glm::vec2 avg_footing;
-    for(std::vector<glm::vec3>::iterator p = leg_targets->begin(); p != leg_targets->end(); p++) {
-        avg_footing += glm::vec2((*p).x, (*p).z);
-    }
-    avg_footing *= (1.0f / leg_targets->size());
-    glm::vec2 correction_dir = glm::normalize(center - avg_footing);
-    for(std::vector<glm::vec3>::iterator p = leg_targets->begin(); p != leg_targets->end(); p++) {
-        float distance_from_center = glm::distance(glm::vec2((*p).x, (*p).z), center);
-        if(distance_from_center < inner_radius ||
-           distance_from_center > outer_radius)
-        {
-            glm::vec2 rand_dir;
-            do {
-                float rand_angle = (static_cast<float>(rand()) / RAND_MAX) * (2 * PI);
-                rand_dir = glm::normalize(glm::vec2(cos(rand_angle), sin(rand_angle)));
-            } while(glm::length(correction_dir) > 0 &&
-                    glm::angle(rand_dir, correction_dir) > MAX_LEG_CORRECTION_SPREAD);
-            float rand_radius = inner_radius + (static_cast<float>(rand()) / RAND_MAX) * (outer_radius - inner_radius);
-            glm::vec2 leg_target = center + rand_dir * rand_radius;
-            leg_target = limit_to_within_terrain(leg_target, width, length);
-            (*p).x = leg_target.x;
-            (*p).z = leg_target.y;
-            (*p).y = lookup_terrain_height(leg_target,
-                                           width,
-                                           length,
-                                           height,
-                                           height_map_pixel_data,
-                                           tex_width,
-                                           tex_length);
-        }
-    }
-}
-
 int init_resources()
 {
     vt::Scene* scene = vt::Scene::instance();
@@ -365,8 +313,6 @@ int init_resources()
     box->set_ambient_color(glm::vec3(0));
     scene->add_mesh(box);
 
-    vt::Scene::instance()->m_debug_targets.resize(IK_LEG_COUNT);
-
     return 1;
 }
 
@@ -442,16 +388,6 @@ void onTick()
                                                          BOX_WIDTH * 0.5);
         box->set_origin(glm::vec3(pos_within_terrain.x, terrain_height, pos_within_terrain.y));
         vt::Scene::instance()->m_debug_target = box->get_origin();
-        update_leg_targets(pos_within_terrain,
-                           LEG_INNER_RADIUS,
-                           LEG_OUTER_RADIUS,
-                           &vt::Scene::instance()->m_debug_targets,
-                           TERRAIN_WIDTH,
-                           TERRAIN_LENGTH,
-                           TERRAIN_HEIGHT,
-                           height_map_pixel_data,
-                           tex_width,
-                           tex_length);
         glm::vec3 abs_heading = box->get_abs_heading();
         glm::vec3 pivot       = glm::cross(terrain_normal, abs_heading);
         float     delta_angle = glm::degrees(glm::angle(terrain_normal, abs_heading));
