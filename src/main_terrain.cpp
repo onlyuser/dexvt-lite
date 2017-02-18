@@ -44,16 +44,16 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
-#define TERRAIN_COLS     100
-#define TERRAIN_ROWS     100
-#define TERRAIN_WIDTH    10
-#define TERRAIN_LENGTH   10
-#define TERRAIN_HEIGHT   0.5
-#define BOX_WIDTH        0.25
-#define BOX_LENGTH       0.5
-#define BOX_HEIGHT       0.1
-#define BOX_SPEED        0.025f
-#define BOX_ANGLE_SPEED  2.0
+#define TERRAIN_COLS    100
+#define TERRAIN_ROWS    100
+#define TERRAIN_WIDTH   10
+#define TERRAIN_LENGTH  10
+#define TERRAIN_HEIGHT  0.5
+#define BOX_WIDTH       0.25
+#define BOX_LENGTH      0.5
+#define BOX_HEIGHT      0.1
+#define BOX_SPEED       0.025f
+#define BOX_ANGLE_SPEED 2.0
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 

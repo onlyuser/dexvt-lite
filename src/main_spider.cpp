@@ -48,12 +48,12 @@
 #define TERRAIN_ROWS          100
 #define TERRAIN_WIDTH         10
 #define TERRAIN_LENGTH        10
-#define TERRAIN_HEIGHT        0.5
+#define TERRAIN_HEIGHT        1 // make terrain more rugged
 #define BOX_WIDTH             0.25
 #define BOX_LENGTH            0.5
 #define BOX_HEIGHT            0.1
 #define BOX_LEVITATION_HEIGHT 0.5
-#define BOX_SPEED             0.025f
+#define BOX_SPEED             0.05f // make it crawl faster
 #define BOX_ANGLE_SPEED       2.0
 #define LEG_INNER_RADIUS      0.25
 #define LEG_OUTER_RADIUS      1
@@ -66,7 +66,7 @@
 #define IK_SEGMENT_LENGTH            0.5
 #define IK_LEG_COUNT                 8
 #define IK_LEG_RADIUS                2
-#define IK_ITERS                     50
+#define IK_ITERS                     10 // trade accuracy for speed
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 
@@ -88,7 +88,7 @@ bool show_help = false;
 bool show_lights = false;
 bool show_normals = false;
 bool wireframe_mode = false;
-bool show_guide_wires = true;
+bool show_guide_wires = false;
 bool show_axis = false;
 bool show_axis_labels = false;
 bool do_animation = true;
@@ -616,10 +616,22 @@ void onKeyboard(unsigned char key, int x, int y)
                 glPolygonMode(GL_FRONT, GL_LINE);
                 terrain->set_ambient_color(glm::vec3(1));
                 box->set_ambient_color(    glm::vec3(1));
+                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
+                    std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
+                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                        (*p)->set_ambient_color(glm::vec3(1));
+                    }
+                }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
                 terrain->set_ambient_color(glm::vec3(0));
                 box->set_ambient_color(    glm::vec3(0));
+                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
+                    std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
+                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                        (*p)->set_ambient_color(glm::vec3(0));
+                    }
+                }
             }
             break;
         case 'x': // axis
