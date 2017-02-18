@@ -57,6 +57,9 @@
 #define LEG_INNER_RADIUS 0.25
 #define LEG_OUTER_RADIUS 1
 
+#define IK_LEG_COUNT              6
+#define MAX_LEG_CORRECTION_SPREAD (PI * 0.5)
+
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
 int init_screen_width = 800, init_screen_height = 600;
@@ -238,13 +241,25 @@ static void update_leg_targets(glm::vec2               center,
     if(!leg_targets) {
         return;
     }
+    glm::vec2 avg_footing;
+    for(std::vector<glm::vec3>::iterator p = leg_targets->begin(); p != leg_targets->end(); p++) {
+        avg_footing += glm::vec2((*p).x, (*p).z);
+    }
+    avg_footing *= (1.0f / leg_targets->size());
+    glm::vec2 correction_dir = glm::normalize(center - avg_footing);
     for(std::vector<glm::vec3>::iterator p = leg_targets->begin(); p != leg_targets->end(); p++) {
         float distance_from_center = glm::distance(glm::vec2((*p).x, (*p).z), center);
-        if(distance_from_center < inner_radius || distance_from_center > outer_radius) {
-            float rand_angle  = (static_cast<float>(rand()) / RAND_MAX) * (2 * PI);
+        if(distance_from_center < inner_radius ||
+           distance_from_center > outer_radius)
+        {
+            glm::vec2 rand_dir;
+            do {
+                float rand_angle = (static_cast<float>(rand()) / RAND_MAX) * (2 * PI);
+                rand_dir = glm::normalize(glm::vec2(cos(rand_angle), sin(rand_angle)));
+            } while(glm::length(correction_dir) > 0 &&
+                    glm::angle(rand_dir, correction_dir) > MAX_LEG_CORRECTION_SPREAD);
             float rand_radius = inner_radius + (static_cast<float>(rand()) / RAND_MAX) * (outer_radius - inner_radius);
-            glm::vec2 leg_target = glm::vec2(center.x + cos(rand_angle) * rand_radius,
-                                             center.y + sin(rand_angle) * rand_radius);
+            glm::vec2 leg_target = center + rand_dir * rand_radius;
             leg_target = limit_to_within_terrain(leg_target, width, length);
             (*p).x = leg_target.x;
             (*p).z = leg_target.y;
@@ -350,7 +365,7 @@ int init_resources()
     box->set_ambient_color(glm::vec3(0));
     scene->add_mesh(box);
 
-    vt::Scene::instance()->m_debug_targets.resize(6);
+    vt::Scene::instance()->m_debug_targets.resize(IK_LEG_COUNT);
 
     return 1;
 }
