@@ -69,9 +69,9 @@ Scene::Scene()
         glm::vec3 offset;
         do {
             offset = glm::vec3(
-                    m_ssao_sample_kernel_pos[r * 3 + 0] = static_cast<float>(rand()) / RAND_MAX * 2 - 1,
-                    m_ssao_sample_kernel_pos[r * 3 + 1] = static_cast<float>(rand()) / RAND_MAX * 2 - 1,
-                    m_ssao_sample_kernel_pos[r * 3 + 2] = static_cast<float>(rand()) / RAND_MAX);
+                    m_ssao_sample_kernel_pos[r * 3 + 0] = (static_cast<float>(rand()) / RAND_MAX) * 2 - 1,
+                    m_ssao_sample_kernel_pos[r * 3 + 1] = (static_cast<float>(rand()) / RAND_MAX) * 2 - 1,
+                    m_ssao_sample_kernel_pos[r * 3 + 2] =  static_cast<float>(rand()) / RAND_MAX);
         } while(glm::dot(glm::vec3(0, 0, 1), offset) < 0.15);
         float scale = static_cast<float>(r) / NUM_SSAO_SAMPLE_KERNELS;
         scale = glm::lerp(0.1f, 1.0f, scale * scale);
@@ -395,7 +395,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
         for(std::vector<glm::vec3>::const_iterator p = m_debug_targets.begin(); p != m_debug_targets.end(); p++) {
             glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * glm::translate(glm::mat4(1), *p)));
 
-            // magenta
+            // red
             glColor3f(1, 0, 0);
             glutWireSphere(TARGETS_RADIUS, 4, 2);
         }

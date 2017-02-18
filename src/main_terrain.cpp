@@ -241,10 +241,10 @@ static void update_leg_targets(glm::vec2               center,
     for(std::vector<glm::vec3>::iterator p = leg_targets->begin(); p != leg_targets->end(); p++) {
         float distance_from_center = glm::distance(glm::vec2((*p).x, (*p).z), center);
         if(distance_from_center < inner_radius || distance_from_center > outer_radius) {
-            float rand_angle = static_cast<float>(rand()) / RAND_MAX * 2 * PI;
-            float range = outer_radius - inner_radius;
-            glm::vec2 leg_target = glm::vec2(center.x + cos(rand_angle) * (inner_radius + static_cast<float>(rand()) / RAND_MAX * range),
-                                             center.y + sin(rand_angle) * (inner_radius + static_cast<float>(rand()) / RAND_MAX * range));
+            float rand_angle  = (static_cast<float>(rand()) / RAND_MAX) * (2 * PI);
+            float rand_radius = inner_radius + (static_cast<float>(rand()) / RAND_MAX) * (outer_radius - inner_radius);
+            glm::vec2 leg_target = glm::vec2(center.x + cos(rand_angle) * rand_radius,
+                                             center.y + sin(rand_angle) * rand_radius);
             leg_target = limit_to_within_terrain(leg_target, width, length);
             (*p).x = leg_target.x;
             (*p).z = leg_target.y;
