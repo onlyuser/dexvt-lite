@@ -579,7 +579,7 @@ void onTick()
         box->rotate(-delta_angle, pivot);
         std::set<int> available_target_indices;
         for(int target_index = 0; target_index < static_cast<int>(vt::Scene::instance()->m_debug_targets.size()); target_index++) {
-            available_target_indices.insert(target_index); // init all targets unused
+            available_target_indices.insert(target_index); // populate unused targets
         }
         int leg_index = 0;
         for(std::vector<IK_Leg*>::iterator p = ik_legs.begin(); p != ik_legs.end(); p++) {
@@ -591,11 +591,11 @@ void onTick()
                 (*p)->m_target_index = find_nearest_target_for_leg(vt::Scene::instance()->m_debug_targets,
                                                                    available_target_indices,
                                                                    *(*p));
-                if((*p)->m_target_index == -1) { // couldn't find legal target for current leg
+                if((*p)->m_target_index == -1) { // can't find legal target for current leg
                     continue;                    // skip this round (hold posture)
                 }
             }
-            available_target_indices.erase((*p)->m_target_index); // set current leg target used
+            available_target_indices.erase((*p)->m_target_index); // use current leg target
             ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
                                                           glm::vec3(0, 0, IK_SEGMENT_LENGTH),
                                                           vt::Scene::instance()->m_debug_targets[(*p)->m_target_index],
