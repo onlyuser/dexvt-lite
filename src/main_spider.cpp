@@ -65,7 +65,7 @@
 #define IK_SEGMENT_HEIGHT            0.05
 #define IK_SEGMENT_LENGTH            0.5
 #define IK_LEG_COUNT                 8
-#define IK_LEG_RADIUS                0 //(BOX_LENGTH * 0.5)
+#define IK_LEG_RADIUS                (BOX_LENGTH * 0.5)
 #define IK_ITERS                     10 // trade accuracy for speed
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
@@ -117,7 +117,7 @@ struct IK_Leg
 {
     vt::Mesh*              m_joint;
     std::vector<vt::Mesh*> m_ik_meshes;
-    glm::vec3              m_target;
+    int                    m_target_index;
 };
 
 std::vector<IK_Leg*> ik_legs;
@@ -275,6 +275,11 @@ static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
     return glm::normalize(glm::cross(z_dir, x_dir));
 }
 
+static bool is_invalid_target(glm::vec3 target)
+{
+    return glm::distance(target, glm::vec3(0)) < EPSILON;
+}
+
 static void update_leg_targets(glm::vec2               center,
                                float                   inner_radius,
                                float                   outer_radius,
@@ -296,10 +301,7 @@ static void update_leg_targets(glm::vec2               center,
     avg_footing *= (1.0f / leg_targets->size());
     glm::vec2 correction_dir = glm::normalize(center - avg_footing);
     for(std::vector<glm::vec3>::iterator p = leg_targets->begin(); p != leg_targets->end(); p++) {
-        float distance_from_center = glm::distance(glm::vec2((*p).x, (*p).z), center);
-        if(distance_from_center < inner_radius ||
-           distance_from_center > outer_radius)
-        {
+        if(is_invalid_target(*p)) {
             glm::vec2 rand_dir;
             do {
                 float rand_angle = (static_cast<float>(rand()) / RAND_MAX) * (2 * PI);
@@ -318,8 +320,31 @@ static void update_leg_targets(glm::vec2               center,
                                            height_map_pixel_data,
                                            tex_width,
                                            tex_length);
+            continue;
+        }
+        float distance_from_center = glm::distance(glm::vec2((*p).x, (*p).z), center);
+        if(distance_from_center < inner_radius || distance_from_center > outer_radius) {
+            (*p) = glm::vec3(0);
         }
     }
+}
+
+static int find_nearest_target_for_leg(std::vector<glm::vec3> &targets,
+                                       std::set<int>          &available_target_indices,
+                                       IK_Leg                 &ik_leg)
+{
+    std::vector<vt::Mesh*> &ik_meshes = ik_leg.m_ik_meshes;
+    float best_distance = LEG_OUTER_RADIUS;
+    int   best_index = -1;
+    for(std::set<int>::iterator p = available_target_indices.begin(); p != available_target_indices.end(); p++) {
+        float distance = glm::distance(targets[*p], ik_meshes[0]->in_abs_system());
+        //float distance = glm::distance(targets[*p], ik_meshes[IK_SEGMENT_COUNT - 1]->in_abs_system(glm::vec3(0, 0, IK_SEGMENT_LENGTH)));
+        if(distance < best_distance) {
+            best_distance = distance;
+            best_index    = *p;
+        }
+    }
+    return best_index;
 }
 
 int init_resources()
@@ -552,17 +577,32 @@ void onTick()
         glm::vec3 pivot       = glm::cross(terrain_normal, abs_heading);
         float     delta_angle = glm::degrees(glm::angle(terrain_normal, abs_heading));
         box->rotate(-delta_angle, pivot);
-        int i = 0;
+        std::set<int> available_target_indices;
+        for(int target_index = 0; target_index < static_cast<int>(vt::Scene::instance()->m_debug_targets.size()); target_index++) {
+            available_target_indices.insert(target_index);
+        }
+        int leg_index = 0;
         for(std::vector<IK_Leg*>::iterator p = ik_legs.begin(); p != ik_legs.end(); p++) {
             std::vector<vt::Mesh*> &ik_meshes = (*p)->m_ik_meshes;
             ik_meshes[0]->set_origin((*p)->m_joint->in_abs_system());
+            if((*p)->m_target_index == -1 ||                                                    // current leg has no target
+               is_invalid_target(vt::Scene::instance()->m_debug_targets[(*p)->m_target_index])) // current leg target illegal
+            {
+                (*p)->m_target_index = find_nearest_target_for_leg(vt::Scene::instance()->m_debug_targets,
+                                                                   available_target_indices,
+                                                                   *(*p));
+                if((*p)->m_target_index == -1) { // couldn't find suitable target
+                    continue;                    // skip this round for current leg (hold posture)
+                }
+            }
+            available_target_indices.erase((*p)->m_target_index);
             ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
                                                           glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-                                                          (*p)->m_target = vt::Scene::instance()->m_debug_targets[i],
+                                                          vt::Scene::instance()->m_debug_targets[(*p)->m_target_index],
                                                           IK_ITERS,
                                                           ACCEPT_END_EFFECTOR_DISTANCE,
                                                           ACCEPT_AVG_ANGLE_DISTANCE);
-            i++;
+            leg_index++;
         }
         user_input = false;
     }
