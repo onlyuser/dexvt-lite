@@ -302,12 +302,15 @@ static void update_leg_targets(glm::vec2               center,
     }
     glm::vec2 avg_footing;
     for(std::vector<glm::vec3>::iterator p = leg_targets->begin(); p != leg_targets->end(); p++) {
-        avg_footing += glm::vec2((*p).x, (*p).z);
+        if(is_invalid_target(*p)) {
+            continue;
+        }
+        avg_footing += (glm::vec2((*p).x, (*p).z) - center);
     }
-    avg_footing *= (1.0f / leg_targets->size());
-    glm::vec2 correction_dir = glm::normalize(center - avg_footing);
-    for(std::vector<glm::vec3>::iterator p = leg_targets->begin(); p != leg_targets->end(); p++) {
-        if(is_invalid_target(*p)) { // only update illegal targets
+    avg_footing *= (leg_targets->size() ? (1.0f / leg_targets->size()) : 1.0f);
+    glm::vec2 correction_dir = ((glm::length(avg_footing) > 0) ? -glm::normalize(avg_footing) : glm::vec2(0));
+    for(std::vector<glm::vec3>::iterator q = leg_targets->begin(); q != leg_targets->end(); q++) {
+        if(is_invalid_target(*q)) { // only update illegal targets
             glm::vec2 rand_dir;
             do {
                 float rand_angle = (static_cast<float>(rand()) / RAND_MAX) * (2 * PI);
@@ -315,11 +318,12 @@ static void update_leg_targets(glm::vec2               center,
             } while(glm::length(correction_dir) > 0 &&
                     glm::angle(rand_dir, correction_dir) < MAX_LEG_CORRECTION_SPREAD);
             float rand_radius = inner_radius + (static_cast<float>(rand()) / RAND_MAX) * (outer_radius - inner_radius);
+            //rand_dir = correction_dir; // NOTE: fix-me!
             glm::vec2 leg_target = center + rand_dir * rand_radius;
             leg_target = limit_to_within_terrain(leg_target, width, length);
-            (*p).x = leg_target.x;
-            (*p).z = leg_target.y;
-            (*p).y = lookup_terrain_height(leg_target,
+            (*q).x = leg_target.x;
+            (*q).z = leg_target.y;
+            (*q).y = lookup_terrain_height(leg_target,
                                            width,
                                            length,
                                            height,
@@ -328,14 +332,14 @@ static void update_leg_targets(glm::vec2               center,
                                            tex_length);
             continue;
         }
-        float distance_from_center = glm::distance(glm::vec2((*p).x, (*p).z), center);
+        float distance_from_center = glm::distance(glm::vec2((*q).x, (*q).z), center);
         if(distance_from_center < inner_radius || distance_from_center > outer_radius) {
-            (*p) = glm::vec3(0); // set illegal target for this round
+            (*q) = glm::vec3(0); // set illegal target for this round
         }
     }
 }
 
-static int find_nearest_target_for_leg(std::vector<glm::vec3> &targets,
+static int find_nearest_target_for_leg(std::vector<glm::vec3> &leg_targets,
                                        std::set<int>          &available_target_indices,
                                        IK_Leg                 &ik_leg)
 {
@@ -343,7 +347,10 @@ static int find_nearest_target_for_leg(std::vector<glm::vec3> &targets,
     float best_distance = LEG_OUTER_RADIUS;
     int   best_index    = -1;
     for(std::set<int>::iterator p = available_target_indices.begin(); p != available_target_indices.end(); p++) {
-        float distance = glm::distance(targets[*p], ik_meshes[0]->in_abs_system());
+        if(is_invalid_target(leg_targets[*p])) {
+            continue;
+        }
+        float distance = glm::distance(leg_targets[*p], ik_meshes[0]->in_abs_system());
         //float distance = glm::distance(targets[*p], ik_meshes[IK_SEGMENT_COUNT - 1]->in_abs_system(glm::vec3(0, 0, IK_SEGMENT_LENGTH)));
         if(distance < best_distance) {
             best_distance = distance;
@@ -455,21 +462,25 @@ int init_resources()
     int angle = 0;
     for(int i = 0; i < IK_LEG_COUNT; i++) {
         IK_Leg* ik_leg = new IK_Leg();
-        std::stringstream ss;
-        ss << "ik_joint_" << i;
-        ik_leg->m_joint = vt::PrimitiveFactory::create_box(ss.str(), IK_SEGMENT_WIDTH,
-                                                                     IK_SEGMENT_WIDTH,
-                                                                     IK_SEGMENT_WIDTH);
+        std::stringstream joint_name_ss;
+        joint_name_ss << "ik_joint_" << i;
+        ik_leg->m_joint = vt::PrimitiveFactory::create_box(joint_name_ss.str(), IK_SEGMENT_WIDTH,
+                                                                                IK_SEGMENT_WIDTH,
+                                                                                IK_SEGMENT_WIDTH);
         ik_leg->m_joint->center_axis();
         scene->add_mesh(ik_leg->m_joint);
         ik_leg->m_joint->link_parent(dummy);
         ik_leg->m_joint->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
-        std::stringstream ss2;
-        ss2 << "ik_box_" << i;
-        create_linked_boxes(scene, &ik_meshes, IK_SEGMENT_COUNT, ss2.str(), glm::vec3(IK_SEGMENT_WIDTH,
-                                                                                      IK_SEGMENT_HEIGHT,
-                                                                                      IK_SEGMENT_LENGTH));
+        std::stringstream ik_segment_name_ss;
+        ik_segment_name_ss << "ik_box_" << i;
+        create_linked_boxes(scene,
+                            &ik_meshes,
+                            IK_SEGMENT_COUNT,
+                            ik_segment_name_ss.str(),
+                            glm::vec3(IK_SEGMENT_WIDTH,
+                                      IK_SEGMENT_HEIGHT,
+                                      IK_SEGMENT_LENGTH));
         int leg_segment_index = 0;
         for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
             (*p)->set_material(bump_mapped_material);

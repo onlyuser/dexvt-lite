@@ -383,10 +383,15 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
 
     glUseProgram(0);
 
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixf(glm::value_ptr(m_camera->get_projection_xform()));
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
     if(draw_guide_wires) {
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
         glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * glm::translate(glm::mat4(1), m_debug_target)));
+        glLineWidth(guide_wire_width);
+        glBegin(GL_LINES);
 
         // magenta
         glColor3f(1, 0, 1);
@@ -399,13 +404,11 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
             glColor3f(1, 0, 0);
             glutWireSphere(TARGETS_RADIUS, 4, 2);
         }
-        glPopMatrix();
+
+        glEnd();
+        glLineWidth(1);
     }
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(glm::value_ptr(m_camera->get_projection_xform()));
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
     for(meshes_t::const_iterator p = m_meshes.begin(); p != m_meshes.end(); p++) {
         if(!(*p)->is_visible()) {
             continue;
@@ -642,6 +645,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
             print_bitmap_string(GLUT_BITMAP_HELVETICA_18, axis_label.c_str());
         }
     }
+
     glPopMatrix();
 
     if(draw_hud_text) {
