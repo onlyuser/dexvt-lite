@@ -301,13 +301,15 @@ static void update_leg_targets(glm::vec2               center,
         return;
     }
     glm::vec2 avg_footing;
+    int valid_target_count = 0;
     for(std::vector<glm::vec3>::iterator p = leg_targets->begin(); p != leg_targets->end(); p++) {
         if(is_invalid_target(*p)) {
             continue;
         }
         avg_footing += (glm::vec2((*p).x, (*p).z) - center);
+        valid_target_count++;
     }
-    avg_footing *= (leg_targets->size() ? (1.0f / leg_targets->size()) : 1.0f);
+    avg_footing *= (valid_target_count ? (1.0f / valid_target_count) : 1.0f);
     glm::vec2 correction_dir = ((glm::length(avg_footing) > 0) ? -glm::normalize(avg_footing) : glm::vec2(0));
     for(std::vector<glm::vec3>::iterator q = leg_targets->begin(); q != leg_targets->end(); q++) {
         if(is_invalid_target(*q)) { // only update illegal targets
@@ -316,7 +318,7 @@ static void update_leg_targets(glm::vec2               center,
                 float rand_angle = (static_cast<float>(rand()) / RAND_MAX) * (2 * PI);
                 rand_dir = glm::normalize(glm::vec2(cos(rand_angle), sin(rand_angle)));
             } while(glm::length(correction_dir) > 0 &&
-                    glm::angle(rand_dir, correction_dir) < MAX_LEG_CORRECTION_SPREAD);
+                    glm::angle(rand_dir, correction_dir) > MAX_LEG_CORRECTION_SPREAD);
             float rand_radius = inner_radius + (static_cast<float>(rand()) / RAND_MAX) * (outer_radius - inner_radius);
             //rand_dir = correction_dir; // NOTE: fix-me!
             glm::vec2 leg_target = center + rand_dir * rand_radius;
@@ -347,9 +349,6 @@ static int find_nearest_target_for_leg(std::vector<glm::vec3> &leg_targets,
     float best_distance = LEG_OUTER_RADIUS;
     int   best_index    = -1;
     for(std::set<int>::iterator p = available_target_indices.begin(); p != available_target_indices.end(); p++) {
-        if(is_invalid_target(leg_targets[*p])) {
-            continue;
-        }
         float distance = glm::distance(leg_targets[*p], ik_meshes[0]->in_abs_system());
         //float distance = glm::distance(targets[*p], ik_meshes[IK_SEGMENT_COUNT - 1]->in_abs_system(glm::vec3(0, 0, IK_SEGMENT_LENGTH)));
         if(distance < best_distance) {
@@ -596,7 +595,16 @@ void onTick()
         box->rotate(-delta_angle, pivot);
         std::set<int> available_target_indices;
         for(int target_index = 0; target_index < static_cast<int>(vt::Scene::instance()->m_debug_targets.size()); target_index++) {
+            if(is_invalid_target(vt::Scene::instance()->m_debug_targets[target_index])) {
+                continue;
+            }
             available_target_indices.insert(target_index); // populate unused targets
+        }
+        for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
+            if((*r)->m_target_index == -1) {
+                continue;
+            }
+            available_target_indices.erase((*r)->m_target_index); // remove currently used
         }
         for(std::vector<IK_Leg*>::iterator p = ik_legs.begin(); p != ik_legs.end(); p++) {
             std::vector<vt::Mesh*> &ik_meshes = (*p)->m_ik_meshes;
@@ -610,7 +618,7 @@ void onTick()
                                                                    available_target_indices,
                                                                    *(*p));
                 if((*p)->m_target_index == -1) { // can't find legal target for current leg
-                    continue;                    // skip this round (hold posture)
+                    continue;                    // skip this leg (hold posture)
                 }
                 (*p)->m_to_point = vt::Scene::instance()->m_debug_targets[(*p)->m_target_index];
             }
@@ -618,9 +626,10 @@ void onTick()
         }
         user_input = false;
     }
+    std::cout << std::endl;
     for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
         std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-        glm::vec3 interp_point = (*q)->m_from_point + ((*q)->m_to_point - (*q)->m_from_point) * (*q)->m_alpha;
+        glm::vec3 interp_point = LERP((*q)->m_from_point, (*q)->m_to_point, (*q)->m_alpha);
         float leg_lift_height = (-pow((*q)->m_alpha * 2 - 1, 2) + 1) * IK_LEG_MAX_LIFT_HEIGHT; // parabolic leg-lift path
         ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
                                                       glm::vec3(0, 0, IK_SEGMENT_LENGTH),
