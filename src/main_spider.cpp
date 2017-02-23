@@ -458,7 +458,6 @@ int init_resources()
     dummy->set_origin(glm::vec3(0));
     dummy->set_orient(glm::vec3(0, 90, 0));
     scene->add_mesh(dummy);
-
     int angle = 0;
     for(int i = 0; i < IK_LEG_COUNT; i++) {
         IK_Leg* ik_leg = new IK_Leg();
@@ -469,7 +468,7 @@ int init_resources()
                                                                                 IK_SEGMENT_WIDTH);
         ik_leg->m_joint->center_axis();
         scene->add_mesh(ik_leg->m_joint);
-        ik_leg->m_joint->link_parent(dummy);
+        ik_leg->m_joint->link_parent(dummy); // one extra layer of xform indirection to convert yaw around z-axis to yaw around y-axis
         ik_leg->m_joint->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
         std::stringstream ik_segment_name_ss;
@@ -559,6 +558,14 @@ void onTick()
         box->set_origin(box->get_origin() - box->get_abs_up_direction() * BOX_SPEED);
         user_input = true;
     }
+    if(page_up_key) {
+        box->set_origin(box->get_origin() + box->get_abs_left_direction() * BOX_SPEED);
+        user_input = true;
+    }
+    if(page_down_key) {
+        box->set_origin(box->get_origin() - box->get_abs_left_direction() * BOX_SPEED);
+        user_input = true;
+    }
     if(user_input) {
         glm::vec2 pos_within_terrain = limit_to_within_terrain(glm::vec2(box->get_origin().x, box->get_origin().z),
                                                                TERRAIN_WIDTH,
@@ -609,7 +616,7 @@ void onTick()
         }
         for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
             std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-            ik_meshes[0]->set_origin((*q)->m_joint->in_abs_system());
+            ik_meshes[0]->set_origin((*q)->m_joint->in_abs_system()); // make leg base follow forward-kinematics joint locations
             if((*q)->m_target_index == -1 ||                                                    // current leg has no target
                is_invalid_target(vt::Scene::instance()->m_debug_targets[(*q)->m_target_index])) // current leg has illegal target
             {

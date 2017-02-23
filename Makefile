@@ -9,7 +9,7 @@ LIB_PATH = $(EXTERN_LIB_PATH)
 SRC_PATH = src
 BUILD_PATH = build
 BIN_PATH = bin
-BIN_STEMS = main_ik main_boids main_hexapod main_terrain main_spider
+BIN_STEMS = main_ik main_boids main_hexapod main_terrain main_spider main_freerot
 BINARIES = $(patsubst %, $(BIN_PATH)/%, $(BIN_STEMS))
 
 INCLUDE_PATHS = $(INCLUDE_PATH) $(EXTERN_INCLUDE_PATH)
@@ -72,11 +72,13 @@ CPP_STEMS_BOIDS   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Lig
 CPP_STEMS_HEXAPOD = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_hexapod Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 CPP_STEMS_TERRAIN = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_terrain Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 CPP_STEMS_SPIDER  = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_spider  Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_FREEROT = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_freerot Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 OBJECTS_IK      = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK))
 OBJECTS_BOIDS   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_BOIDS))
 OBJECTS_HEXAPOD = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_HEXAPOD))
 OBJECTS_TERRAIN = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_TERRAIN))
 OBJECTS_SPIDER  = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_SPIDER))
+OBJECTS_FREEROT = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_FREEROT))
 
 $(BIN_PATH)/main_ik : $(OBJECTS_IK)
 	mkdir -p $(BIN_PATH)
@@ -91,6 +93,9 @@ $(BIN_PATH)/main_terrain : $(OBJECTS_TERRAIN)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 $(BIN_PATH)/main_spider : $(OBJECTS_SPIDER)
+	mkdir -p $(BIN_PATH)
+	$(CXX) -o $@ $^ $(LDFLAGS)
+$(BIN_PATH)/main_freerot : $(OBJECTS_FREEROT)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
@@ -153,11 +158,21 @@ $(HEIGHT_MAP_FILES) :
 	mkdir -p $(HEIGHT_MAP_PATH)
 	curl "https://upload.wikimedia.org/wikipedia/commons/5/57/Heightmap.png" > $(HEIGHT_MAP_PATH)/heightmap.png
 
-resources : $(CHESTERFIELD_MAP_FILES) $(CUBE_MAP_FILES) $(HEIGHT_MAP_FILES)
+3DS_MESH_PATH = $(RESOURCE_PATH)/star_wars
+3DS_MESH_STEMS = TI_Low0
+3DS_MESH_FILES = $(patsubst %, $(3DS_MESH_PATH)/%.3ds, $(3DS_MESH_STEMS))
+$(3DS_MESH_FILES) :
+	mkdir -p $(3DS_MESH_PATH)
+	curl "http://www.jrbassett.com/zips/TI_Low0.Zip" > $(3DS_MESH_PATH)/TI_Low0.Zip
+	unzip $(3DS_MESH_PATH)/TI_Low0.Zip -d $(3DS_MESH_PATH)
+	rm $(3DS_MESH_PATH)/TI_Low0.Zip
+	rm $(3DS_MESH_PATH)/*.txt
+
+resources : $(CHESTERFIELD_MAP_FILES) $(CUBE_MAP_FILES) $(HEIGHT_MAP_FILES) $(3DS_MESH_FILES)
 
 .PHONY : clean_resources
 clean_resources :
-	-rm $(CHESTERFIELD_MAP_FILES) $(CUBE_MAP_FILES)
+	-rm $(CHESTERFIELD_MAP_FILES) $(CUBE_MAP_FILES) $(HEIGHT_MAP_FILES) $(3DS_MESH_FILES)
 	-rm -rf $(RESOURCE_PATH)
 
 #==================
