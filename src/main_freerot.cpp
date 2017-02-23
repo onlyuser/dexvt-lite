@@ -44,10 +44,10 @@
 #include <iomanip> // std::setprecision
 #include <unistd.h> // access
 
-#define IK_SEGMENT_COUNT             3
-#define IK_ITERS                     50
-#define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
+#define ACCEPT_END_EFFECTOR_DISTANCE 0.001
+#define IK_ITERS                     50
+#define IK_SEGMENT_COUNT             3
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
@@ -82,7 +82,7 @@ bool user_input = true;
 int texture_id = 0;
 float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 
-int angle_delta = 1;
+int angle_delta = 2;
 
 std::vector<vt::Mesh*> meshes_imported;
 vt::Mesh* dummy;

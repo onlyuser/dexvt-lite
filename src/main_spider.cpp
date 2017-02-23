@@ -44,36 +44,32 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
-#define TERRAIN_COLS          100
-#define TERRAIN_ROWS          100
-#define TERRAIN_WIDTH         10
-#define TERRAIN_LENGTH        10
-#define TERRAIN_HEIGHT        1 // make terrain more rugged
-#define BOX_WIDTH             0.25
-#define BOX_LENGTH            0.5
-#define BOX_HEIGHT            0.1
-#define BOX_LEVITATION_HEIGHT 0.5
-#define BOX_SPEED             0.05f // make it crawl faster
-#define BOX_ANGLE_SPEED       2.0
-#define LEG_INNER_RADIUS      0.25
-#define LEG_OUTER_RADIUS      1
-
-#define MAX_LEG_CORRECTION_SPREAD (PI * 0.25)
-
-#define IK_SEGMENT_COUNT             3
-#define IK_SEGMENT_WIDTH             0.05
-#define IK_SEGMENT_HEIGHT            0.05
-#define IK_SEGMENT_LENGTH            0.5
-#define IK_LEG_COUNT                 8
-#define IK_LEG_RADIUS                (BOX_LENGTH * 0.5)
-#define IK_LEG_MAX_LIFT_HEIGHT       (BOX_LEVITATION_HEIGHT * 0.5)
-#define IK_ITERS                     10 // trade accuracy for speed
-#define ACCEPT_END_EFFECTOR_DISTANCE 0.001
-#define ACCEPT_AVG_ANGLE_DISTANCE    0.001
-
-#define ANIM_ALPHA_STEP 0.1
-
-#define LERP_PARABOLIC_DOWN_ARC(alpha) (-pow(alpha * 2 - 1, 2) + 1)
+#define ACCEPT_AVG_ANGLE_DISTANCE      0.001
+#define ACCEPT_END_EFFECTOR_DISTANCE   0.001
+#define ANIM_ALPHA_STEP                0.1
+#define BOX_ANGLE_SPEED                2.0
+#define BOX_HEIGHT                     0.1
+#define BOX_LENGTH                     0.5
+#define BOX_LEVITATION_HEIGHT          0.5
+#define BOX_SPEED                      0.05f
+#define BOX_WIDTH                      0.25
+#define IK_ITERS                       10 // trade accuracy for speed
+#define IK_LEG_COUNT                   8
+#define IK_LEG_MAX_LIFT_HEIGHT         (BOX_LEVITATION_HEIGHT * 0.5)
+#define IK_LEG_RADIUS                  (BOX_LENGTH * 0.5)
+#define IK_SEGMENT_COUNT               3
+#define IK_SEGMENT_HEIGHT              0.05
+#define IK_SEGMENT_LENGTH              0.5
+#define IK_SEGMENT_WIDTH               0.05
+#define LEG_INNER_RADIUS               0.25
+#define LEG_OUTER_RADIUS               1
+#define LERP_PARABOLIC_DOWN_ARC(alpha) (-pow((alpha) * 2 - 1, 2) + 1)
+#define MAX_LEG_CORRECTION_SPREAD      (PI * 0.25)
+#define TERRAIN_COLS                   100
+#define TERRAIN_HEIGHT                 1
+#define TERRAIN_LENGTH                 10
+#define TERRAIN_ROWS                   100
+#define TERRAIN_WIDTH                  10
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 

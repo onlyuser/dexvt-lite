@@ -43,10 +43,10 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
-#define BOID_COUNT         50
-#define BOID_FORWARD_SPEED 0.025
 #define BOID_ANGLE_DELTA   2.5
 #define BOID_AVOID_RADIUS  1
+#define BOID_COUNT         50
+#define BOID_FORWARD_SPEED 0.025
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
