@@ -43,10 +43,10 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
-#define IK_SEGMENT_COUNT             3
-#define IK_ITERS                     50
-#define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
+#define ACCEPT_END_EFFECTOR_DISTANCE 0.001
+#define IK_ITERS                     50
+#define IK_SEGMENT_COUNT             3
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
