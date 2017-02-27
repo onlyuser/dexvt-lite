@@ -62,6 +62,7 @@ public:
     bool solve_ik_ccd(XformObject* root,
                       glm::vec3    local_end_effector_tip,
                       glm::vec3    target,
+                      glm::vec3*   end_effector_dir,
                       int          iters,
                       float        accept_end_effector_distance,
                       float        accept_avg_angle_distance);

@@ -186,6 +186,7 @@ void XformObject::rotate(float angle_delta, glm::vec3 pivot)
 bool XformObject::solve_ik_ccd(XformObject* root,
                                glm::vec3    local_end_effector_tip,
                                glm::vec3    target,
+                               glm::vec3*   end_effector_dir,
                                int          iters,
                                float        accept_end_effector_distance,
                                float        accept_avg_angle_distance)
@@ -198,8 +199,14 @@ bool XformObject::solve_ik_ccd(XformObject* root,
         for(XformObject* current_segment = this; current_segment && current_segment != root->get_parent(); current_segment = current_segment->get_parent()) {
             glm::vec3 end_effector_tip = in_abs_system(local_end_effector_tip);
             find_solution = (glm::distance(end_effector_tip, target) < accept_end_effector_distance);
+            glm::vec3 tmp_target;
+            if(end_effector_dir && current_segment == this) {
+                tmp_target = in_abs_system() + *end_effector_dir;
+            } else {
+                tmp_target = target;
+            }
 #if 1
-            glm::vec3 local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(target));
+            glm::vec3 local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(tmp_target));
             glm::vec3 local_end_effector_tip_dir = glm::normalize(current_segment->from_origin_in_parent_system(end_effector_tip));
             glm::vec3 local_arc_dir              = glm::normalize(local_target_dir - local_end_effector_tip_dir);
             glm::vec3 local_arc_midpoint_dir     = glm::normalize((local_target_dir + local_end_effector_tip_dir) * 0.5f);
@@ -214,7 +221,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             current_segment->point_at_local(new_current_segment_heading, &new_current_segment_up_direction);
 
             // update guide wires
-            local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(target));
+            local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(tmp_target));
             local_end_effector_tip_dir = glm::normalize(current_segment->from_origin_in_parent_system(end_effector_tip));
             local_arc_dir              = glm::normalize(local_target_dir - local_end_effector_tip_dir);
             local_arc_midpoint_dir     = glm::normalize((local_target_dir + local_end_effector_tip_dir) * 0.5f);
@@ -222,7 +229,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             current_segment->m_debug_target_dir           = local_target_dir;
             current_segment->m_debug_end_effector_tip_dir = local_end_effector_tip_dir;
             current_segment->m_debug_local_pivot          = local_arc_pivot;
-            current_segment->m_debug_local_target         = current_segment->from_origin_in_parent_system(target);
+            current_segment->m_debug_local_target         = current_segment->from_origin_in_parent_system(tmp_target);
         #ifdef DEBUG
             //std::cout << "TARGET: " << glm::to_string(local_target_dir) << ", END_EFF: " << glm::to_string(local_end_effector_tip_dir) << ", ANGLE: " << angle_delta << std::endl;
             //std::cout << "BEFORE: " << glm::to_string(new_current_segment_xform * glm::vec4(VEC_FORWARD, 1))
@@ -236,7 +243,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             sum_angle += angle_delta;
 #else
             // attempt #1 -- do rotations in Euler coordinates (poor man's ik)
-            glm::vec3 local_target_orient           = offset_to_orient(current_segment->from_origin_in_parent_system(target));
+            glm::vec3 local_target_orient           = offset_to_orient(current_segment->from_origin_in_parent_system(tmp_target));
             glm::vec3 local_end_effector_tip_orient = offset_to_orient(current_segment->from_origin_in_parent_system(end_effector_tip));
             current_segment->set_orient(orient_modulo(current_segment->get_orient() + orient_modulo(local_target_orient - local_end_effector_tip_orient)));
             sum_angle += accept_avg_angle_distance; // to avoid convergence

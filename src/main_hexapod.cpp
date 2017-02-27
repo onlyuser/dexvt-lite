@@ -272,6 +272,7 @@ void onTick()
             ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
                                                           glm::vec3(0, 0, IK_SEGMENT_LENGTH),
                                                           (*p)->m_target = targets[target_index],
+                                                          NULL,
                                                           IK_ITERS,
                                                           ACCEPT_END_EFFECTOR_DISTANCE,
                                                           ACCEPT_AVG_ANGLE_DISTANCE);
