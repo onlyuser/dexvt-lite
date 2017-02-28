@@ -141,18 +141,23 @@ void Mesh::resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry
 
 void Mesh::attach(Mesh* other)
 {
+    size_t prev_num_vertex  = get_num_vertex();
+    size_t prev_num_tri     = get_num_tri();
     size_t other_num_vertex = other->get_num_vertex();
     size_t other_num_tri    = other->get_num_tri();
-    resize(get_num_vertex() + other_num_vertex,
-           get_num_tri() + other_num_tri);
-    for(int i = 0; i < other_num_vertex; i++) {
-        set_vert_coord(i, other->get_vert_coord(i));
-        set_tex_coord(i,  other->get_tex_coord(i));
+    resize(prev_num_vertex + other_num_vertex,
+           prev_num_tri    + other_num_tri,
+           true);
+    for(int i = 0; i < static_cast<int>(other_num_vertex); i++) {
+        set_vert_coord(prev_num_vertex + i, other->get_vert_coord(i));
+        set_tex_coord(prev_num_vertex + i,  other->get_tex_coord(i));
     }
-    for(int j = 0; j < other_num_tri; j++) {
-        set_tri_indices(j, other->get_tri_indices(j));
+    for(int j = 0; j < static_cast<int>(other_num_tri); j++) {
+        glm::ivec3 prev_tri_indices = glm::ivec3(prev_num_vertex, prev_num_vertex, prev_num_vertex);
+        set_tri_indices(prev_num_tri + j, prev_tri_indices + other->get_tri_indices(j));
     }
     update_normals_and_tangents();
+    update_bbox();
 }
 
 glm::vec3 Mesh::get_vert_coord(int index) const
