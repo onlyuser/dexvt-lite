@@ -26,6 +26,7 @@ public:
          size_t      num_tri);
     virtual ~Mesh();
     void resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry = false);
+    void attach(Mesh* other);
 
     size_t get_num_vertex() const
     {
