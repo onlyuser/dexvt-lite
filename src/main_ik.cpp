@@ -61,6 +61,7 @@ glm::vec2 prev_mouse_coord, mouse_drag;
 glm::vec3 prev_orient, orient, orbit_speed = glm::vec3(0, -0.5, -0.5);
 float prev_orbit_radius = 0, orbit_radius = 8, dolly_speed = 0.1, light_distance = 4;
 bool show_bbox = false;
+bool angle_constraint = false;
 bool show_fps = false;
 bool show_help = false;
 bool show_lights = false;
@@ -272,15 +273,17 @@ void onTick()
     }
     if(user_input) {
         glm::vec3 end_effector_orient;
-        if(targets[target_index].y > 0) {
-            end_effector_orient = glm::vec3(0, 1, 0);
-        } else {
-            end_effector_orient = glm::vec3(0, -1, 0);
+        if(angle_constraint) {
+            if(targets[target_index].y > 0) {
+                end_effector_orient = glm::vec3(0, 1, 0);
+            } else {
+                end_effector_orient = glm::vec3(0, -1, 0);
+            }
         }
         ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[1],
                                                       glm::vec3(0, 0, 1),
                                                       targets[target_index],
-                                                      &end_effector_orient,
+                                                      angle_constraint ? &end_effector_orient : NULL,
                                                       IK_ITERS,
                                                       ACCEPT_END_EFFECTOR_DISTANCE,
                                                       ACCEPT_AVG_ANGLE_DISTANCE);
@@ -322,6 +325,10 @@ void onKeyboard(unsigned char key, int x, int y)
     switch(key) {
         case 'b': // bbox
             show_bbox = !show_bbox;
+            break;
+        case 'c': // angle constraint
+            angle_constraint = !angle_constraint;
+            user_input = true;
             break;
         case 'f': // frame rate
             show_fps = !show_fps;

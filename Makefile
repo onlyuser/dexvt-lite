@@ -61,7 +61,7 @@ $(BUILD_PATH)/%.o : $(SRC_PATH)/%.c
 
 .PHONY : clean_objects
 clean_objects :
-	-rm $(OBJECTS_IK)
+	-rm $(OBJECTS_IK) $(OBJECTS_BOIDS) $(OBJECTS_HEXAPOD) $(OBJECTS_TERRAIN) $(OBJECTS_SPIDER) $(OBJECTS_FREEROT)
 
 #==================
 # binaries

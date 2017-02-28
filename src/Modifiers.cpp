@@ -1,10 +1,21 @@
 #include <Modifiers.h>
 #include <MeshIFace.h>
+#include <Scene.h>
 #include <Util.h>
 #include <glm/glm.hpp>
 #include <map>
 
 namespace vt {
+
+class Mesh;
+
+Mesh* _mesh(MeshIFace* mesh);
+
+void mesh_attach(Scene* scene, MeshIFace* mesh1, MeshIFace* mesh2)
+{
+    mesh2->merge(mesh1, mesh1->get_material() == mesh2->get_material());
+    scene->remove_mesh(_mesh(mesh1));
+}
 
 void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase, bool smooth)
 {

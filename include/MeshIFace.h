@@ -6,6 +6,8 @@
 
 namespace vt {
 
+class Material;
+
 class MeshIFace
 {
 public:
@@ -15,6 +17,8 @@ public:
     virtual bool       is_smooth() const = 0;
     virtual void       set_smooth(bool smooth) = 0;
     virtual void       resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry = false) = 0;
+    virtual void       merge(MeshIFace* other, bool include_tex_coords = false) = 0;
+    virtual Material*  get_material() const = 0;
     virtual size_t     get_num_vertex() const = 0;
     virtual size_t     get_num_tri() const = 0;
     virtual glm::vec3  get_vert_coord(int index) const = 0;
