@@ -47,22 +47,17 @@ public:
         return m_camera;
     }
 
-    void add_light(Light* light)
-    {
-        m_lights.push_back(light);
-    }
+    void add_light(Light* light);
+    void remove_light(Light* light);
 
-    void add_mesh(Mesh* mesh)
-    {
-        m_meshes.push_back(mesh);
-    }
+    void add_mesh(Mesh* mesh);
+    void remove_mesh(Mesh* mesh);
 
-    void add_material(Material* material)
-    {
-        m_materials.push_back(material);
-    }
+    void add_material(Material* material);
+    void remove_material(Material* material);
 
     void add_texture(Texture* texture);
+    void remove_texture(Texture* texture);
 
     void set_skybox(Mesh* skybox)
     {

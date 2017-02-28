@@ -117,11 +117,6 @@ Scene::~Scene()
     }
 }
 
-void Scene::add_texture(Texture* texture)
-{
-    m_textures.push_back(texture);
-}
-
 void Scene::reset()
 {
     m_camera = NULL;
@@ -129,6 +124,62 @@ void Scene::reset()
     m_meshes.clear();
     m_materials.clear();
     m_textures.clear();
+}
+
+void Scene::add_light(Light* light)
+{
+    m_lights.push_back(light);
+}
+
+void Scene::remove_light(Light* light)
+{
+    lights_t::iterator p = std::find(m_lights.begin(), m_lights.end(), light);
+    if(p == m_lights.end()) {
+        return;
+    }
+    m_lights.erase(p);
+}
+
+void Scene::add_mesh(Mesh* mesh)
+{
+    m_meshes.push_back(mesh);
+}
+
+void Scene::remove_mesh(Mesh* mesh)
+{
+    meshes_t::iterator p = std::find(m_meshes.begin(), m_meshes.end(), mesh);
+    if(p == m_meshes.end()) {
+        return;
+    }
+    m_meshes.erase(p);
+}
+
+void Scene::add_material(Material* material)
+{
+    m_materials.push_back(material);
+}
+
+void Scene::remove_material(Material* material)
+{
+    materials_t::iterator p = std::find(m_materials.begin(), m_materials.end(), material);
+    if(p == m_materials.end()) {
+        return;
+    }
+    m_materials.erase(p);
+}
+
+void Scene::add_texture(Texture* texture)
+{
+    m_textures.push_back(texture);
+}
+
+void Scene::remove_texture(Texture* texture)
+{
+    textures_t::iterator p = std::find(m_textures.begin(), m_textures.end(), texture);
+    if(p == m_textures.end()) {
+        return;
+    }
+    m_textures.erase(p);
 }
 
 void Scene::use_program()
