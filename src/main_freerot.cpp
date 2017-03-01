@@ -334,7 +334,7 @@ void onSpecial(int key, int x, int y)
             break;
         case GLUT_KEY_HOME:
             dummy->set_orient(glm::vec3(0));
-            dummy->get_xform(true); // TODO: fix-me!
+            dummy->get_xform(true); // TODO: why is this necessary?
             break;
         case GLUT_KEY_LEFT:
             left_key = true;

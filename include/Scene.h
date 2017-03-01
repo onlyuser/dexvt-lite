@@ -47,15 +47,19 @@ public:
         return m_camera;
     }
 
+    Light* find_light(std::string name);
     void add_light(Light* light);
     void remove_light(Light* light);
 
+    Mesh* find_mesh(std::string name);
     void add_mesh(Mesh* mesh);
     void remove_mesh(Mesh* mesh);
 
+    Material* find_material(std::string name);
     void add_material(Material* material);
     void remove_material(Material* material);
 
+    Texture* find_texture(std::string name);
     void add_texture(Texture* texture);
     void remove_texture(Texture* texture);
 

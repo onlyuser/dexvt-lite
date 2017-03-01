@@ -125,7 +125,7 @@ void XformObject::link_parent(XformObject* parent, bool keep_xform)
             rebase(&parent_inverse_xform);
 
             // break all connections -- TODO: review this
-            link_parent(NULL);
+            link_parent(NULL, false);
             unlink_children();
         }
 

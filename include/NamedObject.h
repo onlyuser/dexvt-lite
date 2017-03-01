@@ -23,6 +23,21 @@ protected:
     NamedObject(std::string name);
 };
 
+struct FindByName : std::unary_function<NamedObject*, std::string>
+{
+    std::string m_key;
+
+    FindByName(std::string key)
+    {
+        m_key = key;
+    }
+
+    bool operator()(const NamedObject* x) const
+    {
+        return x->get_name() == m_key;
+    }
+};
+
 }
 
 #endif

@@ -126,6 +126,15 @@ void Scene::reset()
     m_textures.clear();
 }
 
+Light* Scene::find_light(std::string name)
+{
+    lights_t::iterator p = std::find_if(m_lights.begin(), m_lights.end(), FindByName(name));
+    if(p == m_lights.end()) {
+        return NULL;
+    }
+    return *p;
+}
+
 void Scene::add_light(Light* light)
 {
     m_lights.push_back(light);
@@ -140,6 +149,15 @@ void Scene::remove_light(Light* light)
     m_lights.erase(p);
 }
 
+Mesh* Scene::find_mesh(std::string name)
+{
+    meshes_t::iterator p = std::find_if(m_meshes.begin(), m_meshes.end(), FindByName(name));
+    if(p == m_meshes.end()) {
+        return NULL;
+    }
+    return *p;
+}
+
 void Scene::add_mesh(Mesh* mesh)
 {
     m_meshes.push_back(mesh);
@@ -151,7 +169,18 @@ void Scene::remove_mesh(Mesh* mesh)
     if(p == m_meshes.end()) {
         return;
     }
+    (*p)->link_parent(NULL);
+    (*p)->unlink_children();
     m_meshes.erase(p);
+}
+
+Material* Scene::find_material(std::string name)
+{
+    materials_t::iterator p = std::find_if(m_materials.begin(), m_materials.end(), FindByName(name));
+    if(p == m_materials.end()) {
+        return NULL;
+    }
+    return *p;
 }
 
 void Scene::add_material(Material* material)
@@ -161,11 +190,21 @@ void Scene::add_material(Material* material)
 
 void Scene::remove_material(Material* material)
 {
+    // TODO: should check for existing references
     materials_t::iterator p = std::find(m_materials.begin(), m_materials.end(), material);
     if(p == m_materials.end()) {
         return;
     }
     m_materials.erase(p);
+}
+
+Texture* Scene::find_texture(std::string name)
+{
+    textures_t::iterator p = std::find_if(m_textures.begin(), m_textures.end(), FindByName(name));
+    if(p == m_textures.end()) {
+        return NULL;
+    }
+    return *p;
 }
 
 void Scene::add_texture(Texture* texture)
@@ -175,6 +214,7 @@ void Scene::add_texture(Texture* texture)
 
 void Scene::remove_texture(Texture* texture)
 {
+    // TODO: should check for existing references
     textures_t::iterator p = std::find(m_textures.begin(), m_textures.end(), texture);
     if(p == m_textures.end()) {
         return;
