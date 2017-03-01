@@ -26,7 +26,7 @@ public:
          size_t      num_tri);
     virtual ~Mesh();
     void resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry = false);
-    void merge(MeshIFace* other, bool include_tex_coords = false);
+    void merge(const MeshIFace* other, bool copy_tex_coords = false);
 
     size_t get_num_vertex() const
     {
@@ -71,6 +71,9 @@ public:
 
     // NOTE: strangely required by pure virtual (already defined in base class!)
     void get_min_max(glm::vec3* min, glm::vec3* max) const;
+
+    // NOTE: strangely required by pure virtual (already defined in base class!)
+    glm::vec3 in_abs_system(glm::vec3 local_point = glm::vec3(0));
 
     void init_buffers();
     void update_buffers() const;

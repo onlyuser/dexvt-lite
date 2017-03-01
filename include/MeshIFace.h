@@ -17,7 +17,7 @@ public:
     virtual bool       is_smooth() const = 0;
     virtual void       set_smooth(bool smooth) = 0;
     virtual void       resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry = false) = 0;
-    virtual void       merge(MeshIFace* other, bool include_tex_coords = false) = 0;
+    virtual void       merge(const MeshIFace* other, bool copy_tex_coords = false) = 0;
     virtual Material*  get_material() const = 0;
     virtual size_t     get_num_vertex() const = 0;
     virtual size_t     get_num_tri() const = 0;
@@ -34,6 +34,7 @@ public:
     virtual void       update_bbox() = 0;
     virtual void       update_normals_and_tangents() = 0;
     virtual void       get_min_max(glm::vec3* min, glm::vec3* max) const = 0;
+    virtual glm::vec3  in_abs_system(glm::vec3 local_point = glm::vec3(0)) = 0;
     virtual void       set_axis(glm::vec3 axis) = 0;
     virtual void       center_axis(BBoxObject::align_t align = BBoxObject::ALIGN_CENTER) = 0;
 };

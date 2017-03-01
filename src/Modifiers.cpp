@@ -13,6 +13,7 @@ Mesh* _mesh(MeshIFace* mesh);
 
 void mesh_attach(Scene* scene, MeshIFace* mesh1, MeshIFace* mesh2)
 {
+    mesh2->set_axis(mesh1->in_abs_system());
     mesh2->merge(mesh1, mesh1->get_material() == mesh2->get_material());
     scene->remove_mesh(_mesh(mesh1));
 }

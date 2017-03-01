@@ -139,7 +139,7 @@ void Mesh::resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry
     }
 }
 
-void Mesh::merge(MeshIFace* other, bool include_tex_coords)
+void Mesh::merge(const MeshIFace* other, bool copy_tex_coords)
 {
     size_t prev_num_vertex  = get_num_vertex();
     size_t prev_num_tri     = get_num_tri();
@@ -153,7 +153,7 @@ void Mesh::merge(MeshIFace* other, bool include_tex_coords)
         set_vert_normal(prev_num_vertex + i,  other->get_vert_normal(i));
         set_vert_tangent(prev_num_vertex + i, other->get_vert_tangent(i));
     }
-    if(include_tex_coords) {
+    if(copy_tex_coords) {
         for(int j = 0; j < static_cast<int>(other_num_vertex); j++) {
             set_tex_coord(prev_num_vertex + j, other->get_tex_coord(j));
         }
@@ -301,6 +301,12 @@ void Mesh::update_normals_and_tangents()
 void Mesh::get_min_max(glm::vec3* min, glm::vec3* max) const
 {
     BBoxObject::get_min_max(min, max);
+}
+
+// NOTE: strangely required by pure virtual (already defined in base class!)
+glm::vec3 Mesh::in_abs_system(glm::vec3 local_point)
+{
+    return XformObject::in_abs_system(local_point);
 }
 
 void Mesh::init_buffers()
