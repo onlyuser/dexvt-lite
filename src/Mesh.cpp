@@ -51,12 +51,12 @@ Mesh::Mesh(std::string name,
 
 Mesh::~Mesh()
 {
-    if(m_vert_coords)              { delete []m_vert_coords; }
-    if(m_vert_normal)              { delete []m_vert_normal; }
-    if(m_vert_tangent)             { delete []m_vert_tangent; }
-    if(m_tex_coords)               { delete []m_tex_coords; }
-    if(m_tri_indices)              { delete []m_tri_indices; }
-    if(m_ambient_color)            { delete []m_ambient_color; }
+    if(m_vert_coords)              { delete[] m_vert_coords; }
+    if(m_vert_normal)              { delete[] m_vert_normal; }
+    if(m_vert_tangent)             { delete[] m_vert_tangent; }
+    if(m_tex_coords)               { delete[] m_tex_coords; }
+    if(m_tri_indices)              { delete[] m_tri_indices; }
+    if(m_ambient_color)            { delete[] m_ambient_color; }
     if(m_vbo_vert_coords)          { delete m_vbo_vert_coords; }
     if(m_vbo_vert_normal)          { delete m_vbo_vert_normal; }
     if(m_vbo_vert_tangent)         { delete m_vbo_vert_tangent; }
@@ -95,11 +95,11 @@ void Mesh::resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry
             }
         }
     }
-    if(m_vert_coords)              { delete []m_vert_coords; }
-    if(m_vert_normal)              { delete []m_vert_normal; }
-    if(m_vert_tangent)             { delete []m_vert_tangent; }
-    if(m_tex_coords)               { delete []m_tex_coords; }
-    if(m_tri_indices)              { delete []m_tri_indices; }
+    if(m_vert_coords)              { delete[] m_vert_coords; }
+    if(m_vert_normal)              { delete[] m_vert_normal; }
+    if(m_vert_tangent)             { delete[] m_vert_tangent; }
+    if(m_tex_coords)               { delete[] m_tex_coords; }
+    if(m_tri_indices)              { delete[] m_tri_indices; }
     if(m_vbo_vert_coords)          { delete m_vbo_vert_coords;          m_vbo_vert_coords = NULL; }
     if(m_vbo_vert_normal)          { delete m_vbo_vert_normal;          m_vbo_vert_normal = NULL; }
     if(m_vbo_vert_tangent)         { delete m_vbo_vert_tangent;         m_vbo_vert_tangent = NULL; }
@@ -125,16 +125,16 @@ void Mesh::resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry
                 set_vert_tangent(i, new_vert_tangent[i]);
                 set_tex_coord(i,    new_tex_coord[i]);
             }
-            delete []new_vert_coord;
-            delete []new_vert_normal;
-            delete []new_vert_tangent;
-            delete []new_tex_coord;
+            delete[] new_vert_coord;
+            delete[] new_vert_normal;
+            delete[] new_vert_tangent;
+            delete[] new_tex_coord;
         }
         if(new_tri_indices) {
             for(int i = 0; i < static_cast<int>(num_tri); i++) {
                 set_tri_indices(i, new_tri_indices[i]);
             }
-            delete []new_tri_indices;
+            delete[] new_tri_indices;
         }
     }
 }

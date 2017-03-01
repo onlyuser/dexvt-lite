@@ -207,8 +207,6 @@ int init_resources()
         }
         i++;
     }
-    //vt::mesh_tessellate(ik_meshes[0], vt::TESSELLATION_EDGE_CENTER);
-    //vt::mesh_tessellate(ik_meshes[0], vt::TESSELLATION_TRI_CENTER);
 
     vt::Scene::instance()->m_debug_target = targets[target_index];
 

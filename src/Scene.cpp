@@ -104,16 +104,16 @@ Scene::~Scene()
         delete *s;
     }
     if(m_light_pos) {
-        delete []m_light_pos;
+        delete[] m_light_pos;
     }
     if(m_light_color) {
-        delete []m_light_color;
+        delete[] m_light_color;
     }
     if(m_light_enabled) {
-        delete []m_light_enabled;
+        delete[] m_light_enabled;
     }
     if(m_ssao_sample_kernel_pos) {
-        delete []m_ssao_sample_kernel_pos;
+        delete[] m_ssao_sample_kernel_pos;
     }
 }
 

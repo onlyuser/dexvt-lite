@@ -506,7 +506,7 @@ int init_resources()
 int deinit_resources()
 {
     if(height_map_pixel_data) {
-        delete []height_map_pixel_data;
+        delete[] height_map_pixel_data;
     }
     return 1;
 }

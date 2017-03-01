@@ -135,7 +135,7 @@ void File3ds::read_vertices(FILE* stream, MeshIFace* mesh)
         fread(vert_coord, sizeof(float), 3, stream);
         mesh->set_vert_coord(i, glm::vec3(vert_coord[0], vert_coord[2], vert_coord[1]));
     }
-    delete []vert_coord;
+    delete[] vert_coord;
 }
 
 void File3ds::read_faces(FILE* stream, MeshIFace* mesh)
@@ -148,7 +148,7 @@ void File3ds::read_faces(FILE* stream, MeshIFace* mesh)
         mesh->set_tri_indices(i, glm::ivec3(tri_indices[0], tri_indices[2], tri_indices[1]));
         fseek(stream, sizeof(uint16_t), SEEK_CUR); // skip tri_indices info
     }
-    delete []tri_indices;
+    delete[] tri_indices;
 }
 
 uint16_t File3ds::read_short(FILE* stream)
