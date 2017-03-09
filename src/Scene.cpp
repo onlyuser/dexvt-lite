@@ -26,6 +26,16 @@
 #define TARGET_RADIUS           0.125
 #define TARGETS_RADIUS          0.0625
 
+#define BROKEN_EDGE_ALPHA 0.25f
+
+#define draw_broken_edge(p1, p2, m1, m2) \
+        m1 = LERP(p1, p2, BROKEN_EDGE_ALPHA); \
+        m2 = LERP(p1, p2, 1 - BROKEN_EDGE_ALPHA); \
+        glVertex3fv(&p1.x); \
+        glVertex3fv(&m1.x); \
+        glVertex3fv(&m2.x); \
+        glVertex3fv(&p2.x);
+
 namespace vt {
 
 Scene::Scene()
@@ -625,44 +635,25 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
 
             glColor3f(1, 0, 0);
 
+            glm::vec3 m1, m2;
+
             // back quad
-            glVertex3fv(&llb.x);
-            glVertex3fv(&lrb.x);
-
-            glVertex3fv(&lrb.x);
-            glVertex3fv(&urb.x);
-
-            glVertex3fv(&urb.x);
-            glVertex3fv(&ulb.x);
-
-            glVertex3fv(&ulb.x);
-            glVertex3fv(&llb.x);
+            draw_broken_edge(llb, lrb, m1, m2);
+            draw_broken_edge(lrb, urb, m1, m2);
+            draw_broken_edge(urb, ulb, m1, m2);
+            draw_broken_edge(ulb, llb, m1, m2);
 
             // front quad
-            glVertex3fv(&llf.x);
-            glVertex3fv(&lrf.x);
-
-            glVertex3fv(&lrf.x);
-            glVertex3fv(&urf.x);
-
-            glVertex3fv(&urf.x);
-            glVertex3fv(&ulf.x);
-
-            glVertex3fv(&ulf.x);
-            glVertex3fv(&llf.x);
+            draw_broken_edge(llf, lrf, m1, m2);
+            draw_broken_edge(lrf, urf, m1, m2);
+            draw_broken_edge(urf, ulf, m1, m2);
+            draw_broken_edge(ulf, llf, m1, m2);
 
             // back to front segments
-            glVertex3fv(&llb.x);
-            glVertex3fv(&llf.x);
-
-            glVertex3fv(&lrb.x);
-            glVertex3fv(&lrf.x);
-
-            glVertex3fv(&urb.x);
-            glVertex3fv(&urf.x);
-
-            glVertex3fv(&ulb.x);
-            glVertex3fv(&ulf.x);
+            draw_broken_edge(llb, llf, m1, m2);
+            draw_broken_edge(lrb, lrf, m1, m2);
+            draw_broken_edge(urb, urf, m1, m2);
+            draw_broken_edge(ulb, ulf, m1, m2);
 
             glEnd();
             glLineWidth(1);

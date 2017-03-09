@@ -12,7 +12,7 @@
 #define EPSILON 0.0001
 
 #define SIGN(x)             (!(x) ? 0 : (((x) > 0) ? 1 : -1))
-#define LERP(p1, p2, alpha) ((p1) + ((p2) - (p1)) * alpha)
+#define LERP(p1, p2, alpha) ((p1) + ((p2) - (p1)) * (alpha))
 
 #define MAKEWORD(a, b) ((uint16_t)(((uint8_t)(a))  | (((uint16_t)((uint8_t)(b))) << 8)))
 #define MAKELONG(a, b) ((uint32_t)(((uint16_t)(a)) | (((uint32_t)((uint16_t)(b))) << 16)))
