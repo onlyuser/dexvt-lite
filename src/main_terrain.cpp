@@ -126,6 +126,7 @@ static vt::Mesh* create_terrain(std::string     name,
         vertex.y = static_cast<float>(shade) / 255 * height;
         terrain->set_vert_coord(i, vertex);
     }
+    terrain->update_normals_and_tangents();
     terrain->center_axis();
     terrain->set_origin(glm::vec3(0));
     return terrain;
