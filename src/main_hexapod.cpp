@@ -300,14 +300,14 @@ void onTick()
     if(up_key) {
         glm::vec3 body_orient = body->get_orient();
         body->set_orient(glm::vec3(ORIENT_ROLL(body_orient),
-                                   ORIENT_PITCH(body_orient) + BODY_ANGLE_SPEED,
+                                   ORIENT_PITCH(body_orient) - BODY_ANGLE_SPEED,
                                    ORIENT_YAW(body_orient)));
         user_input = true;
     }
     if(down_key) {
         glm::vec3 body_orient = body->get_orient();
         body->set_orient(glm::vec3(ORIENT_ROLL(body_orient),
-                                   ORIENT_PITCH(body_orient) - BODY_ANGLE_SPEED,
+                                   ORIENT_PITCH(body_orient) + BODY_ANGLE_SPEED,
                                    ORIENT_YAW(body_orient)));
         user_input = true;
     }
