@@ -459,9 +459,10 @@ void Mesh::set_ambient_color(glm::vec3 ambient_color)
 void Mesh::xform_vertices(glm::mat4 xform)
 {
     for(int i = 0; i < static_cast<int>(m_num_vertex); i++) {
-        set_vert_coord(i, glm::vec3(xform * glm::vec4(get_vert_coord(i), 1)));
+        set_vert_coord(i,   glm::vec3(xform * glm::vec4(get_vert_coord(i),   1)));
+        set_vert_normal(i,  glm::vec3(xform * glm::vec4(get_vert_normal(i),  1)));
+        set_vert_tangent(i, glm::vec3(xform * glm::vec4(get_vert_tangent(i), 1)));
     }
-    update_normals_and_tangents();
     update_bbox();
 }
 

@@ -54,7 +54,7 @@ int init_screen_width = 800, init_screen_height = 600;
 vt::Camera* camera;
 vt::Mesh *mesh_skybox;
 vt::Light *light, *light2, *light3;
-vt::Texture *texture_box_color, *texture_box_normal, *texture_skybox;
+vt::Texture *texture_skybox;
 
 bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
@@ -78,7 +78,6 @@ bool page_up_key = false;
 bool page_down_key = false;
 bool user_input = true;
 
-int texture_id = 0;
 float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 
 int angle_delta = 1;
@@ -145,12 +144,6 @@ int init_resources()
             true); // use_overlay
     scene->add_material(skybox_material);
 
-    vt::Material* bump_mapped_material = new vt::Material(
-            "bump_mapped",
-            "src/shaders/bump_mapped.v.glsl",
-            "src/shaders/bump_mapped.f.glsl");
-    scene->add_material(bump_mapped_material);
-
     vt::Material* phong_material = new vt::Material(
             "phong",
             "src/shaders/phong.v.glsl",
@@ -167,18 +160,6 @@ int init_resources()
             "data/SaintPetersSquare2/negz.png");
     scene->add_texture(          texture_skybox);
     skybox_material->add_texture(texture_skybox);
-
-    texture_box_color = new vt::Texture(
-            "chesterfield_color",
-            "data/chesterfield_color.png");
-    scene->add_texture(               texture_box_color);
-    bump_mapped_material->add_texture(texture_box_color);
-
-    texture_box_normal = new vt::Texture(
-            "chesterfield_normal",
-            "data/chesterfield_normal.png");
-    scene->add_texture(               texture_box_normal);
-    bump_mapped_material->add_texture(texture_box_normal);
 
     glm::vec3 origin = glm::vec3();
     camera = new vt::Camera("camera", origin + glm::vec3(0, 0, orbit_radius), origin);

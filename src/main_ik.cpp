@@ -47,6 +47,9 @@
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define IK_ITERS                     50
 #define IK_SEGMENT_COUNT             5
+#define IK_SEGMENT_HEIGHT            0.25
+#define IK_SEGMENT_LENGTH            1
+#define IK_SEGMENT_WIDTH             0.25
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
@@ -191,7 +194,13 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    create_linked_boxes(scene, &ik_meshes, IK_SEGMENT_COUNT, "ik_box", glm::vec3(0.25, 0.25, 1));
+    create_linked_boxes(scene,
+                        &ik_meshes,
+                        IK_SEGMENT_COUNT,
+                        "ik_box",
+                        glm::vec3(IK_SEGMENT_WIDTH,
+                                  IK_SEGMENT_HEIGHT,
+                                  IK_SEGMENT_LENGTH));
     if(ik_meshes.size()) {
         ik_meshes[0]->set_origin(glm::vec3(0));
     }
@@ -279,7 +288,7 @@ void onTick()
             }
         }
         ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[1],
-                                                      glm::vec3(0, 0, 1),
+                                                      glm::vec3(0, 0, IK_SEGMENT_LENGTH),
                                                       targets[target_index],
                                                       angle_constraint ? &end_effector_orient : NULL,
                                                       IK_ITERS,

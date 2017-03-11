@@ -77,7 +77,7 @@ int init_screen_width = 800, init_screen_height = 600;
 vt::Camera* camera;
 vt::Mesh *mesh_skybox;
 vt::Light *light, *light2, *light3;
-vt::Texture *texture_box_color, *texture_box_normal, *texture_skybox;
+vt::Texture *texture_skybox;
 
 bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
@@ -101,7 +101,6 @@ bool page_up_key = false;
 bool page_down_key = false;
 bool user_input = true;
 
-int texture_id = 0;
 float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 
 int angle_delta = 1;
@@ -377,12 +376,6 @@ int init_resources()
             true); // use_overlay
     scene->add_material(skybox_material);
 
-    vt::Material* bump_mapped_material = new vt::Material(
-            "bump_mapped",
-            "src/shaders/bump_mapped.v.glsl",
-            "src/shaders/bump_mapped.f.glsl");
-    scene->add_material(bump_mapped_material);
-
     vt::Material* phong_material = new vt::Material(
             "phong",
             "src/shaders/phong.v.glsl",
@@ -399,18 +392,6 @@ int init_resources()
             "data/SaintPetersSquare2/negz.png");
     scene->add_texture(          texture_skybox);
     skybox_material->add_texture(texture_skybox);
-
-    texture_box_color = new vt::Texture(
-            "chesterfield_color",
-            "data/chesterfield_color.png");
-    scene->add_texture(               texture_box_color);
-    bump_mapped_material->add_texture(texture_box_color);
-
-    texture_box_normal = new vt::Texture(
-            "chesterfield_normal",
-            "data/chesterfield_normal.png");
-    scene->add_texture(               texture_box_normal);
-    bump_mapped_material->add_texture(texture_box_normal);
 
     glm::vec3 origin = glm::vec3();
     camera = new vt::Camera("camera", origin + glm::vec3(0, 0, orbit_radius), origin);
@@ -443,9 +424,7 @@ int init_resources()
     box->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
     box->set_origin(glm::vec3(0));
     vt::Scene::instance()->m_debug_target = box->get_origin();
-    box->set_material(bump_mapped_material);
-    box->set_texture_index(     box->get_material()->get_texture_index_by_name("chesterfield_color"));
-    box->set_bump_texture_index(box->get_material()->get_texture_index_by_name("chesterfield_normal"));
+    box->set_material(phong_material);
     box->set_ambient_color(glm::vec3(0));
     scene->add_mesh(box);
     dummy = vt::PrimitiveFactory::create_box("dummy");
@@ -478,9 +457,7 @@ int init_resources()
                                       IK_SEGMENT_LENGTH));
         int leg_segment_index = 0;
         for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
-            (*p)->set_material(bump_mapped_material);
-            (*p)->set_texture_index(     (*p)->get_material()->get_texture_index_by_name("chesterfield_color"));
-            (*p)->set_bump_texture_index((*p)->get_material()->get_texture_index_by_name("chesterfield_normal"));
+            (*p)->set_material(phong_material);
             (*p)->set_ambient_color(glm::vec3(0));
             if(leg_segment_index == 0) {
                 (*p)->set_enable_orient_constraints(glm::ivec3(1, 1, 0));
