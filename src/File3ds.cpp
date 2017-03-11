@@ -104,6 +104,8 @@ bool File3ds::load3ds_impl(std::string filename, int index, std::vector<MeshIFac
         glm::vec3 global_center = (global_min + global_max) * 0.5f;
         for(std::vector<MeshIFace*>::iterator p = meshes->begin(); p != meshes->end(); p++) {
             (*p)->set_axis(global_center);
+            (*p)->update_normals_and_tangents();
+            (*p)->update_bbox();
         }
     }
     return true;
