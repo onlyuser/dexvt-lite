@@ -38,13 +38,20 @@ TEST_PATH = test
 all : $(BINARIES) resources
 
 #==================
+# bin_only
+#==================
+
+.PHONY : bin_only
+bin_only : $(BINARIES)
+
+#==================
 # for_travis
 #==================
 
 .PHONY : for_travis
 for_travis : CXXFLAGS += -DNO_GLM_CONSTANTS
 
-for_travis : all
+for_travis : bin_only
 	@echo TARGET=$@ CXXFLAGS=${CXXFLAGS}
 
 #==================
