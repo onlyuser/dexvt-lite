@@ -44,6 +44,7 @@ public:
     void set_orient_constraints_center(glm::vec3 orient_constraints_center)               { m_orient_constraints_center = orient_constraints_center; }
     const glm::vec3 &get_orient_constraints_max_deviation() const                         { return m_orient_constraints_max_deviation; }
     void set_orient_constraints_max_deviation(glm::vec3 orient_constraints_max_deviation) { m_orient_constraints_max_deviation = orient_constraints_max_deviation; }
+    void apply_orient_constraints();
 
     // origin constraints
     const glm::ivec3 &get_enable_origin_constraints() const                               { return m_enable_origin_constraints; }
@@ -52,9 +53,6 @@ public:
     void set_origin_constraints_center(glm::vec3 origin_constraints_center)               { m_origin_constraints_center = origin_constraints_center; }
     const glm::vec3 &get_origin_constraints_max_deviation() const                         { return m_origin_constraints_max_deviation; }
     void set_origin_constraints_max_deviation(glm::vec3 origin_constraints_max_deviation) { m_origin_constraints_max_deviation = origin_constraints_max_deviation; }
-
-    // constraints
-    void apply_orient_constraints();
     void apply_origin_constraints();
 
     // coordinate system conversions
