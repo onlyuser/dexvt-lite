@@ -69,6 +69,9 @@ public:
     std::set<XformObject*> &get_children() { return m_children; }
     void unlink_children();
 
+    void set_ik_joint(ik_joint_t ik_joint) { m_ik_joint = ik_joint; }
+    ik_joint_t get_ik_joint() const        { return m_ik_joint; }
+
     // advanced features
     void point_at_local(glm::vec3 local_target, glm::vec3* up_direction = NULL);
     void point_at(glm::vec3 target, glm::vec3* up_direction = NULL);

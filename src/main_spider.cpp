@@ -422,7 +422,7 @@ int init_resources()
     box = vt::PrimitiveFactory::create_box("box", BOX_WIDTH,
                                                   BOX_LENGTH,
                                                   BOX_HEIGHT);
-    box->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
+    box->center_axis(vt::BBoxObject::ALIGN_CENTER);
     box->set_origin(glm::vec3(0));
     vt::Scene::instance()->m_debug_target = box->get_origin();
     box->set_material(phong_material);
