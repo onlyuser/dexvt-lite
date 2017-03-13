@@ -22,7 +22,11 @@ XformObject::XformObject(
       m_enable_orient_constraints(       glm::ivec3(0)),
       m_orient_constraints_center(       glm::vec3(0)),
       m_orient_constraints_max_deviation(glm::vec3(180, 90, 180)),
+      m_enable_origin_constraints(       glm::ivec3(0)),
+      m_origin_constraints_center(       glm::vec3(0)),
+      m_origin_constraints_max_deviation(glm::vec3(0)),
       m_parent(NULL),
+      m_ik_joint(IK_JOINT_REVOLUTE),
       m_is_dirty_xform(true),
       m_is_dirty_normal_xform(true)
 {
@@ -35,13 +39,14 @@ XformObject::~XformObject()
 void XformObject::set_origin(glm::vec3 origin)
 {
     m_origin = origin;
+    apply_origin_constraints();
     mark_dirty_xform();
 }
 
 void XformObject::set_orient(glm::vec3 orient)
 {
     m_orient = orient;
-    apply_constraints();
+    apply_orient_constraints();
     mark_dirty_xform();
 }
 
@@ -59,7 +64,7 @@ void XformObject::reset_xform()
     mark_dirty_xform();
 }
 
-void XformObject::apply_constraints()
+void XformObject::apply_orient_constraints()
 {
     for(int i = 0; i < 3; i++) {
         if(!m_enable_orient_constraints[i]) {
@@ -74,6 +79,26 @@ void XformObject::apply_constraints()
                 m_orient[i] = min_angle;
             } else {
                 m_orient[i] = max_angle;
+            }
+        }
+    }
+}
+
+void XformObject::apply_origin_constraints()
+{
+    for(int i = 0; i < 3; i++) {
+        if(!m_enable_origin_constraints[i]) {
+            continue;
+        }
+        if(fabs(m_origin[i] - m_origin_constraints_center[i]) > m_origin_constraints_max_deviation[i]) {
+            float min_pos = m_origin_constraints_center[i] - m_origin_constraints_max_deviation[i];
+            float max_pos = m_origin_constraints_center[i] + m_origin_constraints_max_deviation[i];
+            float distance_to_lower_bound = fabs(m_origin[i] - min_pos);
+            float distance_to_upper_bound = fabs(m_origin[i] - max_pos);
+            if(distance_to_lower_bound < distance_to_upper_bound) {
+                m_origin[i] = min_pos;
+            } else {
+                m_origin[i] = max_pos;
             }
         }
     }
@@ -204,6 +229,9 @@ bool XformObject::solve_ik_ccd(XformObject* root,
                 tmp_target = in_abs_system() + *end_effector_dir;
             } else {
                 tmp_target = target;
+            }
+            if(m_ik_joint != IK_JOINT_REVOLUTE) { // TODO: add prismatic joint support
+                continue;
             }
 #if 1
             glm::vec3 local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(tmp_target));
