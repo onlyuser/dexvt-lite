@@ -230,7 +230,8 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             } else {
                 tmp_target = target;
             }
-            if(m_ik_joint != IK_JOINT_REVOLUTE) { // TODO: add prismatic joint support
+            if(current_segment->get_ik_joint() == IK_JOINT_PRISMATIC) {
+                current_segment->set_origin(current_segment->get_origin() + (tmp_target - end_effector_tip));
                 continue;
             }
 #if 1

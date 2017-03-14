@@ -443,10 +443,9 @@ ShaderContext* Mesh::get_ssao_shader_context(Material* ssao_material)
 
 glm::vec3 Mesh::get_ambient_color() const
 {
-    return glm::vec3(
-            m_ambient_color[0],
-            m_ambient_color[1],
-            m_ambient_color[2]);
+    return glm::vec3(m_ambient_color[0],
+                     m_ambient_color[1],
+                     m_ambient_color[2]);
 }
 
 void Mesh::set_ambient_color(glm::vec3 ambient_color)
@@ -458,7 +457,7 @@ void Mesh::set_ambient_color(glm::vec3 ambient_color)
 
 void Mesh::xform_vertices(glm::mat4 xform)
 {
-    glm::mat4 normal_xform(glm::transpose(glm::inverse(xform)));
+    glm::mat4 normal_xform = glm::transpose(glm::inverse(xform));
     for(int i = 0; i < static_cast<int>(m_num_vertex); i++) {
         set_vert_coord(i,   glm::vec3(xform        * glm::vec4(get_vert_coord(i),   1)));
         set_vert_normal(i,  glm::vec3(normal_xform * glm::vec4(get_vert_normal(i),  1)));
