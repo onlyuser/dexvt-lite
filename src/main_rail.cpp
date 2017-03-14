@@ -45,13 +45,18 @@
 
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
-#define HBAR_LENGTH                  5
+#define IK_BASE_HEIGHT               0.5
+#define IK_BASE_LENGTH               0.5
+#define IK_BASE_WIDTH                0.5
+#define IK_HRAIL_LENGTH              5
 #define IK_ITERS                     50
+#define IK_RAIL_HEIGHT               0.25
+#define IK_RAIL_WIDTH                0.125
 #define IK_SEGMENT_COUNT             3
 #define IK_SEGMENT_HEIGHT            0.25
 #define IK_SEGMENT_LENGTH            1
 #define IK_SEGMENT_WIDTH             0.25
-#define VBAR_LENGTH                  5
+#define IK_VRAIL_LENGTH              5
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
@@ -98,8 +103,9 @@ glm::vec3 targets[] = {glm::vec3( 1,  1,  1),
                        glm::vec3(-1, -1, -1),
                        glm::vec3(-1, -1,  1)};
 
-vt::Mesh* ik_hbar;
-vt::Mesh* ik_vbar;
+vt::Mesh* ik_hrail;
+vt::Mesh* ik_vrail;
+vt::Mesh* ik_base;
 
 std::vector<vt::Mesh*> ik_meshes;
 
@@ -198,26 +204,36 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    ik_hbar = vt::PrimitiveFactory::create_box("hbar");
-    scene->add_mesh(ik_hbar);
-    ik_hbar->center_axis();
-    ik_hbar->set_origin(glm::vec3(0));
-    ik_hbar->set_scale(glm::vec3(HBAR_LENGTH, IK_SEGMENT_HEIGHT, IK_SEGMENT_WIDTH));
-    ik_hbar->rebase();
-    ik_hbar->set_material(phong_material);
-    ik_hbar->set_ambient_color(glm::vec3(0));
-    ik_hbar->set_ik_joint(vt::XformObject::IK_JOINT_PRISMATIC);
+    ik_hrail = vt::PrimitiveFactory::create_box("hrail");
+    scene->add_mesh(ik_hrail);
+    ik_hrail->center_axis();
+    ik_hrail->set_origin(glm::vec3(0));
+    ik_hrail->set_scale(glm::vec3(IK_HRAIL_LENGTH, IK_RAIL_HEIGHT, IK_RAIL_WIDTH));
+    ik_hrail->rebase();
+    ik_hrail->set_material(phong_material);
+    ik_hrail->set_ambient_color(glm::vec3(0));
+    ik_hrail->set_ik_joint(vt::XformObject::IK_JOINT_PRISMATIC);
 
-    ik_vbar = vt::PrimitiveFactory::create_box("vbar");
-    scene->add_mesh(ik_vbar);
-    ik_vbar->center_axis();
-    ik_vbar->set_origin(glm::vec3(0));
-    ik_vbar->set_scale(glm::vec3(IK_SEGMENT_WIDTH, IK_SEGMENT_HEIGHT, VBAR_LENGTH));
-    ik_vbar->rebase();
-    ik_vbar->set_material(phong_material);
-    ik_vbar->set_ambient_color(glm::vec3(0));
-    ik_vbar->link_parent(ik_hbar);
-    ik_vbar->set_ik_joint(vt::XformObject::IK_JOINT_PRISMATIC);
+    ik_vrail = vt::PrimitiveFactory::create_box("vrail");
+    scene->add_mesh(ik_vrail);
+    ik_vrail->center_axis();
+    ik_vrail->set_origin(glm::vec3(0));
+    ik_vrail->set_scale(glm::vec3(IK_RAIL_WIDTH, IK_RAIL_HEIGHT, IK_VRAIL_LENGTH));
+    ik_vrail->rebase();
+    ik_vrail->set_material(phong_material);
+    ik_vrail->set_ambient_color(glm::vec3(0));
+    ik_vrail->link_parent(ik_hrail);
+    ik_vrail->set_ik_joint(vt::XformObject::IK_JOINT_PRISMATIC);
+
+    ik_base = vt::PrimitiveFactory::create_box("base");
+    scene->add_mesh(ik_base);
+    ik_base->center_axis();
+    ik_base->set_origin(glm::vec3(0));
+    ik_base->set_scale(glm::vec3(IK_BASE_WIDTH, IK_BASE_HEIGHT, IK_BASE_LENGTH));
+    ik_base->rebase();
+    ik_base->set_material(phong_material);
+    ik_base->set_ambient_color(glm::vec3(0));
+    ik_base->link_parent(ik_vrail);
 
     create_linked_boxes(scene,
                         &ik_meshes,
@@ -229,7 +245,7 @@ int init_resources()
     if(ik_meshes.size()) {
         ik_meshes[0]->set_origin(glm::vec3(0));
     }
-    ik_meshes[0]->link_parent(ik_vbar);
+    ik_meshes[0]->link_parent(ik_base);
     int leg_segment_index = 0;
     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
         (*p)->set_material(bump_mapped_material);
@@ -365,15 +381,15 @@ void onKeyboard(unsigned char key, int x, int y)
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
-                ik_hbar->set_ambient_color(glm::vec3(1));
-                ik_vbar->set_ambient_color(glm::vec3(1));
+                ik_hrail->set_ambient_color(glm::vec3(1));
+                ik_vrail->set_ambient_color(glm::vec3(1));
                 for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                     (*p)->set_ambient_color(glm::vec3(1));
                 }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
-                ik_hbar->set_ambient_color(glm::vec3(0));
-                ik_vbar->set_ambient_color(glm::vec3(0));
+                ik_hrail->set_ambient_color(glm::vec3(0));
+                ik_vrail->set_ambient_color(glm::vec3(0));
                 for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                     (*p)->set_ambient_color(glm::vec3(0));
                 }

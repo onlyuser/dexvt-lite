@@ -9,7 +9,7 @@ LIB_PATH = $(EXTERN_LIB_PATH)
 SRC_PATH = src
 BUILD_PATH = build
 BIN_PATH = bin
-BIN_STEMS = main_ik main_boids main_hexapod main_terrain main_spider main_freerot main_track
+BIN_STEMS = main_ik main_boids main_hexapod main_terrain main_spider main_freerot main_rail
 BINARIES = $(patsubst %, $(BIN_PATH)/%, $(BIN_STEMS))
 
 INCLUDE_PATHS = $(INCLUDE_PATH) $(EXTERN_INCLUDE_PATH)
@@ -80,7 +80,7 @@ CPP_STEMS_HEXAPOD = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Lig
 CPP_STEMS_TERRAIN = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_terrain Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 CPP_STEMS_SPIDER  = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_spider  Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 CPP_STEMS_FREEROT = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_freerot Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
-CPP_STEMS_TRACK   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_track   Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_TRACK   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_rail   Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 OBJECTS_IK      = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK))
 OBJECTS_BOIDS   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_BOIDS))
 OBJECTS_HEXAPOD = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_HEXAPOD))
@@ -107,7 +107,7 @@ $(BIN_PATH)/main_spider : $(OBJECTS_SPIDER)
 $(BIN_PATH)/main_freerot : $(OBJECTS_FREEROT)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
-$(BIN_PATH)/main_track : $(OBJECTS_TRACK)
+$(BIN_PATH)/main_rail : $(OBJECTS_TRACK)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
