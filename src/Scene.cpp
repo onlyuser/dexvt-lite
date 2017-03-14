@@ -26,7 +26,7 @@
 #define TARGET_RADIUS           0.125
 #define TARGETS_RADIUS          0.0625
 
-#define BROKEN_EDGE_ALPHA 0.25f
+#define BROKEN_EDGE_ALPHA 0.125f
 
 #define draw_broken_edge(p1, p2, m1, m2) \
         m1 = LERP(p1, p2, BROKEN_EDGE_ALPHA); \
