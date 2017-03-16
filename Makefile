@@ -68,7 +68,7 @@ $(BUILD_PATH)/%.o : $(SRC_PATH)/%.c
 
 .PHONY : clean_objects
 clean_objects :
-	-rm $(OBJECTS_IK) $(OBJECTS_BOIDS) $(OBJECTS_HEXAPOD) $(OBJECTS_TERRAIN) $(OBJECTS_SPIDER) $(OBJECTS_FREEROT) $(OBJECTS_TRACK)
+	-rm $(OBJECTS_IK) $(OBJECTS_BOIDS) $(OBJECTS_HEXAPOD) $(OBJECTS_TERRAIN) $(OBJECTS_SPIDER) $(OBJECTS_FREEROT) $(OBJECTS_RAIL)
 
 #==================
 # binaries
@@ -80,14 +80,14 @@ CPP_STEMS_HEXAPOD = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Lig
 CPP_STEMS_TERRAIN = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_terrain Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 CPP_STEMS_SPIDER  = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_spider  Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 CPP_STEMS_FREEROT = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_freerot Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
-CPP_STEMS_TRACK   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_rail   Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_RAIL    = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_rail    Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
 OBJECTS_IK      = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK))
 OBJECTS_BOIDS   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_BOIDS))
 OBJECTS_HEXAPOD = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_HEXAPOD))
 OBJECTS_TERRAIN = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_TERRAIN))
 OBJECTS_SPIDER  = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_SPIDER))
 OBJECTS_FREEROT = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_FREEROT))
-OBJECTS_TRACK   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_TRACK))
+OBJECTS_RAIL    = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_RAIL))
 
 $(BIN_PATH)/main_ik : $(OBJECTS_IK)
 	mkdir -p $(BIN_PATH)
@@ -107,7 +107,7 @@ $(BIN_PATH)/main_spider : $(OBJECTS_SPIDER)
 $(BIN_PATH)/main_freerot : $(OBJECTS_FREEROT)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
-$(BIN_PATH)/main_rail : $(OBJECTS_TRACK)
+$(BIN_PATH)/main_rail : $(OBJECTS_RAIL)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
