@@ -231,7 +231,8 @@ bool XformObject::solve_ik_ccd(XformObject* root,
                 tmp_target = target;
             }
             if(current_segment->get_ik_joint() == IK_JOINT_PRISMATIC) {
-                current_segment->set_origin(current_segment->get_origin() + (tmp_target - end_effector_tip));
+                current_segment->set_origin(current_segment->get_origin() + (current_segment->from_origin_in_parent_system(tmp_target) -
+                                                                             current_segment->from_origin_in_parent_system(end_effector_tip)));
                 continue;
             }
 #if 1

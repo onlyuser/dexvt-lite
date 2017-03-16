@@ -48,15 +48,15 @@
 #define BODY_ANGLE_SPEED             2.0
 #define BODY_DEFAULT_PITCH           -90
 #define BODY_HEIGHT                  0.25
-#define BODY_LEVITATION_HEIGHT       1
+#define BODY_LEVITATION_HEIGHT       2
 #define BODY_SPEED                   0.05f
-#define IK_FOOTING_RADIUS            2.5
+#define IK_FOOTING_RADIUS            1
 #define IK_ITERS                     50
 #define IK_LEG_COUNT                 6
 #define IK_LEG_RADIUS                1
-#define IK_SEGMENT_COUNT             3
+#define IK_SEGMENT_COUNT             2
 #define IK_SEGMENT_HEIGHT            0.25
-#define IK_SEGMENT_LENGTH            1
+#define IK_SEGMENT_LENGTH            1.5
 #define IK_SEGMENT_WIDTH             0.25
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
@@ -100,6 +100,7 @@ glm::vec3 targets[] = {glm::vec3( 1, -1,  1),
                        glm::vec3(-1, -1,  1)};
 
 vt::Mesh* body;
+vt::Mesh* base;
 vt::Mesh* dummy;
 
 struct IK_Leg
@@ -188,7 +189,7 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    body = vt::PrimitiveFactory::create_cylinder("body", IK_LEG_COUNT, IK_LEG_RADIUS, BODY_HEIGHT);
+    body = vt::PrimitiveFactory::create_cylinder("body", IK_LEG_COUNT * 0.5, IK_LEG_RADIUS, BODY_HEIGHT);
     //body->center_axis(vt::BBoxObject::ALIGN_CENTER);
     body->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
     body->set_origin(glm::vec3(0));
@@ -200,6 +201,18 @@ int init_resources()
     body->set_ambient_color(glm::vec3(0));
     scene->add_mesh(body);
 
+    base = vt::PrimitiveFactory::create_cylinder("base", IK_LEG_COUNT * 0.5, IK_LEG_RADIUS, BODY_HEIGHT);
+    //body->center_axis(vt::BBoxObject::ALIGN_CENTER);
+    base->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
+    base->set_origin(glm::vec3(0));
+    base->set_orient(glm::vec3(0, 90, 0));
+    base->rebase();
+    base->set_origin(glm::vec3(0, -BODY_LEVITATION_HEIGHT, 0));
+    base->set_orient(glm::vec3(0, BODY_DEFAULT_PITCH, 360 / IK_LEG_COUNT));
+    base->set_material(phong_material);
+    base->set_ambient_color(glm::vec3(0));
+    scene->add_mesh(base);
+
     dummy = vt::PrimitiveFactory::create_box("dummy");
     dummy->center_axis();
     dummy->link_parent(body);
@@ -207,8 +220,13 @@ int init_resources()
     dummy->set_orient(glm::vec3(0, 90, 0));
     scene->add_mesh(dummy);
 
-    int angle = 0;
+    int angles[IK_LEG_COUNT];
     for(int i = 0; i < IK_LEG_COUNT; i++) {
+        angles[i] = i * 360 / IK_LEG_COUNT;
+    }
+    for(int i = 0; i < IK_LEG_COUNT; i++) {
+        int from_index = ((i + 1) % IK_LEG_COUNT) / 2 * 2;
+        int to_index   = i / 2 * 2 + 1;
         IK_Leg* ik_leg = new IK_Leg();
         std::stringstream joint_name_ss;
         joint_name_ss << "ik_joint_" << i;
@@ -217,9 +235,9 @@ int init_resources()
                                                                                 IK_SEGMENT_WIDTH);
         ik_leg->m_joint->center_axis();
         ik_leg->m_joint->link_parent(dummy); // one extra layer of xform indirection to convert yaw around z-axis to yaw around y-axis
-        ik_leg->m_joint->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
+        ik_leg->m_joint->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angles[from_index])) * static_cast<float>(IK_LEG_RADIUS));
         scene->add_mesh(ik_leg->m_joint);
-        ik_leg->m_target = vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_FOOTING_RADIUS) + glm::vec3(0, -BODY_LEVITATION_HEIGHT, 0);
+        ik_leg->m_target = vt::orient_to_offset(glm::vec3(0, 0, angles[to_index])) * static_cast<float>(IK_FOOTING_RADIUS) + glm::vec3(0, -BODY_LEVITATION_HEIGHT, 0);
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
         std::stringstream ik_segment_name_ss;
         ik_segment_name_ss << "ik_box_" << i;
@@ -236,18 +254,17 @@ int init_resources()
             (*p)->set_ambient_color(glm::vec3(0));
             if(!leg_segment_index) {
                 (*p)->set_enable_orient_constraints(glm::ivec3(1, 1, 0));
-                (*p)->set_orient_constraints_center(glm::vec3(0, -45, 0));
-                (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 45, 0));
+                (*p)->set_orient_constraints_center(glm::vec3(0, 90, 0));
+                (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 60, 0));
             }
             if(leg_segment_index) {
+                (*p)->set_ik_joint(vt::XformObject::IK_JOINT_PRISMATIC);
+                (*p)->set_enable_origin_constraints(glm::ivec3(1, 1, 0));
                 (*p)->set_enable_orient_constraints(glm::ivec3(1, 1, 1));
-                (*p)->set_orient_constraints_center(glm::vec3(0, 45, 0));
-                (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 45, 0));
             }
             leg_segment_index++;
         }
         ik_legs.push_back(ik_leg);
-        angle += (360 / IK_LEG_COUNT);
     }
 
     vt::Scene::instance()->m_debug_target = targets[target_index];

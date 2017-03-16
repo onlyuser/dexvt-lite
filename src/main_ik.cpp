@@ -114,13 +114,13 @@ static void create_linked_boxes(vt::Scene*              scene,
         std::stringstream ss;
         ss << name << "_" << i;
         vt::Mesh* mesh = vt::PrimitiveFactory::create_box(ss.str());
-        scene->add_mesh(mesh);
         mesh->center_axis();
         mesh->set_origin(glm::vec3(0, 0, z_offset));
         mesh->set_scale(box_dim);
         mesh->rebase();
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
         mesh->link_parent(prev_mesh, true);
+        scene->add_mesh(mesh);
         ik_meshes->push_back(mesh);
         prev_mesh = mesh;
         z_offset += box_dim.z;

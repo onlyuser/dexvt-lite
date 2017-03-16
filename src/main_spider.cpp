@@ -140,13 +140,13 @@ static void create_linked_boxes(vt::Scene*              scene,
         std::stringstream ss;
         ss << name << "_" << i;
         vt::Mesh* mesh = vt::PrimitiveFactory::create_box(ss.str());
-        scene->add_mesh(mesh);
         mesh->center_axis();
         mesh->set_origin(glm::vec3(0, 0, z_offset));
         mesh->set_scale(box_dim);
         mesh->rebase();
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
         mesh->link_parent(prev_mesh, true);
+        scene->add_mesh(mesh);
         ik_meshes->push_back(mesh);
         prev_mesh = mesh;
         z_offset += box_dim.z;
@@ -428,12 +428,14 @@ int init_resources()
     box->set_material(phong_material);
     box->set_ambient_color(glm::vec3(0));
     scene->add_mesh(box);
+
     dummy = vt::PrimitiveFactory::create_box("dummy");
     dummy->center_axis();
     dummy->link_parent(box);
     dummy->set_origin(glm::vec3(0));
     dummy->set_orient(glm::vec3(0, 90, 0));
     scene->add_mesh(dummy);
+
     int angle = 0;
     for(int i = 0; i < IK_LEG_COUNT; i++) {
         IK_Leg* ik_leg = new IK_Leg();
@@ -443,9 +445,9 @@ int init_resources()
                                                                                 IK_SEGMENT_WIDTH,
                                                                                 IK_SEGMENT_WIDTH);
         ik_leg->m_joint->center_axis();
-        scene->add_mesh(ik_leg->m_joint);
         ik_leg->m_joint->link_parent(dummy); // one extra layer of xform indirection to convert yaw around z-axis to yaw around y-axis
         ik_leg->m_joint->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
+        scene->add_mesh(ik_leg->m_joint);
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
         std::stringstream ik_segment_name_ss;
         ik_segment_name_ss << "ik_box_" << i;
