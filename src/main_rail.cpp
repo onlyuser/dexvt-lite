@@ -45,6 +45,7 @@
 
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
+#define GROUND_THICKNESS             0.125
 #define IK_BASE_HEIGHT               0.5
 #define IK_BASE_LENGTH               0.5
 #define IK_BASE_WIDTH                0.5
@@ -206,9 +207,9 @@ int init_resources()
 
     ground = vt::PrimitiveFactory::create_box("ground");
     scene->add_mesh(ground);
-    ground->center_axis();
+    ground->center_axis(vt::BBoxObject::ALIGN_Y_MAX);
     ground->set_origin(glm::vec3(0));
-    ground->set_scale(glm::vec3(IK_RAIL_LENGTH, IK_RAIL_HEIGHT, IK_RAIL_LENGTH));
+    ground->set_scale(glm::vec3(IK_RAIL_LENGTH, GROUND_THICKNESS, IK_RAIL_LENGTH));
     ground->rebase();
     ground->set_origin(glm::vec3(0, -IK_RAIL_HEIGHT, 0));
     ground->set_material(phong_material);
