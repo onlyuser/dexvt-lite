@@ -58,8 +58,8 @@
 #define IK_SEGMENT_HEIGHT            0.125
 #define IK_SEGMENT_LENGTH            1.5
 #define IK_SEGMENT_WIDTH             0.125
-#define PUMP_SIDES                   6
 #define PUMP_SHRINK_FACTOR           0.5
+#define PUMP_SIDES                   6
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
@@ -272,7 +272,9 @@ int init_resources()
             }
             if(leg_segment_index) {
                 (*p)->set_ik_joint(vt::XformObject::IK_JOINT_PRISMATIC);
-                (*p)->set_enable_origin_constraints(glm::ivec3(1, 1, 0));
+                (*p)->set_enable_origin_constraints(glm::ivec3(1, 1, 1));
+                (*p)->set_origin_constraints_center(glm::vec3(0, 0, IK_SEGMENT_LENGTH * 0.5));
+                (*p)->set_origin_constraints_max_deviation(glm::vec3(0, 0, IK_SEGMENT_LENGTH * 0.5));
                 (*p)->set_enable_orient_constraints(glm::ivec3(1, 1, 1));
             }
             leg_segment_index++;
