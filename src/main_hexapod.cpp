@@ -46,7 +46,6 @@
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define BODY_ANGLE_SPEED             2.0
-#define BODY_DEFAULT_PITCH           -90
 #define BODY_HEIGHT                  0.25
 #define BODY_LEVITATION_HEIGHT       1
 #define BODY_SPEED                   0.05f
@@ -101,8 +100,7 @@ glm::vec3 targets[] = {glm::vec3( 1, -1,  1),
                        glm::vec3(-1, -1, -1),
                        glm::vec3(-1, -1,  1)};
 
-vt::Mesh* body  = NULL;
-vt::Mesh* dummy = NULL;
+vt::Mesh* body = NULL;
 
 struct IK_Leg
 {
@@ -179,7 +177,7 @@ int init_resources()
     scene->add_texture(          texture_skybox);
     skybox_material->add_texture(texture_skybox);
 
-    glm::vec3 origin = glm::vec3();
+    glm::vec3 origin = glm::vec3(0, -BODY_LEVITATION_HEIGHT * 0.5, 0);
     camera = new vt::Camera("camera", origin + glm::vec3(0, 0, orbit_radius), origin);
     scene->set_camera(camera);
 
@@ -193,21 +191,9 @@ int init_resources()
     body = vt::PrimitiveFactory::create_cylinder("body", IK_LEG_COUNT, IK_LEG_RADIUS, BODY_HEIGHT);
     //body->center_axis(vt::BBoxObject::ALIGN_CENTER);
     body->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
-    body->set_origin(glm::vec3(0));
-    body->set_orient(glm::vec3(0, 90, 0));
-    body->rebase();
-    body->set_origin(glm::vec3(0));
-    body->set_orient(glm::vec3(0, BODY_DEFAULT_PITCH, 0));
     body->set_material(phong_material);
     body->set_ambient_color(glm::vec3(0));
     scene->add_mesh(body);
-
-    dummy = vt::PrimitiveFactory::create_box("dummy");
-    dummy->center_axis();
-    dummy->link_parent(body);
-    dummy->set_origin(glm::vec3(0));
-    dummy->set_orient(glm::vec3(0, 90, 0));
-    scene->add_mesh(dummy);
 
     int angle = 0;
     for(int i = 0; i < IK_LEG_COUNT; i++) {
@@ -218,7 +204,7 @@ int init_resources()
                                                                                 IK_SEGMENT_WIDTH,
                                                                                 IK_SEGMENT_WIDTH);
         ik_leg->m_joint->center_axis();
-        ik_leg->m_joint->link_parent(dummy); // one extra layer of xform indirection to convert yaw around z-axis to yaw around y-axis
+        ik_leg->m_joint->link_parent(body);
         ik_leg->m_joint->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
         scene->add_mesh(ik_leg->m_joint);
         ik_leg->m_target = vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_FOOTING_RADIUS) + glm::vec3(0, -BODY_LEVITATION_HEIGHT, 0);
@@ -411,7 +397,6 @@ void onKeyboard(unsigned char key, int x, int y)
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
                 body->set_ambient_color(glm::vec3(1));
-                dummy->set_ambient_color(glm::vec3(1, 0, 0));
                 for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
                     (*q)->m_joint->set_ambient_color(glm::vec3(1, 0, 0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
@@ -422,7 +407,6 @@ void onKeyboard(unsigned char key, int x, int y)
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
                 body->set_ambient_color(glm::vec3(0));
-                dummy->set_ambient_color(glm::vec3(0));
                 for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
                     (*q)->m_joint->set_ambient_color(glm::vec3(0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
@@ -466,7 +450,6 @@ void onSpecial(int key, int x, int y)
                 std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
                 vt::Scene::instance()->m_debug_target = targets[target_index];
                 body->set_origin(glm::vec3());
-                body->set_orient(glm::vec3(0, BODY_DEFAULT_PITCH, 0));
                 user_input = true;
             }
             break;
