@@ -47,7 +47,7 @@
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define BODY_ANGLE_SPEED             2.0
 #define BODY_DEFAULT_PITCH           -90
-#define BODY_HEIGHT                  0.25
+#define BODY_HEIGHT                  0.125
 #define BODY_LEVITATION_HEIGHT       2
 #define BODY_SPEED                   0.05f
 #define IK_FOOTING_RADIUS            1
@@ -55,9 +55,11 @@
 #define IK_LEG_COUNT                 6
 #define IK_LEG_RADIUS                1
 #define IK_SEGMENT_COUNT             2
-#define IK_SEGMENT_HEIGHT            0.25
+#define IK_SEGMENT_HEIGHT            0.125
 #define IK_SEGMENT_LENGTH            1.5
-#define IK_SEGMENT_WIDTH             0.25
+#define IK_SEGMENT_WIDTH             0.125
+#define PUMP_SIDES                   6
+#define PUMP_SHRINK_FACTOR           0.5
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
@@ -71,7 +73,7 @@ bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
 glm::vec3 prev_orient, orient, orbit_speed = glm::vec3(0, -0.5, -0.5);
 float prev_orbit_radius = 0, orbit_radius = 8, dolly_speed = 0.1, light_distance = 4;
-bool show_bbox = true;
+bool show_bbox = false;
 bool show_fps = false;
 bool show_help = false;
 bool show_lights = false;
@@ -112,24 +114,33 @@ struct IK_Leg
 
 std::vector<IK_Leg*> ik_legs;
 
-static void create_linked_boxes(vt::Scene*              scene,
-                                std::vector<vt::Mesh*>* ik_meshes,
-                                int                     ik_segment_count,
-                                std::string             name,
-                                glm::vec3               box_dim)
+static void create_linked_cylinder(vt::Scene*              scene,
+                                   std::vector<vt::Mesh*>* ik_meshes,
+                                   int                     ik_segment_count,
+                                   std::string             name,
+                                   glm::vec3               box_dim)
 {
     if(!scene || !ik_meshes) {
         return;
     }
     float z_offset = 0;
     vt::Mesh* prev_mesh = NULL;
+    glm::vec3 box_dim_inner = glm::vec3(box_dim.x * PUMP_SHRINK_FACTOR,
+                                        box_dim.y * PUMP_SHRINK_FACTOR,
+                                        box_dim.z);
     for(int i = 0; i < ik_segment_count; i++) {
         std::stringstream ss;
         ss << name << "_" << i;
-        vt::Mesh* mesh = vt::PrimitiveFactory::create_box(ss.str());
+        vt::Mesh* mesh = vt::PrimitiveFactory::create_cylinder(ss.str(), PUMP_SIDES);
         mesh->center_axis();
+        mesh->set_orient(glm::vec3(0, 90, 0));
+        mesh->rebase();
         mesh->set_origin(glm::vec3(0, 0, z_offset));
-        mesh->set_scale(box_dim);
+        if(!i) {
+            mesh->set_scale(box_dim_inner);
+        } else {
+            mesh->set_scale(box_dim);
+        }
         mesh->rebase();
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
         mesh->link_parent(prev_mesh, true);
@@ -241,13 +252,13 @@ int init_resources()
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
         std::stringstream ik_segment_name_ss;
         ik_segment_name_ss << "ik_box_" << i;
-        create_linked_boxes(scene,
-                            &ik_meshes,
-                            IK_SEGMENT_COUNT,
-                            ik_segment_name_ss.str(),
-                            glm::vec3(IK_SEGMENT_WIDTH,
-                                      IK_SEGMENT_HEIGHT,
-                                      IK_SEGMENT_LENGTH));
+        create_linked_cylinder(scene,
+                               &ik_meshes,
+                               IK_SEGMENT_COUNT,
+                               ik_segment_name_ss.str(),
+                               glm::vec3(IK_SEGMENT_WIDTH,
+                                         IK_SEGMENT_HEIGHT,
+                                         IK_SEGMENT_LENGTH));
         int leg_segment_index = 0;
         for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
             (*p)->set_material(phong_material);

@@ -57,6 +57,7 @@
 #define IK_SEGMENT_HEIGHT            0.25
 #define IK_SEGMENT_LENGTH            1
 #define IK_SEGMENT_WIDTH             0.25
+#define LOCAL_TARGET_OFFSET_RADIUS   1
 
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
@@ -71,6 +72,7 @@ glm::vec2 prev_mouse_coord, mouse_drag;
 glm::vec3 prev_orient, orient, orbit_speed = glm::vec3(0, -0.5, -0.5);
 float prev_orbit_radius = 0, orbit_radius = 8, dolly_speed = 0.1, light_distance = 4;
 bool show_bbox = false;
+bool angle_constraint = false;
 bool show_fps = false;
 bool show_help = false;
 bool show_lights = false;
@@ -94,14 +96,14 @@ float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 int angle_delta = 1;
 
 int target_index = 0;
-glm::vec3 targets[] = {glm::vec3( 1, 2,  4),
-                       glm::vec3( 1, 2, -4),
-                       glm::vec3(-1, 2, -4),
-                       glm::vec3(-1, 2,  4),
-                       glm::vec3( 4, 2,  1),
-                       glm::vec3( 4, 2, -1),
-                       glm::vec3(-4, 2, -1),
-                       glm::vec3(-4, 2,  1)};
+glm::vec3 targets[] = {glm::vec3( 1, 2,  2),
+                       glm::vec3( 1, 2, -2),
+                       glm::vec3(-1, 2, -2),
+                       glm::vec3(-1, 2,  2),
+                       glm::vec3( 2, 2,  1),
+                       glm::vec3( 2, 2, -1),
+                       glm::vec3(-2, 2, -1),
+                       glm::vec3(-2, 2,  1)};
 
 vt::Mesh* ground;
 vt::Mesh* ik_hrail;
@@ -320,18 +322,17 @@ void onTick()
         glutSetWindowTitle(ss.str().c_str());
     }
     frames++;
-    if(user_input) {
-        ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_vrail,
-                                                      glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-                                                      targets[target_index],
-                                                      NULL,
-                                                      IK_ITERS,
-                                                      ACCEPT_END_EFFECTOR_DISTANCE,
-                                                      ACCEPT_AVG_ANGLE_DISTANCE);
-        ik_hrail->set_origin(ik_base->get_origin());
-        user_input = false;
-    }
     static int angle = 0;
+    glm::vec3 offset = vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(LOCAL_TARGET_OFFSET_RADIUS);
+    glm::vec3 end_effector_orient = glm::vec3(0, 1, 0);
+    ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_vrail,
+                                                  glm::vec3(0, 0, IK_SEGMENT_LENGTH),
+                                                  targets[target_index] + offset,
+                                                  angle_constraint ? &end_effector_orient : NULL,
+                                                  IK_ITERS,
+                                                  ACCEPT_END_EFFECTOR_DISTANCE,
+                                                  ACCEPT_AVG_ANGLE_DISTANCE);
+    ik_hrail->set_origin(ik_base->get_origin());
     angle = (angle + angle_delta) % 360;
 }
 
