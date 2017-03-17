@@ -74,10 +74,12 @@
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
 int init_screen_width = 800, init_screen_height = 600;
-vt::Camera* camera;
-vt::Mesh *mesh_skybox;
-vt::Light *light, *light2, *light3;
-vt::Texture *texture_skybox;
+vt::Camera  *camera         = NULL;
+vt::Mesh    *mesh_skybox    = NULL;
+vt::Light   *light          = NULL,
+            *light2         = NULL,
+            *light3         = NULL;
+vt::Texture *texture_skybox = NULL;
 
 bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
@@ -109,9 +111,9 @@ unsigned char* height_map_pixel_data = NULL;
 size_t tex_width = 0;
 size_t tex_length = 0;
 
-vt::Mesh* terrain;
-vt::Mesh* box;
-vt::Mesh* dummy;
+vt::Mesh* terrain = NULL;
+vt::Mesh* box     = NULL;
+vt::Mesh* dummy   = NULL;
 
 struct IK_Leg
 {
@@ -692,10 +694,10 @@ void onKeyboard(unsigned char key, int x, int y)
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
                 terrain->set_ambient_color(glm::vec3(1));
-                box->set_ambient_color(    glm::vec3(0, 1, 0));
-                dummy->set_ambient_color(  glm::vec3(1));
+                box->set_ambient_color(    glm::vec3(1));
+                dummy->set_ambient_color(  glm::vec3(1, 0, 0));
                 for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
-                    (*q)->m_joint->set_ambient_color(glm::vec3(1));
+                    (*q)->m_joint->set_ambient_color(glm::vec3(1, 0, 0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
                     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                         (*p)->set_ambient_color(glm::vec3(0, 1, 0));

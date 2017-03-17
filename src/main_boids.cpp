@@ -51,10 +51,12 @@
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
 int init_screen_width = 800, init_screen_height = 600;
-vt::Camera* camera;
-vt::Mesh *mesh_skybox;
-vt::Light *light, *light2, *light3;
-vt::Texture *texture_skybox;
+vt::Camera  *camera         = NULL;
+vt::Mesh    *mesh_skybox    = NULL;
+vt::Light   *light          = NULL,
+            *light2         = NULL,
+            *light3         = NULL;
+vt::Texture *texture_skybox = NULL;
 
 bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
@@ -215,6 +217,15 @@ void onTick()
     }
     frames++;
     for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
+        if(wireframe_mode) {
+            if(glm::distance((*p)->get_origin(), targets[target_index]) < BOID_AVOID_RADIUS) {
+                (*p)->set_ambient_color(glm::vec3(1, 0, 0));
+            } else {
+                (*p)->set_ambient_color(glm::vec3(0, 1, 0));
+            }
+        } else {
+            (*p)->set_ambient_color(glm::vec3(0));
+        }
         (*p)->update_boid(targets[target_index],
                           BOID_FORWARD_SPEED,
                           BOID_ANGLE_DELTA,

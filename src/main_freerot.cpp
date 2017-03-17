@@ -52,10 +52,12 @@
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
 int init_screen_width = 800, init_screen_height = 600;
-vt::Camera* camera;
-vt::Mesh *mesh_skybox;
-vt::Light *light, *light2, *light3;
-vt::Texture *texture_skybox;
+vt::Camera  *camera         = NULL;
+vt::Mesh    *mesh_skybox    = NULL;
+vt::Light   *light          = NULL,
+            *light2         = NULL,
+            *light3         = NULL;
+vt::Texture *texture_skybox = NULL;
 
 bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
@@ -84,7 +86,7 @@ float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 int angle_delta = 2;
 
 std::vector<vt::Mesh*> meshes_imported;
-vt::Mesh* dummy;
+vt::Mesh* dummy = NULL;
 
 int init_resources()
 {
@@ -144,7 +146,9 @@ int init_resources()
         vt::File3ds::load3ds(model_filename, -1, &meshes_imported);
     }
     for(std::vector<vt::Mesh*>::iterator p = meshes_imported.begin(); p != meshes_imported.end(); p++) {
-        (*p)->set_scale(glm::vec3(0.3, 0.3, 0.3));
+        (*p)->set_origin(glm::vec3(0));
+        (*p)->set_scale(glm::vec3(0.33, 0.33, 0.33));
+        (*p)->rebase();
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         (*p)->link_parent(dummy);
@@ -276,10 +280,12 @@ void onKeyboard(unsigned char key, int x, int y)
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
+                dummy->set_ambient_color(glm::vec3(1, 0, 0));
                 for(std::vector<vt::Mesh*>::iterator p = meshes_imported.begin(); p != meshes_imported.end(); p++) {
                     (*p)->set_ambient_color(glm::vec3(1));
                 }
             } else {
+                dummy->set_ambient_color(glm::vec3(0));
                 glPolygonMode(GL_FRONT, GL_FILL);
                 for(std::vector<vt::Mesh*>::iterator p = meshes_imported.begin(); p != meshes_imported.end(); p++) {
                     (*p)->set_ambient_color(glm::vec3(0));

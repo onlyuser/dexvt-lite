@@ -62,10 +62,14 @@
 const char* DEFAULT_CAPTION = "My Textured Cube";
 
 int init_screen_width = 800, init_screen_height = 600;
-vt::Camera* camera;
-vt::Mesh *mesh_skybox;
-vt::Light *light, *light2, *light3;
-vt::Texture *texture_box_color, *texture_box_normal, *texture_skybox;
+vt::Camera  *camera             = NULL;
+vt::Mesh    *mesh_skybox        = NULL;
+vt::Light   *light              = NULL,
+            *light2             = NULL,
+            *light3             = NULL;
+vt::Texture *texture_box_color  = NULL,
+            *texture_box_normal = NULL,
+            *texture_skybox     = NULL;
 
 bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
@@ -104,10 +108,10 @@ glm::vec3 targets[] = {glm::vec3( 1, 2,  2),
                        glm::vec3(-2, 2, -1),
                        glm::vec3(-2, 2,  1)};
 
-vt::Mesh* ground;
-vt::Mesh* ik_hrail;
-vt::Mesh* ik_vrail;
-vt::Mesh* ik_base;
+vt::Mesh* ground   = NULL;
+vt::Mesh* ik_hrail = NULL;
+vt::Mesh* ik_vrail = NULL;
+vt::Mesh* ik_base  = NULL;
 
 std::vector<vt::Mesh*> ik_meshes;
 
@@ -405,10 +409,10 @@ void onKeyboard(unsigned char key, int x, int y)
                 glPolygonMode(GL_FRONT, GL_LINE);
                 ground->set_ambient_color(glm::vec3(1));
                 ik_hrail->set_ambient_color(glm::vec3(1));
-                ik_vrail->set_ambient_color(glm::vec3(1));
-                ik_base->set_ambient_color(glm::vec3(1));
+                ik_vrail->set_ambient_color(glm::vec3(0, 1, 0));
+                ik_base->set_ambient_color(glm::vec3(0, 1, 0));
                 for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
-                    (*p)->set_ambient_color(glm::vec3(1));
+                    (*p)->set_ambient_color(glm::vec3(0, 1, 0));
                 }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
