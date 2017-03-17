@@ -17,6 +17,16 @@ Screenshots
 -----------
 
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_ik_ccd_thumb.gif?attredirects=0)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_ik_ccd.gif?attredirects=0)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_boids_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_boids.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_freerot_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_freerot.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_hexapod_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_hexapod.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_hexapod_wireframe_2_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_hexapod_wireframe_2.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_hexapod_wireframe_3_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_hexapod_wireframe_3.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_hexapod_wireframe_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_hexapod_wireframe.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_rail_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_rail.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_spider_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_spider.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_spider_wireframe_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_spider_wireframe.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_stewart_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_stewart.png)
 
 Requirements
 ------------
