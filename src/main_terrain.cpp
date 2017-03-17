@@ -441,7 +441,7 @@ void onKeyboard(unsigned char key, int x, int y)
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
                 terrain->set_ambient_color(glm::vec3(1));
-                box->set_ambient_color(    glm::vec3(1));
+                box->set_ambient_color(    glm::vec3(0, 1, 0));
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
                 terrain->set_ambient_color(glm::vec3(0));

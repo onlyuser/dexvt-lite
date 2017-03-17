@@ -144,10 +144,10 @@ int init_resources()
         vt::File3ds::load3ds(model_filename, -1, &meshes_imported);
     }
     for(std::vector<vt::Mesh*>::iterator p = meshes_imported.begin(); p != meshes_imported.end(); p++) {
-        (*p)->link_parent(dummy);
-        (*p)->set_scale(glm::vec3(0.1, 0.1, 0.1));
+        (*p)->set_scale(glm::vec3(0.3, 0.3, 0.3));
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
+        (*p)->link_parent(dummy);
         scene->add_mesh(*p);
     }
 
