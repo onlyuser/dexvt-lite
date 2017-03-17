@@ -10,6 +10,10 @@
 #define DEFAULT_VIEWPORT_HEIGHT       600
 #define DEFAULT_ORTHO_VIEWPORT_WIDTH  1
 #define DEFAULT_ORTHO_VIEWPORT_HEIGHT 1
+#define DEFAULT_FOV                   45
+#define DEFAULT_NEAR_PLANE            1
+#define DEFAULT_FAR_PLANE             100
+#define DEFAULT_ZOOM                  1
 
 namespace vt {
 
@@ -27,15 +31,15 @@ public:
     Camera(std::string       name            = "",
            glm::vec3         origin          = glm::vec3(0),
            glm::vec3         target          = glm::vec3(-1),
-           float             fov             = 45,
+           float             fov             = DEFAULT_FOV,
            glm::vec2         offset          = glm::vec2(0),
            glm::vec2         dim             = glm::vec2(DEFAULT_VIEWPORT_WIDTH,
                                                          DEFAULT_VIEWPORT_HEIGHT),
-           float             near_plane      = 4,
-           float             far_plane       = 16,
+           float             near_plane      = DEFAULT_NEAR_PLANE,
+           float             far_plane       = DEFAULT_FAR_PLANE,
            glm::vec2         ortho_dim       = glm::vec2(DEFAULT_ORTHO_VIEWPORT_WIDTH,
                                                          DEFAULT_ORTHO_VIEWPORT_HEIGHT),
-           float             zoom            = 1,
+           float             zoom            = DEFAULT_ZOOM,
            projection_mode_t projection_mode = PROJECTION_MODE_PERSPECTIVE);
     virtual ~Camera();
 
