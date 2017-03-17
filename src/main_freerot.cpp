@@ -191,11 +191,11 @@ void onTick()
     }
     frames++;
     if(left_key) {
-        dummy->rotate(-angle_delta, dummy->get_abs_up_direction());
+        dummy->rotate(angle_delta, dummy->get_abs_heading());
         user_input = true;
     }
     if(right_key) {
-        dummy->rotate(angle_delta, dummy->get_abs_up_direction());
+        dummy->rotate(-angle_delta, dummy->get_abs_heading());
         user_input = true;
     }
     if(up_key) {
@@ -207,11 +207,11 @@ void onTick()
         user_input = true;
     }
     if(page_up_key) {
-        dummy->rotate(angle_delta, dummy->get_abs_heading());
+        dummy->rotate(angle_delta, dummy->get_abs_up_direction());
         user_input = true;
     }
     if(page_down_key) {
-        dummy->rotate(-angle_delta, dummy->get_abs_heading());
+        dummy->rotate(-angle_delta, dummy->get_abs_up_direction());
         user_input = true;
     }
     static int angle = 0;
