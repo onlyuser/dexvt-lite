@@ -88,7 +88,6 @@ bool up_key = false;
 bool down_key = false;
 bool page_up_key = false;
 bool page_down_key = false;
-bool user_input = true;
 
 int texture_id = 0;
 float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
@@ -369,6 +368,9 @@ void onKeyboard(unsigned char key, int x, int y)
         case 'b': // bbox
             show_bbox = !show_bbox;
             break;
+        case 'c': // angle constraint
+            angle_constraint = !angle_constraint;
+            break;
         case 'f': // frame rate
             show_fps = !show_fps;
             if(!show_fps) {
@@ -452,7 +454,6 @@ void onSpecial(int key, int x, int y)
                 target_index = (target_index + 1) % target_count;
                 std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
                 vt::Scene::instance()->m_debug_target = targets[target_index];
-                user_input = true;
             }
             break;
         case GLUT_KEY_LEFT:
