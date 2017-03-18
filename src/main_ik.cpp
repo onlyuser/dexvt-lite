@@ -1,8 +1,7 @@
 /**
- * From the OpenGL Programming wikibook: http://en.wikibooks.org/wiki/OpenGL_Programming
+ * Based on Sylvain Beucler's tutorial from the OpenGL Programming wikibook: http://en.wikibooks.org/wiki/OpenGL_Programming
  * This file is in the public domain.
- * Contributors: Sylvain Beucler
- * Enhanced by: Jerry Chen
+ * Author: Jerry Chen
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,7 +50,7 @@
 #define IK_SEGMENT_LENGTH            1
 #define IK_SEGMENT_WIDTH             0.25
 
-const char* DEFAULT_CAPTION = "My Textured Cube";
+const char* DEFAULT_CAPTION = NULL;
 
 int init_screen_width = 800, init_screen_height = 600;
 vt::Camera  *camera             = NULL;
@@ -515,6 +514,8 @@ void onReshape(int width, int height)
 
 int main(int argc, char* argv[])
 {
+    DEFAULT_CAPTION = argv[0];
+
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH /*| GLUT_STENCIL*/);
     glutInitWindowSize(init_screen_width, init_screen_height);
