@@ -122,6 +122,15 @@ float angle_distance(float angle1, float angle2)
     return angle_diff;
 }
 
+glm::vec3 bezier_lerp(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float t)
+{
+    float y0 = pow(1 - t, 3);
+    float y1 = 3 * pow(1 - t, 2) * t;
+    float y2 = 3 * (1 - t) * pow(t, 2);
+    float y3 = pow(t, 3);
+    return y0 * p0 + y1 * p1 + y2 * p2 + y3 * p3;
+}
+
 bool read_file(std::string filename, std::string &s)
 {
     FILE* file = fopen(filename.c_str(), "rb");
