@@ -9,7 +9,7 @@ LIB_PATH = $(EXTERN_LIB_PATH)
 SRC_PATH = src
 BUILD_PATH = build
 BIN_PATH = bin
-BIN_STEMS = main_ik main_boids main_hexapod main_terrain main_spider main_freerot main_rail main_stewart
+BIN_STEMS = main_ik main_boids main_hexapod main_deltabot main_terrain main_spider main_freerot main_rail main_stewart
 BINARIES = $(patsubst %, $(BIN_PATH)/%, $(BIN_STEMS))
 
 INCLUDE_PATHS = $(INCLUDE_PATH) $(EXTERN_INCLUDE_PATH)
@@ -68,28 +68,30 @@ $(BUILD_PATH)/%.o : $(SRC_PATH)/%.c
 
 .PHONY : clean_objects
 clean_objects :
-	-rm $(OBJECTS_IK) $(OBJECTS_BOIDS) $(OBJECTS_HEXAPOD) $(OBJECTS_TERRAIN) $(OBJECTS_SPIDER) $(OBJECTS_FREEROT) $(OBJECTS_RAIL) $(OBJECTS_STEWART)
+	-rm $(OBJECTS_IK) $(OBJECTS_BOIDS) $(OBJECTS_HEXAPOD) $(OBJECTS_DELTABOT) $(OBJECTS_TERRAIN) $(OBJECTS_SPIDER) $(OBJECTS_FREEROT) $(OBJECTS_RAIL) $(OBJECTS_STEWART)
 
 #==================
 # binaries
 #==================
 
-CPP_STEMS_IK      = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_ik      Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
-CPP_STEMS_BOIDS   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_boids   Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
-CPP_STEMS_HEXAPOD = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_hexapod Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
-CPP_STEMS_TERRAIN = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_terrain Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
-CPP_STEMS_SPIDER  = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_spider  Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
-CPP_STEMS_FREEROT = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_freerot Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
-CPP_STEMS_RAIL    = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_rail    Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
-CPP_STEMS_STEWART = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_stewart Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
-OBJECTS_IK      = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK))
-OBJECTS_BOIDS   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_BOIDS))
-OBJECTS_HEXAPOD = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_HEXAPOD))
-OBJECTS_TERRAIN = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_TERRAIN))
-OBJECTS_SPIDER  = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_SPIDER))
-OBJECTS_FREEROT = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_FREEROT))
-OBJECTS_RAIL    = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_RAIL))
-OBJECTS_STEWART = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_STEWART))
+CPP_STEMS_IK       = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_ik       Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_BOIDS    = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_boids    Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_HEXAPOD  = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_hexapod  Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_DELTABOT = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_deltabot Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_TERRAIN  = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_terrain  Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_SPIDER   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_spider   Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_FREEROT  = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_freerot  Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_RAIL     = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_rail     Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+CPP_STEMS_STEWART  = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject Light Modifiers main_stewart  Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform XformObject
+OBJECTS_IK       = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK))
+OBJECTS_BOIDS    = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_BOIDS))
+OBJECTS_HEXAPOD  = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_HEXAPOD))
+OBJECTS_DELTABOT = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_DELTABOT))
+OBJECTS_TERRAIN  = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_TERRAIN))
+OBJECTS_SPIDER   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_SPIDER))
+OBJECTS_FREEROT  = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_FREEROT))
+OBJECTS_RAIL     = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_RAIL))
+OBJECTS_STEWART  = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_STEWART))
 
 $(BIN_PATH)/main_ik : $(OBJECTS_IK)
 	mkdir -p $(BIN_PATH)
@@ -98,6 +100,9 @@ $(BIN_PATH)/main_boids : $(OBJECTS_BOIDS)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 $(BIN_PATH)/main_hexapod : $(OBJECTS_HEXAPOD)
+	mkdir -p $(BIN_PATH)
+	$(CXX) -o $@ $^ $(LDFLAGS)
+$(BIN_PATH)/main_deltabot : $(OBJECTS_DELTABOT)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 $(BIN_PATH)/main_terrain : $(OBJECTS_TERRAIN)

@@ -113,9 +113,20 @@ glm::vec3 orient_modulo(glm::vec3 orient)
     return orient;
 }
 
+float angle_modulo(float angle)
+{
+    while(angle > 360) {
+        angle -= 360;
+    }
+    while(angle < 0) {
+        angle += 360;
+    }
+    return angle;
+}
+
 float angle_distance(float angle1, float angle2)
 {
-    float angle_diff = fabs(angle1 - angle2);
+    float angle_diff = fabs(angle_modulo(angle1) - angle_modulo(angle2));
     if(angle_diff > 180) {
         return 360 - angle_diff;
     }
