@@ -45,8 +45,8 @@
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define BODY_ANGLE_SPEED             2.0
+#define BODY_ELEVATION               2
 #define BODY_HEIGHT                  0.125
-#define BODY_LEVITATION_HEIGHT       2
 #define BODY_SPEED                   0.05f
 #define IK_FOOTING_RADIUS            1
 #define IK_ITERS                     50
@@ -113,7 +113,7 @@ struct IK_Leg
 
 std::vector<IK_Leg*> ik_legs;
 
-static void create_linked_cylinder(vt::Scene*              scene,
+static void create_linked_segments(vt::Scene*              scene,
                                    std::vector<vt::Mesh*>* ik_meshes,
                                    int                     ik_segment_count,
                                    std::string             name,
@@ -188,7 +188,7 @@ int init_resources()
     scene->add_texture(          texture_skybox);
     skybox_material->add_texture(texture_skybox);
 
-    glm::vec3 origin = glm::vec3(0, -BODY_LEVITATION_HEIGHT * 0.5, 0);
+    glm::vec3 origin = glm::vec3(0, -BODY_ELEVATION * 0.5, 0);
     camera = new vt::Camera("camera", origin + glm::vec3(0, 0, orbit_radius), origin);
     scene->set_camera(camera);
 
@@ -211,7 +211,7 @@ int init_resources()
     base->set_orient(glm::vec3(0, 0, 360 / IK_LEG_COUNT));
     base->rebase();
     base->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
-    base->set_origin(glm::vec3(0, -BODY_LEVITATION_HEIGHT, 0));
+    base->set_origin(glm::vec3(0, -BODY_ELEVATION, 0));
     base->set_material(phong_material);
     base->set_ambient_color(glm::vec3(0));
     scene->add_mesh(base);
@@ -233,11 +233,11 @@ int init_resources()
         ik_leg->m_joint->link_parent(body);
         ik_leg->m_joint->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angles[from_index])) * static_cast<float>(IK_LEG_RADIUS));
         scene->add_mesh(ik_leg->m_joint);
-        ik_leg->m_target = vt::orient_to_offset(glm::vec3(0, 0, angles[to_index])) * static_cast<float>(IK_FOOTING_RADIUS) + glm::vec3(0, -BODY_LEVITATION_HEIGHT, 0);
+        ik_leg->m_target = vt::orient_to_offset(glm::vec3(0, 0, angles[to_index])) * static_cast<float>(IK_FOOTING_RADIUS) + glm::vec3(0, -BODY_ELEVATION, 0);
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
         std::stringstream ik_segment_name_ss;
         ik_segment_name_ss << "ik_box_" << i;
-        create_linked_cylinder(scene,
+        create_linked_segments(scene,
                                &ik_meshes,
                                IK_SEGMENT_COUNT,
                                ik_segment_name_ss.str(),

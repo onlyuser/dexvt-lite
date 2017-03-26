@@ -10,7 +10,7 @@
 
 /* Use glew.h instead of gl.h to get all the GL prototypes declared */
 #include <GL/glew.h>
-/* Using the GLUT library for the base windowing setup */
+/* Using the GLUT library for the body windowing setup */
 #include <GL/glut.h>
 /* GLM */
 // #define GLM_MESSAGES
@@ -45,8 +45,8 @@
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define BODY_ANGLE_SPEED             2.0
+#define BODY_ELEVATION               2
 #define BODY_HEIGHT                  0.125
-#define BODY_LEVITATION_HEIGHT       2
 #define BODY_SPEED                   0.05f
 #define IK_FOOTING_RADIUS            0.5
 #define IK_ITERS                     50
@@ -101,19 +101,19 @@ glm::vec3 targets[] = {glm::vec3( 1, -1,  1),
                        glm::vec3(-1, -1, -1),
                        glm::vec3(-1, -1,  1)};
 
-vt::Mesh* body = NULL;
 vt::Mesh* base = NULL;
+vt::Mesh* body = NULL;
 
 struct IK_Leg
 {
-    vt::Mesh*              m_joint;
-    vt::Mesh*              m_joint2;
+    vt::Mesh*              m_joint_base;
+    vt::Mesh*              m_joint_body;
     std::vector<vt::Mesh*> m_ik_meshes;
 };
 
 std::vector<IK_Leg*> ik_legs;
 
-static void create_linked_cylinder(vt::Scene*              scene,
+static void create_linked_segments(vt::Scene*              scene,
                                    std::vector<vt::Mesh*>* ik_meshes,
                                    int                     ik_segment_count,
                                    std::string             name,
@@ -195,7 +195,7 @@ int init_resources()
     scene->add_texture(          texture_skybox);
     skybox_material->add_texture(texture_skybox);
 
-    glm::vec3 origin = glm::vec3(0, -BODY_LEVITATION_HEIGHT * 0.5, 0);
+    glm::vec3 origin = glm::vec3(0, -BODY_ELEVATION * 0.5, 0);
     camera = new vt::Camera("camera", origin + glm::vec3(0, 0, orbit_radius), origin);
     scene->set_camera(camera);
 
@@ -206,46 +206,46 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    body = vt::PrimitiveFactory::create_cylinder("body", IK_LEG_COUNT * 2, IK_LEG_RADIUS, BODY_HEIGHT);
-    //body->center_axis(vt::BBoxObject::ALIGN_CENTER);
-    body->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
-    body->set_material(phong_material);
-    body->set_ambient_color(glm::vec3(0));
-    scene->add_mesh(body);
-
-    base = vt::PrimitiveFactory::create_cylinder("base", IK_LEG_COUNT, IK_FOOTING_RADIUS, BODY_HEIGHT);
-    //body->center_axis(vt::BBoxObject::ALIGN_CENTER);
-    base->rebase();
+    base = vt::PrimitiveFactory::create_cylinder("base", IK_LEG_COUNT * 2, IK_LEG_RADIUS, BODY_HEIGHT);
+    //base->center_axis(vt::BBoxObject::ALIGN_CENTER);
     base->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
-    base->set_origin(glm::vec3(0, -BODY_LEVITATION_HEIGHT, 0));
     base->set_material(phong_material);
     base->set_ambient_color(glm::vec3(0));
     scene->add_mesh(base);
+
+    body = vt::PrimitiveFactory::create_cylinder("body", IK_LEG_COUNT, IK_FOOTING_RADIUS, BODY_HEIGHT);
+    //base->center_axis(vt::BBoxObject::ALIGN_CENTER);
+    body->rebase();
+    body->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
+    body->set_origin(glm::vec3(0, -BODY_ELEVATION, 0));
+    body->set_material(phong_material);
+    body->set_ambient_color(glm::vec3(0));
+    scene->add_mesh(body);
 
     for(int i = 0; i < IK_LEG_COUNT; i++) {
         float angle = i * 360 / IK_LEG_COUNT;
         IK_Leg* ik_leg = new IK_Leg();
         std::stringstream joint_name_ss;
         joint_name_ss << "ik_joint_" << i;
-        ik_leg->m_joint = vt::PrimitiveFactory::create_box(joint_name_ss.str(), IK_SEGMENT_WIDTH,
-                                                                                IK_SEGMENT_WIDTH,
-                                                                                IK_SEGMENT_WIDTH);
-        ik_leg->m_joint->center_axis();
-        ik_leg->m_joint->link_parent(body);
-        ik_leg->m_joint->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
-        scene->add_mesh(ik_leg->m_joint);
+        ik_leg->m_joint_base = vt::PrimitiveFactory::create_box(joint_name_ss.str(), IK_SEGMENT_WIDTH,
+                                                                                     IK_SEGMENT_WIDTH,
+                                                                                     IK_SEGMENT_WIDTH);
+        ik_leg->m_joint_base->center_axis();
+        ik_leg->m_joint_base->link_parent(base);
+        ik_leg->m_joint_base->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
+        scene->add_mesh(ik_leg->m_joint_base);
         joint_name_ss << "ik_joint_" << i;
-        ik_leg->m_joint2 = vt::PrimitiveFactory::create_box(joint_name_ss.str(), IK_SEGMENT_WIDTH,
-                                                                                 IK_SEGMENT_WIDTH,
-                                                                                 IK_SEGMENT_WIDTH);
-        ik_leg->m_joint2->center_axis();
-        ik_leg->m_joint2->link_parent(base);
-        ik_leg->m_joint2->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_FOOTING_RADIUS));
-        scene->add_mesh(ik_leg->m_joint2);
+        ik_leg->m_joint_body = vt::PrimitiveFactory::create_box(joint_name_ss.str(), IK_SEGMENT_WIDTH,
+                                                                                     IK_SEGMENT_WIDTH,
+                                                                                     IK_SEGMENT_WIDTH);
+        ik_leg->m_joint_body->center_axis();
+        ik_leg->m_joint_body->link_parent(body);
+        ik_leg->m_joint_body->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_FOOTING_RADIUS));
+        scene->add_mesh(ik_leg->m_joint_body);
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
         std::stringstream ik_segment_name_ss;
         ik_segment_name_ss << "ik_box_" << i;
-        create_linked_cylinder(scene,
+        create_linked_segments(scene,
                                &ik_meshes,
                                IK_SEGMENT_COUNT,
                                ik_segment_name_ss.str(),
@@ -309,34 +309,34 @@ void onTick()
     }
     frames++;
     if(left_key) {
-        base->set_origin(base->get_origin() - base->get_abs_left_direction() * BODY_SPEED);
+        body->set_origin(body->get_origin() - body->get_abs_left_direction() * BODY_SPEED);
     }
     if(right_key) {
-        base->set_origin(base->get_origin() + base->get_abs_left_direction() * BODY_SPEED);
+        body->set_origin(body->get_origin() + body->get_abs_left_direction() * BODY_SPEED);
     }
     if(up_key) {
-        base->set_origin(base->get_origin() - base->get_abs_heading() * BODY_SPEED);
+        body->set_origin(body->get_origin() - body->get_abs_heading() * BODY_SPEED);
     }
     if(down_key) {
-        base->set_origin(base->get_origin() + base->get_abs_heading() * BODY_SPEED);
+        body->set_origin(body->get_origin() + body->get_abs_heading() * BODY_SPEED);
     }
     if(page_up_key) {
-        base->set_origin(base->get_origin() + base->get_abs_up_direction() * BODY_SPEED);
+        body->set_origin(body->get_origin() + body->get_abs_up_direction() * BODY_SPEED);
     }
     if(page_down_key) {
-        base->set_origin(base->get_origin() - base->get_abs_up_direction() * BODY_SPEED);
+        body->set_origin(body->get_origin() - body->get_abs_up_direction() * BODY_SPEED);
     }
     if(user_input) {
         for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
             std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-            ik_meshes[0]->set_origin((*q)->m_joint->in_abs_system());
+            ik_meshes[0]->set_origin((*q)->m_joint_base->in_abs_system());
         }
     }
     for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
         std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
         ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
                                                       glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-                                                      (*r)->m_joint2->in_abs_system(),
+                                                      (*r)->m_joint_body->in_abs_system(),
                                                       NULL,
                                                       IK_ITERS,
                                                       ACCEPT_END_EFFECTOR_DISTANCE,
@@ -411,11 +411,11 @@ void onKeyboard(unsigned char key, int x, int y)
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
-                body->set_ambient_color(glm::vec3(1));
                 base->set_ambient_color(glm::vec3(1));
+                body->set_ambient_color(glm::vec3(1));
                 for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
-                    (*q)->m_joint->set_ambient_color(glm::vec3(1, 0, 0));
-                    (*q)->m_joint2->set_ambient_color(glm::vec3(1, 0, 0));
+                    (*q)->m_joint_base->set_ambient_color(glm::vec3(1, 0, 0));
+                    (*q)->m_joint_body->set_ambient_color(glm::vec3(1, 0, 0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
                     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                         (*p)->set_ambient_color(glm::vec3(0, 1, 0));
@@ -423,11 +423,11 @@ void onKeyboard(unsigned char key, int x, int y)
                 }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
-                body->set_ambient_color(glm::vec3(0));
                 base->set_ambient_color(glm::vec3(0));
+                body->set_ambient_color(glm::vec3(0));
                 for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
-                    (*q)->m_joint->set_ambient_color(glm::vec3(0));
-                    (*q)->m_joint2->set_ambient_color(glm::vec3(0));
+                    (*q)->m_joint_base->set_ambient_color(glm::vec3(0));
+                    (*q)->m_joint_body->set_ambient_color(glm::vec3(0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
                     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                         (*p)->set_ambient_color(glm::vec3(0));
@@ -468,7 +468,7 @@ void onSpecial(int key, int x, int y)
                 target_index = (target_index + 1) % target_count;
                 std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
                 vt::Scene::instance()->m_debug_target = targets[target_index];
-                body->set_origin(glm::vec3());
+                base->set_origin(glm::vec3());
                 user_input = true;
             }
             break;

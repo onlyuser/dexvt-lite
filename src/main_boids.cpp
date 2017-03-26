@@ -94,13 +94,13 @@ glm::vec3 targets[] = {glm::vec3( 1,  1,  1),
 
 std::vector<vt::Mesh*> boid_meshes;
 
-static void create_boid_boxes(vt::Scene*              scene,
-                              std::vector<vt::Mesh*>* boid_meshes,
-                              int                     boid_count,
-                              glm::vec3               scatter_min,
-                              glm::vec3               scatter_max,
-                              std::string             name,
-                              glm::vec3               box_dim)
+static void create_boids(vt::Scene*              scene,
+                         std::vector<vt::Mesh*>* boid_meshes,
+                         int                     boid_count,
+                         glm::vec3               scatter_min,
+                         glm::vec3               scatter_max,
+                         std::string             name,
+                         glm::vec3               box_dim)
 {
     if(!scene || !boid_meshes) {
         return;
@@ -172,7 +172,7 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    create_boid_boxes(scene, &boid_meshes, BOID_COUNT, glm::vec3(-10), glm::vec3(10), "boid_box", glm::vec3(0.0625, 0.0625, 0.25));
+    create_boids(scene, &boid_meshes, BOID_COUNT, glm::vec3(-10), glm::vec3(10), "boid_box", glm::vec3(0.0625, 0.0625, 0.25));
     for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));

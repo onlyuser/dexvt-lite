@@ -47,14 +47,14 @@
 #define ACCEPT_END_EFFECTOR_DISTANCE   0.001
 #define ANIM_ALPHA_STEP                0.1
 #define BOX_ANGLE_SPEED                2.0
+#define BOX_ELEVATION                  0.5
 #define BOX_HEIGHT                     0.1
 #define BOX_LENGTH                     0.5
-#define BOX_LEVITATION_HEIGHT          0.5
 #define BOX_SPEED                      0.05f
 #define BOX_WIDTH                      0.25
 #define IK_ITERS                       10 // trade accuracy for speed
 #define IK_LEG_COUNT                   8
-#define IK_LEG_MAX_LIFT_HEIGHT         (BOX_LEVITATION_HEIGHT * 0.5)
+#define IK_LEG_MAX_LIFT_HEIGHT         (BOX_ELEVATION * 0.5)
 #define IK_LEG_RADIUS                  (BOX_LENGTH * 0.5)
 #define IK_SEGMENT_COUNT               3
 #define IK_SEGMENT_HEIGHT              0.05
@@ -126,11 +126,11 @@ struct IK_Leg
 
 std::vector<IK_Leg*> ik_legs;
 
-static void create_linked_boxes(vt::Scene*              scene,
-                                std::vector<vt::Mesh*>* ik_meshes,
-                                int                     ik_segment_count,
-                                std::string             name,
-                                glm::vec3               box_dim)
+static void create_linked_segments(vt::Scene*              scene,
+                                   std::vector<vt::Mesh*>* ik_meshes,
+                                   int                     ik_segment_count,
+                                   std::string             name,
+                                   glm::vec3               box_dim)
 {
     if(!scene || !ik_meshes) {
         return;
@@ -452,13 +452,13 @@ int init_resources()
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
         std::stringstream ik_segment_name_ss;
         ik_segment_name_ss << "ik_box_" << i;
-        create_linked_boxes(scene,
-                            &ik_meshes,
-                            IK_SEGMENT_COUNT,
-                            ik_segment_name_ss.str(),
-                            glm::vec3(IK_SEGMENT_WIDTH,
-                                      IK_SEGMENT_HEIGHT,
-                                      IK_SEGMENT_LENGTH));
+        create_linked_segments(scene,
+                               &ik_meshes,
+                               IK_SEGMENT_COUNT,
+                               ik_segment_name_ss.str(),
+                               glm::vec3(IK_SEGMENT_WIDTH,
+                                         IK_SEGMENT_HEIGHT,
+                                         IK_SEGMENT_LENGTH));
         int leg_segment_index = 0;
         for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
             (*p)->set_material(phong_material);
@@ -562,7 +562,7 @@ void onTick()
                                                          tex_width,
                                                          tex_length,
                                                          BOX_WIDTH * 0.5);
-        box->set_origin(glm::vec3(pos_within_terrain.x, terrain_height + BOX_LEVITATION_HEIGHT, pos_within_terrain.y));
+        box->set_origin(glm::vec3(pos_within_terrain.x, terrain_height + BOX_ELEVATION, pos_within_terrain.y));
         vt::Scene::instance()->m_debug_target = box->get_origin();
         update_leg_targets(pos_within_terrain,
                            LEG_INNER_RADIUS,

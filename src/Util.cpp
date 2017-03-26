@@ -115,7 +115,7 @@ glm::vec3 orient_modulo(glm::vec3 orient)
 
 float angle_modulo(float angle)
 {
-    while(angle > 360) {
+    while(angle >= 360) {
         angle -= 360;
     }
     while(angle < 0) {
