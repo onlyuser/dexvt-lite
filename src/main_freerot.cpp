@@ -189,6 +189,9 @@ void onTick()
         glutSetWindowTitle(ss.str().c_str());
     }
     frames++;
+    //if(!do_animation) {
+    //    return;
+    //}
     if(left_key) {
         dummy->rotate(angle_delta, dummy->get_abs_heading());
         user_input = true;

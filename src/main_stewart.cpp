@@ -137,10 +137,10 @@ static void create_linked_segments(vt::Scene*              scene,
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
         if(!i) {
             mesh->set_origin(glm::vec3(0, 0, 0));
-        } else {
+        } else if(prev_mesh) {
+            mesh->link_parent(prev_mesh, true);
             mesh->set_origin(glm::vec3(0, 0, box_dim.z));
         }
-        mesh->link_parent(prev_mesh, true);
         scene->add_mesh(mesh);
         ik_meshes->push_back(mesh);
         prev_mesh = mesh;
@@ -297,6 +297,9 @@ void onTick()
         glutSetWindowTitle(ss.str().c_str());
     }
     frames++;
+    //if(!do_animation) {
+    //    return;
+    //}
     if(left_key) {
         glm::vec3 body_orient = body->get_orient();
         body->set_orient(glm::vec3(ORIENT_ROLL(body_orient),

@@ -113,24 +113,28 @@ static void create_linked_segments(vt::Scene*              scene,
     if(!scene || !ik_meshes) {
         return;
     }
-    float z_offset = 0;
     vt::Mesh* prev_mesh = NULL;
     for(int i = 0; i < ik_segment_count; i++) {
         std::stringstream ss;
         ss << name << "_" << i;
         vt::Mesh* mesh = vt::PrimitiveFactory::create_box(ss.str());
         mesh->center_axis();
-        mesh->set_origin(glm::vec3(0, 0, z_offset));
+        mesh->set_origin(glm::vec3(0, 0, 0));
         mesh->set_scale(box_dim);
         mesh->rebase();
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
-        mesh->link_parent(prev_mesh, true);
+        if(!i) {
+            mesh->set_origin(glm::vec3(0, 0, 0));
+        } else if(prev_mesh) {
+            mesh->link_parent(prev_mesh, true);
+            mesh->set_origin(glm::vec3(0, 0, box_dim.z));
+        }
         scene->add_mesh(mesh);
         ik_meshes->push_back(mesh);
         prev_mesh = mesh;
-        z_offset += box_dim.z;
     }
 }
+
 int init_resources()
 {
     vt::Scene* scene = vt::Scene::instance();
@@ -265,6 +269,9 @@ void onTick()
         glutSetWindowTitle(ss.str().c_str());
     }
     frames++;
+    //if(!do_animation) {
+    //    return;
+    //}
     if(left_key) {
         glm::vec3 body_orient = body->get_orient();
         body->set_orient(glm::vec3(ORIENT_ROLL(body_orient),

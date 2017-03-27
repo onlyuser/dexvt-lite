@@ -215,6 +215,9 @@ void onTick()
         glutSetWindowTitle(ss.str().c_str());
     }
     frames++;
+    if(!do_animation) {
+        return;
+    }
     for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
         if(wireframe_mode) {
             if(glm::distance((*p)->get_origin(), targets[target_index]) < BOID_AVOID_RADIUS) {

@@ -329,6 +329,9 @@ void onTick()
         glutSetWindowTitle(ss.str().c_str());
     }
     frames++;
+    //if(!do_animation) {
+    //    return;
+    //}
     if(left_key) {
         box->rotate(BOX_ANGLE_SPEED, box->get_abs_heading());
         user_input = true;
