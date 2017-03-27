@@ -134,7 +134,7 @@ static void create_linked_segments(vt::Scene*              scene,
         std::stringstream ss;
         ss << name << "_" << i;
         vt::Mesh* mesh = NULL;
-        if(!i) {
+        if(!prev_mesh) {
             mesh = vt::PrimitiveFactory::create_box(ss.str());
             mesh->center_axis();
         } else {
@@ -145,18 +145,18 @@ static void create_linked_segments(vt::Scene*              scene,
             mesh->rebase();
         }
         mesh->set_origin(glm::vec3(0, 0, 0));
-        if(!i) {
+        if(!prev_mesh) {
             mesh->set_scale(glm::vec3(box_dim, ik_segment_lengths[i]));
         } else {
             mesh->set_scale(glm::vec3(box_dim_inner, ik_segment_lengths[i]));
         }
         mesh->rebase();
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
-        if(!i) {
+        if(!prev_mesh) {
             mesh->set_origin(glm::vec3(0, 0, 0));
-        } else if(prev_mesh) {
+        } else {
             mesh->link_parent(prev_mesh, true);
-            mesh->set_origin(glm::vec3(0, 0, ik_segment_lengths[i - 1]));
+            mesh->set_origin(glm::vec3(0, 0, ik_segment_lengths[i - 1])); // must go after link_parent
         }
         scene->add_mesh(mesh);
         ik_meshes->push_back(mesh);

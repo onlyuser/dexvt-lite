@@ -133,11 +133,11 @@ static void create_linked_segments(vt::Scene*              scene,
         mesh->set_scale(box_dim);
         mesh->rebase();
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
-        if(!i) {
+        if(!prev_mesh) {
             mesh->set_origin(glm::vec3(0, 0, 0));
-        } else if(prev_mesh) {
+        } else {
             mesh->link_parent(prev_mesh, true);
-            mesh->set_origin(glm::vec3(0, 0, box_dim.z));
+            mesh->set_origin(glm::vec3(0, 0, box_dim.z)); // must go after link_parent
         }
         scene->add_mesh(mesh);
         ik_meshes->push_back(mesh);
