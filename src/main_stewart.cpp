@@ -95,12 +95,6 @@ float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 
 int angle_delta = 1;
 
-int target_index = 0;
-glm::vec3 targets[] = {glm::vec3( 1, -1,  1),
-                       glm::vec3( 1, -1, -1),
-                       glm::vec3(-1, -1, -1),
-                       glm::vec3(-1, -1,  1)};
-
 vt::Mesh* body = NULL;
 vt::Mesh* base = NULL;
 
@@ -122,7 +116,6 @@ static void create_linked_segments(vt::Scene*              scene,
     if(!scene || !ik_meshes) {
         return;
     }
-    float z_offset = 0;
     vt::Mesh* prev_mesh = NULL;
     glm::vec3 box_dim_inner = glm::vec3(box_dim.x * PUMP_SHRINK_FACTOR,
                                         box_dim.y * PUMP_SHRINK_FACTOR,
@@ -134,7 +127,7 @@ static void create_linked_segments(vt::Scene*              scene,
         mesh->center_axis();
         mesh->set_orient(glm::vec3(0, 90, 0));
         mesh->rebase();
-        mesh->set_origin(glm::vec3(0, 0, z_offset));
+        mesh->set_origin(glm::vec3(0, 0, 0));
         if(!i) {
             mesh->set_scale(box_dim_inner);
         } else {
@@ -142,11 +135,15 @@ static void create_linked_segments(vt::Scene*              scene,
         }
         mesh->rebase();
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
+        if(!i) {
+            mesh->set_origin(glm::vec3(0, 0, 0));
+        } else {
+            mesh->set_origin(glm::vec3(0, 0, box_dim.z));
+        }
         mesh->link_parent(prev_mesh, true);
         scene->add_mesh(mesh);
         ik_meshes->push_back(mesh);
         prev_mesh = mesh;
-        z_offset += box_dim.z;
     }
 }
 
@@ -264,8 +261,6 @@ int init_resources()
         }
         ik_legs.push_back(ik_leg);
     }
-
-    vt::Scene::instance()->m_debug_target = targets[target_index];
 
     return 1;
 }
@@ -399,9 +394,6 @@ void onKeyboard(unsigned char key, int x, int y)
             break;
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
-            if(show_guide_wires) {
-                vt::Scene::instance()->m_debug_target = targets[target_index];
-            }
             break;
         case 'h': // help
             show_help = !show_help;
@@ -474,11 +466,8 @@ void onSpecial(int key, int x, int y)
             break;
         case GLUT_KEY_HOME: // target
             {
-                size_t target_count = sizeof(targets) / sizeof(targets[0]);
-                target_index = (target_index + 1) % target_count;
-                std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
-                vt::Scene::instance()->m_debug_target = targets[target_index];
                 body->set_origin(glm::vec3());
+                body->set_orient(glm::vec3());
                 user_input = true;
             }
             break;

@@ -41,6 +41,8 @@
 #include <iostream> // std::cout
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
+#include <stdio.h>
+#include <stdarg.h>
 
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
@@ -52,9 +54,10 @@
 #define IK_ITERS                     50
 #define IK_LEG_COUNT                 3
 #define IK_LEG_RADIUS                1
+#define IK_SEGMENT_0_LENGTH          1.0
+#define IK_SEGMENT_1_LENGTH          2.0
 #define IK_SEGMENT_COUNT             2
 #define IK_SEGMENT_HEIGHT            0.125
-#define IK_SEGMENT_LENGTH            1.5
 #define IK_SEGMENT_WIDTH             0.25
 #define PUMP_SHRINK_FACTOR           0.5
 #define PUMP_SIDES                   6
@@ -95,12 +98,6 @@ float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 
 int angle_delta = 1;
 
-int target_index = 0;
-glm::vec3 targets[] = {glm::vec3( 1, -1,  1),
-                       glm::vec3( 1, -1, -1),
-                       glm::vec3(-1, -1, -1),
-                       glm::vec3(-1, -1,  1)};
-
 vt::Mesh* base = NULL;
 vt::Mesh* body = NULL;
 
@@ -115,45 +112,55 @@ std::vector<IK_Leg*> ik_legs;
 
 static void create_linked_segments(vt::Scene*              scene,
                                    std::vector<vt::Mesh*>* ik_meshes,
-                                   int                     ik_segment_count,
                                    std::string             name,
-                                   glm::vec3               box_dim)
+                                   glm::vec2               box_dim,
+                                   int                     ik_segment_count,
+                                   ...)
 {
     if(!scene || !ik_meshes) {
         return;
     }
-    float z_offset = 0;
+    std::vector<float> ik_segment_lengths;
+    va_list vl;
+    va_start(vl, ik_segment_count);
+    for(int i = 0; i < ik_segment_count; i++) {
+        ik_segment_lengths.push_back(va_arg(vl, double));
+    }
+    va_end(vl);
     vt::Mesh* prev_mesh = NULL;
     float box_dim_inner_min = std::min(box_dim.x, box_dim.y) * PUMP_SHRINK_FACTOR;
-    glm::vec3 box_dim_inner = glm::vec3(box_dim_inner_min,
-                                        box_dim_inner_min,
-                                        box_dim.z);
+    glm::vec2 box_dim_inner = glm::vec2(box_dim_inner_min, box_dim_inner_min);
     for(int i = 0; i < ik_segment_count; i++) {
         std::stringstream ss;
         ss << name << "_" << i;
         vt::Mesh* mesh = NULL;
         if(!i) {
             mesh = vt::PrimitiveFactory::create_box(ss.str());
+            mesh->center_axis();
         } else {
             mesh = vt::PrimitiveFactory::create_cylinder(ss.str(), PUMP_SIDES);
+            mesh->center_axis();
+            mesh->set_origin(glm::vec3(0, 0, 0));
+            mesh->set_orient(glm::vec3(0, 90, 0));
+            mesh->rebase();
         }
-        mesh->center_axis();
-        mesh->set_orient(glm::vec3(0, 90, 0));
         mesh->set_origin(glm::vec3(0, 0, 0));
-        mesh->rebase();
-        mesh->set_origin(glm::vec3(0, 0, z_offset));
         if(!i) {
-            mesh->set_scale(box_dim);
+            mesh->set_scale(glm::vec3(box_dim, ik_segment_lengths[i]));
         } else {
-            mesh->set_scale(box_dim_inner);
+            mesh->set_scale(glm::vec3(box_dim_inner, ik_segment_lengths[i]));
         }
         mesh->rebase();
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
+        if(!i) {
+            mesh->set_origin(glm::vec3(0, 0, 0));
+        } else {
+            mesh->set_origin(glm::vec3(0, 0, ik_segment_lengths[i - 1]));
+        }
         mesh->link_parent(prev_mesh, true);
         scene->add_mesh(mesh);
         ik_meshes->push_back(mesh);
         prev_mesh = mesh;
-        z_offset += box_dim.z;
     }
 }
 
@@ -247,11 +254,12 @@ int init_resources()
         ik_segment_name_ss << "ik_box_" << i;
         create_linked_segments(scene,
                                &ik_meshes,
-                               IK_SEGMENT_COUNT,
                                ik_segment_name_ss.str(),
-                               glm::vec3(IK_SEGMENT_WIDTH,
-                                         IK_SEGMENT_HEIGHT,
-                                         IK_SEGMENT_LENGTH));
+                               glm::vec2(IK_SEGMENT_WIDTH,
+                                         IK_SEGMENT_HEIGHT),
+                               IK_SEGMENT_COUNT,
+                               IK_SEGMENT_0_LENGTH,
+                               IK_SEGMENT_1_LENGTH);
         int leg_segment_index = 0;
         for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
             (*p)->set_material(phong_material);
@@ -270,8 +278,6 @@ int init_resources()
         }
         ik_legs.push_back(ik_leg);
     }
-
-    vt::Scene::instance()->m_debug_target = targets[target_index];
 
     return 1;
 }
@@ -335,7 +341,7 @@ void onTick()
     for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
         std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
         ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
-                                                      glm::vec3(0, 0, IK_SEGMENT_LENGTH),
+                                                      glm::vec3(0, 0, IK_SEGMENT_1_LENGTH),
                                                       (*r)->m_joint_body->in_abs_system(),
                                                       NULL,
                                                       IK_ITERS,
@@ -387,9 +393,6 @@ void onKeyboard(unsigned char key, int x, int y)
             break;
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
-            if(show_guide_wires) {
-                vt::Scene::instance()->m_debug_target = targets[target_index];
-            }
             break;
         case 'h': // help
             show_help = !show_help;
@@ -464,10 +467,6 @@ void onSpecial(int key, int x, int y)
             break;
         case GLUT_KEY_HOME: // target
             {
-                size_t target_count = sizeof(targets) / sizeof(targets[0]);
-                target_index = (target_index + 1) % target_count;
-                std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
-                vt::Scene::instance()->m_debug_target = targets[target_index];
                 base->set_origin(glm::vec3());
                 user_input = true;
             }

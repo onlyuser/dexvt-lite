@@ -72,7 +72,7 @@ bool show_help = false;
 bool show_lights = false;
 bool show_normals = false;
 bool wireframe_mode = false;
-bool show_guide_wires = true;
+bool show_guide_wires = false;
 bool show_axis = false;
 bool show_axis_labels = false;
 bool do_animation = true;
@@ -287,7 +287,6 @@ int init_resources()
     box = vt::PrimitiveFactory::create_box("box", BOX_WIDTH, BOX_LENGTH, BOX_HEIGHT);
     box->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
     box->set_origin(glm::vec3(0));
-    vt::Scene::instance()->m_debug_target = box->get_origin();
     box->set_material(phong_material);
     box->set_ambient_color(glm::vec3(0));
     scene->add_mesh(box);
@@ -366,7 +365,6 @@ void onTick()
                                                          tex_length,
                                                          BOX_WIDTH * 0.5);
         box->set_origin(glm::vec3(pos_within_terrain.x, terrain_height, pos_within_terrain.y));
-        vt::Scene::instance()->m_debug_target = box->get_origin();
         glm::vec3 abs_heading = box->get_abs_heading();
         glm::vec3 pivot       = glm::cross(terrain_normal, abs_heading);
         float     delta_angle = glm::degrees(glm::angle(terrain_normal, abs_heading));
@@ -477,7 +475,6 @@ void onSpecial(int key, int x, int y)
         case GLUT_KEY_HOME: // target
             {
                 box->set_origin(glm::vec3(0));
-                vt::Scene::instance()->m_debug_target = box->get_origin();
                 user_input = true;
             }
             break;

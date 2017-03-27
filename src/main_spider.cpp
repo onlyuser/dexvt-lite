@@ -746,7 +746,6 @@ void onSpecial(int key, int x, int y)
         case GLUT_KEY_HOME: // target
             {
                 box->set_origin(glm::vec3(0));
-                vt::Scene::instance()->m_debug_target = box->get_origin();
                 user_input = true;
             }
             break;

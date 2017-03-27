@@ -93,12 +93,6 @@ float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 
 int angle_delta = 1;
 
-int target_index = 0;
-glm::vec3 targets[] = {glm::vec3( 1, -1,  1),
-                       glm::vec3( 1, -1, -1),
-                       glm::vec3(-1, -1, -1),
-                       glm::vec3(-1, -1,  1)};
-
 vt::Mesh* body = NULL;
 
 struct IK_Leg
@@ -137,7 +131,6 @@ static void create_linked_segments(vt::Scene*              scene,
         z_offset += box_dim.z;
     }
 }
-
 int init_resources()
 {
     vt::Scene* scene = vt::Scene::instance();
@@ -236,8 +229,6 @@ int init_resources()
         ik_legs.push_back(ik_leg);
         angle += (360 / IK_LEG_COUNT);
     }
-
-    vt::Scene::instance()->m_debug_target = targets[target_index];
 
     return 1;
 }
@@ -371,9 +362,6 @@ void onKeyboard(unsigned char key, int x, int y)
             break;
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
-            if(show_guide_wires) {
-                vt::Scene::instance()->m_debug_target = targets[target_index];
-            }
             break;
         case 'h': // help
             show_help = !show_help;
@@ -444,11 +432,8 @@ void onSpecial(int key, int x, int y)
             break;
         case GLUT_KEY_HOME: // target
             {
-                size_t target_count = sizeof(targets) / sizeof(targets[0]);
-                target_index = (target_index + 1) % target_count;
-                std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
-                vt::Scene::instance()->m_debug_target = targets[target_index];
                 body->set_origin(glm::vec3());
+                body->set_orient(glm::vec3());
                 user_input = true;
             }
             break;
