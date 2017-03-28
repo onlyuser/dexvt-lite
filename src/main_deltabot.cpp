@@ -213,7 +213,7 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    base = vt::PrimitiveFactory::create_cylinder("base", IK_LEG_COUNT * 2, IK_LEG_RADIUS, BODY_HEIGHT);
+    base = vt::PrimitiveFactory::create_cylinder("base", IK_LEG_COUNT, IK_LEG_RADIUS, BODY_HEIGHT);
     //base->center_axis(vt::BBoxObject::ALIGN_CENTER);
     base->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
     base->set_material(phong_material);
@@ -222,7 +222,6 @@ int init_resources()
 
     body = vt::PrimitiveFactory::create_cylinder("body", IK_LEG_COUNT, IK_FOOTING_RADIUS, BODY_HEIGHT);
     //base->center_axis(vt::BBoxObject::ALIGN_CENTER);
-    body->rebase();
     body->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
     body->set_origin(glm::vec3(0, -BODY_ELEVATION, 0));
     body->set_material(phong_material);
@@ -270,9 +269,9 @@ int init_resources()
                 (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 0, 0));
             }
             if(leg_segment_index) {
-                (*p)->set_enable_orient_constraints(glm::ivec3(1, 0, 0));
-                (*p)->set_orient_constraints_center(glm::vec3(0, 0, 0));
-                (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 0, 0));
+                (*p)->set_enable_orient_constraints(glm::ivec3(1, 1, 0));
+                (*p)->set_orient_constraints_center(glm::vec3(0, 90, 0));
+                (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 90, 0));
             }
             leg_segment_index++;
         }
