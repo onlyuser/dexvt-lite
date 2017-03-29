@@ -469,7 +469,7 @@ void onSpecial(int key, int x, int y)
             break;
         case GLUT_KEY_HOME: // target
             {
-                base->set_origin(glm::vec3());
+                body->set_origin(glm::vec3(0, -BODY_ELEVATION, 0));
                 user_input = true;
             }
             break;
