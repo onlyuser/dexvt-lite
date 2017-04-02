@@ -221,6 +221,7 @@ int init_resources()
         int from_index = ((i + 1) % IK_LEG_COUNT) / 2 * 2;
         int to_index   = i / 2 * 2 + 1;
         IK_Leg* ik_leg = new IK_Leg();
+
         std::stringstream joint_name_ss;
         joint_name_ss << "ik_joint_" << i;
         ik_leg->m_joint = vt::PrimitiveFactory::create_box(joint_name_ss.str(), IK_SEGMENT_WIDTH,
@@ -230,6 +231,7 @@ int init_resources()
         ik_leg->m_joint->link_parent(body);
         ik_leg->m_joint->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angles[from_index])) * static_cast<float>(IK_LEG_RADIUS));
         scene->add_mesh(ik_leg->m_joint);
+
         ik_leg->m_target = vt::orient_to_offset(glm::vec3(0, 0, angles[to_index])) * static_cast<float>(IK_FOOTING_RADIUS) + glm::vec3(0, -BODY_ELEVATION, 0);
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
         std::stringstream ik_segment_name_ss;

@@ -54,8 +54,8 @@
 #define IK_ITERS                     50
 #define IK_LEG_COUNT                 3
 #define IK_LEG_RADIUS                1
-#define IK_SEGMENT_0_LENGTH          1.0
-#define IK_SEGMENT_1_LENGTH          2.0
+#define IK_SEGMENT_0_LENGTH          0.25
+#define IK_SEGMENT_1_LENGTH          1.5
 #define IK_SEGMENT_COUNT             2
 #define IK_SEGMENT_HEIGHT            0.125
 #define IK_SEGMENT_WIDTH             0.25
@@ -106,6 +106,7 @@ struct IK_Leg
     vt::Mesh*              m_joint_base;
     vt::Mesh*              m_joint_body;
     std::vector<vt::Mesh*> m_ik_meshes;
+    vt::Mesh*              m_rail;
 };
 
 std::vector<IK_Leg*> ik_legs;
@@ -216,6 +217,7 @@ int init_resources()
     base = vt::PrimitiveFactory::create_cylinder("base", IK_LEG_COUNT, IK_LEG_RADIUS, BODY_HEIGHT);
     //base->center_axis(vt::BBoxObject::ALIGN_CENTER);
     base->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
+    base->set_origin(glm::vec3(0, 0, 0));
     base->set_material(phong_material);
     base->set_ambient_color(glm::vec3(0));
     scene->add_mesh(base);
@@ -252,6 +254,18 @@ int init_resources()
         ik_leg->m_joint_body->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_FOOTING_RADIUS));
         scene->add_mesh(ik_leg->m_joint_body);
 
+        std::stringstream rail_name_ss;
+        rail_name_ss << "ik_rail_" << i;
+        ik_leg->m_rail = vt::PrimitiveFactory::create_box(rail_name_ss.str(), IK_SEGMENT_WIDTH,
+                                                                              IK_SEGMENT_HEIGHT,
+                                                                              BODY_ELEVATION);
+        ik_leg->m_rail->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
+        ik_leg->m_rail->set_origin(vt::orient_to_offset(glm::vec3(0, BODY_HEIGHT * 0.5, angle)) * static_cast<float>(IK_LEG_RADIUS));
+        ik_leg->m_rail->set_orient(glm::vec3(0, 90, angle));
+        ik_leg->m_rail->set_material(phong_material);
+        ik_leg->m_rail->set_ambient_color(glm::vec3(0));
+        scene->add_mesh(ik_leg->m_rail);
+
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
         std::stringstream ik_segment_name_ss;
         ik_segment_name_ss << "ik_box_" << i;
@@ -267,10 +281,12 @@ int init_resources()
         for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
             (*p)->set_material(phong_material);
             (*p)->set_ambient_color(glm::vec3(0));
+            (*p)->set_orient(glm::vec3(0, 90, angle));
             if(!leg_segment_index) {
-                (*p)->set_enable_orient_constraints(glm::ivec3(1, 0, 1));
-                (*p)->set_orient_constraints_center(glm::vec3(0, 0, angle));
-                (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 0, 0));
+                (*p)->set_ik_joint(vt::XformObject::IK_JOINT_PRISMATIC);
+                (*p)->set_enable_origin_constraints(glm::ivec3(1, 1, 1));
+                (*p)->set_origin_constraints_center(ik_leg->m_joint_base->in_abs_system() - glm::vec3(0, BODY_ELEVATION * 0.5, 0));
+                (*p)->set_origin_constraints_max_deviation(glm::vec3(0, BODY_ELEVATION * 0.5, 0));
             }
             if(leg_segment_index) {
                 (*p)->set_enable_orient_constraints(glm::ivec3(1, 1, 0));
@@ -425,6 +441,7 @@ void onKeyboard(unsigned char key, int x, int y)
                 for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
                     (*q)->m_joint_base->set_ambient_color(glm::vec3(1, 0, 0));
                     (*q)->m_joint_body->set_ambient_color(glm::vec3(1, 0, 0));
+                    (*q)->m_rail->set_ambient_color(glm::vec3(1, 0, 0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
                     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                         (*p)->set_ambient_color(glm::vec3(0, 1, 0));
@@ -437,6 +454,7 @@ void onKeyboard(unsigned char key, int x, int y)
                 for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
                     (*q)->m_joint_base->set_ambient_color(glm::vec3(0));
                     (*q)->m_joint_body->set_ambient_color(glm::vec3(0));
+                    (*q)->m_rail->set_ambient_color(glm::vec3(0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
                     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                         (*p)->set_ambient_color(glm::vec3(0));
