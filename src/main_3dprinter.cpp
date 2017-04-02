@@ -50,7 +50,7 @@
 #define BODY_ELEVATION               2
 #define BODY_HEIGHT                  0.125
 #define BODY_SPEED                   0.05f
-#define IK_FOOTING_RADIUS            0.5
+#define IK_FOOTING_RADIUS            0.25
 #define IK_ITERS                     50
 #define IK_LEG_COUNT                 3
 #define IK_LEG_RADIUS                1
@@ -98,12 +98,12 @@ float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 
 int angle_delta = 1;
 
-vt::Mesh* base = NULL;
+vt::Mesh* base_upper = NULL;
+vt::Mesh* base_lower = NULL;
 vt::Mesh* body = NULL;
 
 struct IK_Leg
 {
-    vt::Mesh*              m_joint_base;
     vt::Mesh*              m_joint_body;
     std::vector<vt::Mesh*> m_ik_meshes;
     vt::Mesh*              m_rail;
@@ -214,18 +214,26 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    base = vt::PrimitiveFactory::create_cylinder("base", IK_LEG_COUNT, IK_LEG_RADIUS, BODY_HEIGHT);
-    //base->center_axis(vt::BBoxObject::ALIGN_CENTER);
-    base->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
-    base->set_origin(glm::vec3(0, 0, 0));
-    base->set_material(phong_material);
-    base->set_ambient_color(glm::vec3(0));
-    scene->add_mesh(base);
+    base_upper = vt::PrimitiveFactory::create_cylinder("base_upper", IK_LEG_COUNT, IK_LEG_RADIUS, BODY_HEIGHT);
+    //base_upper->center_axis(vt::BBoxObject::ALIGN_CENTER);
+    base_upper->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
+    base_upper->set_origin(glm::vec3(0, 0, 0));
+    base_upper->set_material(phong_material);
+    base_upper->set_ambient_color(glm::vec3(0));
+    scene->add_mesh(base_upper);
+
+    base_lower = vt::PrimitiveFactory::create_cylinder("base_lower", IK_LEG_COUNT, IK_LEG_RADIUS, BODY_HEIGHT);
+    //base_lower->center_axis(vt::BBoxObject::ALIGN_CENTER);
+    base_lower->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
+    base_lower->set_origin(glm::vec3(0, 0, 0) - glm::vec3(0, BODY_ELEVATION, 0));
+    base_lower->set_material(phong_material);
+    base_lower->set_ambient_color(glm::vec3(0));
+    scene->add_mesh(base_lower);
 
     body = vt::PrimitiveFactory::create_cylinder("body", IK_LEG_COUNT, IK_FOOTING_RADIUS, BODY_HEIGHT);
-    //base->center_axis(vt::BBoxObject::ALIGN_CENTER);
+    //body->center_axis(vt::BBoxObject::ALIGN_CENTER);
     body->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
-    body->set_origin(glm::vec3(0, -BODY_ELEVATION, 0));
+    body->set_origin(glm::vec3(0, -BODY_ELEVATION + IK_SEGMENT_HEIGHT, 0));
     body->set_material(phong_material);
     body->set_ambient_color(glm::vec3(0));
     scene->add_mesh(body);
@@ -233,16 +241,6 @@ int init_resources()
     for(int i = 0; i < IK_LEG_COUNT; i++) {
         float angle = i * 360 / IK_LEG_COUNT;
         IK_Leg* ik_leg = new IK_Leg();
-
-        std::stringstream joint_base_name_ss;
-        joint_base_name_ss << "ik_joint_base_" << i;
-        ik_leg->m_joint_base = vt::PrimitiveFactory::create_box(joint_base_name_ss.str(), IK_SEGMENT_WIDTH,
-                                                                                          IK_SEGMENT_WIDTH,
-                                                                                          IK_SEGMENT_WIDTH);
-        ik_leg->m_joint_base->center_axis();
-        ik_leg->m_joint_base->link_parent(base);
-        ik_leg->m_joint_base->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS - IK_SEGMENT_HEIGHT));
-        scene->add_mesh(ik_leg->m_joint_base);
 
         std::stringstream joint_body_name_ss;
         joint_body_name_ss << "ik_joint_body_" << i;
@@ -285,7 +283,8 @@ int init_resources()
             if(!leg_segment_index) {
                 (*p)->set_ik_joint(vt::XformObject::IK_JOINT_PRISMATIC);
                 (*p)->set_enable_origin_constraints(glm::ivec3(1, 1, 1));
-                (*p)->set_origin_constraints_center(ik_leg->m_joint_base->in_abs_system() - glm::vec3(0, BODY_ELEVATION * 0.5, 0));
+                (*p)->set_origin_constraints_center(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS - IK_SEGMENT_HEIGHT) -
+                                                    glm::vec3(0, BODY_ELEVATION * 0.5, 0));
                 (*p)->set_origin_constraints_max_deviation(glm::vec3(0, BODY_ELEVATION * 0.5, 0));
             }
             if(leg_segment_index) {
@@ -353,12 +352,6 @@ void onTick()
     }
     if(page_down_key) {
         body->set_origin(body->get_origin() - body->get_abs_up_direction() * BODY_SPEED);
-    }
-    if(user_input) {
-        for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
-            std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-            ik_meshes[0]->set_origin((*q)->m_joint_base->in_abs_system());
-        }
     }
     for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
         std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
@@ -436,12 +429,12 @@ void onKeyboard(unsigned char key, int x, int y)
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
-                base->set_ambient_color(glm::vec3(1));
+                base_upper->set_ambient_color(glm::vec3(1));
+                base_lower->set_ambient_color(glm::vec3(1));
                 body->set_ambient_color(glm::vec3(1));
                 for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
-                    (*q)->m_joint_base->set_ambient_color(glm::vec3(1, 0, 0));
                     (*q)->m_joint_body->set_ambient_color(glm::vec3(1, 0, 0));
-                    (*q)->m_rail->set_ambient_color(glm::vec3(1, 0, 0));
+                    (*q)->m_rail->set_ambient_color(glm::vec3(1));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
                     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                         (*p)->set_ambient_color(glm::vec3(0, 1, 0));
@@ -449,10 +442,10 @@ void onKeyboard(unsigned char key, int x, int y)
                 }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
-                base->set_ambient_color(glm::vec3(0));
+                base_upper->set_ambient_color(glm::vec3(0));
+                base_lower->set_ambient_color(glm::vec3(0));
                 body->set_ambient_color(glm::vec3(0));
                 for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
-                    (*q)->m_joint_base->set_ambient_color(glm::vec3(0));
                     (*q)->m_joint_body->set_ambient_color(glm::vec3(0));
                     (*q)->m_rail->set_ambient_color(glm::vec3(0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
