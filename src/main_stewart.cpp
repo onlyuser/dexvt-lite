@@ -232,7 +232,8 @@ int init_resources()
         ik_leg->m_joint->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angles[from_index])) * static_cast<float>(IK_LEG_RADIUS));
         scene->add_mesh(ik_leg->m_joint);
 
-        ik_leg->m_target = vt::orient_to_offset(glm::vec3(0, 0, angles[to_index])) * static_cast<float>(IK_FOOTING_RADIUS) + glm::vec3(0, -BODY_ELEVATION, 0);
+        ik_leg->m_target = vt::orient_to_offset(glm::vec3(0, 0, angles[to_index])) * static_cast<float>(IK_FOOTING_RADIUS) +
+                           glm::vec3(0, -BODY_ELEVATION, 0);
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
         std::stringstream ik_segment_name_ss;
         ik_segment_name_ss << "ik_box_" << i;
