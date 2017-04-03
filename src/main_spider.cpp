@@ -467,14 +467,14 @@ int init_resources()
             (*p)->set_material(phong_material);
             (*p)->set_ambient_color(glm::vec3(0));
             if(leg_segment_index == 0) {
-                (*p)->set_enable_orient_constraints(glm::ivec3(1, 1, 0));
-                (*p)->set_orient_constraints_center(glm::vec3(0, -45, 0));
-                (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 45, 0));
+                (*p)->set_enable_constraints(glm::ivec3(1, 1, 0));
+                (*p)->set_constraints_center(glm::vec3(0, -45, 0));
+                (*p)->set_constraints_max_deviation(glm::vec3(0, 45, 0));
             }
             if(leg_segment_index >= 1) {
-                (*p)->set_enable_orient_constraints(glm::ivec3(1, 1, 1));
-                (*p)->set_orient_constraints_center(glm::vec3(0, 45, 0));
-                (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 45, 0));
+                (*p)->set_enable_constraints(glm::ivec3(1, 1, 1));
+                (*p)->set_constraints_center(glm::vec3(0, 45, 0));
+                (*p)->set_constraints_max_deviation(glm::vec3(0, 45, 0));
             }
             leg_segment_index++;
         }

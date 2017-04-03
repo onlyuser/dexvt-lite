@@ -37,23 +37,14 @@ public:
     void set_scale(glm::vec3 scale);
     void reset_xform();
 
-    // orient constraints
-    const glm::ivec3 &get_enable_orient_constraints() const                               { return m_enable_orient_constraints; }
-    void set_enable_orient_constraints(glm::ivec3 enable_orient_constraints)              { m_enable_orient_constraints = enable_orient_constraints; }
-    const glm::vec3 &get_orient_constraints_center() const                                { return m_orient_constraints_center; }
-    void set_orient_constraints_center(glm::vec3 orient_constraints_center)               { m_orient_constraints_center = orient_constraints_center; }
-    const glm::vec3 &get_orient_constraints_max_deviation() const                         { return m_orient_constraints_max_deviation; }
-    void set_orient_constraints_max_deviation(glm::vec3 orient_constraints_max_deviation) { m_orient_constraints_max_deviation = orient_constraints_max_deviation; }
-    void apply_orient_constraints();
-
-    // origin constraints
-    const glm::ivec3 &get_enable_origin_constraints() const                               { return m_enable_origin_constraints; }
-    void set_enable_origin_constraints(glm::ivec3 enable_origin_constraints)              { m_enable_origin_constraints = enable_origin_constraints; }
-    const glm::vec3 &get_origin_constraints_center() const                                { return m_origin_constraints_center; }
-    void set_origin_constraints_center(glm::vec3 origin_constraints_center)               { m_origin_constraints_center = origin_constraints_center; }
-    const glm::vec3 &get_origin_constraints_max_deviation() const                         { return m_origin_constraints_max_deviation; }
-    void set_origin_constraints_max_deviation(glm::vec3 origin_constraints_max_deviation) { m_origin_constraints_max_deviation = origin_constraints_max_deviation; }
-    void apply_origin_constraints();
+    // constraints
+    const glm::ivec3 &get_enable_constraints() const                        { return m_enable_constraints; }
+    void set_enable_constraints(glm::ivec3 enable_constraints)              { m_enable_constraints = enable_constraints; }
+    const glm::vec3 &get_constraints_center() const                         { return m_constraints_center; }
+    void set_constraints_center(glm::vec3 constraints_center)               { m_constraints_center = constraints_center; }
+    const glm::vec3 &get_constraints_max_deviation() const                  { return m_constraints_max_deviation; }
+    void set_constraints_max_deviation(glm::vec3 constraints_max_deviation) { m_constraints_max_deviation = constraints_max_deviation; }
+    void apply_constraints();
 
     // coordinate system conversions
     glm::vec3 in_abs_system(glm::vec3 local_point = glm::vec3(0));
@@ -101,15 +92,10 @@ protected:
     glm::mat4 m_xform;
     glm::mat4 m_normal_xform;
 
-    // orient constraints
-    glm::ivec3 m_enable_orient_constraints;
-    glm::vec3  m_orient_constraints_center;
-    glm::vec3  m_orient_constraints_max_deviation;
-
-    // origin constraints
-    glm::ivec3 m_enable_origin_constraints;
-    glm::vec3  m_origin_constraints_center;
-    glm::vec3  m_origin_constraints_max_deviation;
+    // constraints
+    glm::ivec3 m_enable_constraints;
+    glm::vec3  m_constraints_center;
+    glm::vec3  m_constraints_max_deviation;
 
     // hierarchy related
     XformObject* m_parent;

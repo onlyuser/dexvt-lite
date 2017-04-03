@@ -282,15 +282,15 @@ int init_resources()
             (*p)->set_orient(glm::vec3(0, 90, angle));
             if(!leg_segment_index) {
                 (*p)->set_ik_joint(vt::XformObject::IK_JOINT_PRISMATIC);
-                (*p)->set_enable_origin_constraints(glm::ivec3(1, 1, 1));
-                (*p)->set_origin_constraints_center(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS - IK_SEGMENT_HEIGHT) -
-                                                    glm::vec3(0, BODY_ELEVATION * 0.5, 0));
-                (*p)->set_origin_constraints_max_deviation(glm::vec3(0, BODY_ELEVATION * 0.5, 0));
+                (*p)->set_enable_constraints(glm::ivec3(1, 1, 1));
+                (*p)->set_constraints_center(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS - IK_SEGMENT_HEIGHT) -
+                                             glm::vec3(0, BODY_ELEVATION * 0.5, 0));
+                (*p)->set_constraints_max_deviation(glm::vec3(0, BODY_ELEVATION * 0.5, 0));
             }
             if(leg_segment_index) {
-                (*p)->set_enable_orient_constraints(glm::ivec3(1, 1, 0));
-                (*p)->set_orient_constraints_center(glm::vec3(0, 90, 0));
-                (*p)->set_orient_constraints_max_deviation(glm::vec3(0, 90, 0));
+                (*p)->set_enable_constraints(glm::ivec3(1, 1, 0));
+                (*p)->set_constraints_center(glm::vec3(0, 90, 0));
+                (*p)->set_constraints_max_deviation(glm::vec3(0, 90, 0));
             }
             leg_segment_index++;
         }
@@ -484,7 +484,7 @@ void onSpecial(int key, int x, int y)
             break;
         case GLUT_KEY_HOME: // target
             {
-                body->set_origin(glm::vec3(0, -BODY_ELEVATION, 0));
+                body->set_origin(glm::vec3(0, -BODY_ELEVATION + IK_SEGMENT_HEIGHT, 0));
                 user_input = true;
             }
             break;
