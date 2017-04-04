@@ -4,7 +4,7 @@
 #include <NamedObject.h>
 #include <FrameObject.h>
 #include <IdentObject.h>
-#include <BindableObjectIFace.h>
+#include <BindableObjectBase.h>
 #include <GL/glew.h>
 #include <string>
 #include <glm/glm.hpp>
@@ -17,7 +17,7 @@ namespace vt {
 class Texture : public NamedObject,
                 public FrameObject<glm::ivec2, int>,
                 public IdentObject,
-                public BindableObjectIFace
+                public BindableObjectBase
 {
 public:
     typedef enum { RGB, DEPTH, STENCIL } type_t;

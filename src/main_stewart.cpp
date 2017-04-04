@@ -126,14 +126,14 @@ static void create_linked_segments(vt::Scene*              scene,
         vt::Mesh* mesh = vt::PrimitiveFactory::create_cylinder(ss.str(), PUMP_SIDES);
         mesh->center_axis();
         mesh->set_orient(glm::vec3(0, 90, 0));
-        mesh->rebase();
+        mesh->flatten();
         mesh->set_origin(glm::vec3(0, 0, 0));
         if(!prev_mesh) {
             mesh->set_scale(box_dim_inner);
         } else {
             mesh->set_scale(box_dim);
         }
-        mesh->rebase();
+        mesh->flatten();
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
         if(!prev_mesh) {
             mesh->set_origin(glm::vec3(0, 0, 0));
@@ -206,7 +206,7 @@ int init_resources()
     base = vt::PrimitiveFactory::create_cylinder("base", IK_LEG_COUNT * 0.5, IK_FOOTING_RADIUS, BODY_HEIGHT);
     //body->center_axis(vt::BBoxObject::ALIGN_CENTER);
     base->set_orient(glm::vec3(0, 0, 360 / IK_LEG_COUNT));
-    base->rebase();
+    base->flatten();
     base->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
     base->set_origin(glm::vec3(0, -BODY_ELEVATION, 0));
     base->set_material(phong_material);
@@ -254,7 +254,7 @@ int init_resources()
                 (*p)->set_ik_joint_constraints_max_deviation(glm::vec3(0, 60, 0));
             }
             if(leg_segment_index) {
-                (*p)->set_ik_joint_type(vt::XformObject::IK_JOINT_TYPE_PRISMATIC);
+                (*p)->set_ik_joint_type(vt::TransformObject::IK_JOINT_TYPE_PRISMATIC);
                 (*p)->set_enable_ik_joint_constraints(glm::ivec3(1, 1, 1));
                 (*p)->set_ik_joint_constraints_center(glm::vec3(0, 0, IK_SEGMENT_LENGTH * 0.5));
                 (*p)->set_ik_joint_constraints_max_deviation(glm::vec3(0, 0, IK_SEGMENT_LENGTH * 0.5));

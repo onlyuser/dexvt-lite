@@ -1,6 +1,6 @@
 #include <PrimitiveFactory.h>
 #include <Modifiers.h>
-#include <MeshIFace.h>
+#include <MeshBase.h>
 #include <Util.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -9,12 +9,12 @@
 
 namespace vt {
 
-MeshIFace* alloc_meshiface(std::string name, size_t num_vertex, size_t num_tri);
+MeshBase* alloc_mesh_base(std::string name, size_t num_vertex, size_t num_tri);
 
 class Mesh;
 
-Mesh* _mesh(MeshIFace* mesh);
-MeshIFace* _meshiface(Mesh* mesh);
+Mesh* _mesh(MeshBase* mesh);
+MeshBase* _mesh_base(Mesh* mesh);
 
 Mesh* PrimitiveFactory::create_grid(
         std::string name,
@@ -27,7 +27,7 @@ Mesh* PrimitiveFactory::create_grid(
 {
     int        num_vertex = (rows + 1) * (cols + 1);
     int        num_tri    = rows * cols * 2;
-    MeshIFace* mesh       = alloc_meshiface(name, num_vertex, num_tri);
+    MeshBase* mesh       = alloc_mesh_base(name, num_vertex, num_tri);
 
     // ==============================
     // init mesh vertex/normal coords
@@ -90,7 +90,7 @@ Mesh* PrimitiveFactory::create_sphere(
 {
     int        cols = slices;
     int        rows = stacks;
-    MeshIFace* mesh = _meshiface(create_grid(name, cols, rows));
+    MeshBase* mesh = _mesh_base(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -127,7 +127,7 @@ Mesh* PrimitiveFactory::create_hemisphere(
 {
     int        cols = slices;
     int        rows = stacks * 0.5 + 2;
-    MeshIFace* mesh = _meshiface(create_grid(name, cols, rows));
+    MeshBase* mesh = _mesh_base(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -175,7 +175,7 @@ Mesh* PrimitiveFactory::create_cylinder(
 {
     int        cols = slices;
     int        rows = 5;
-    MeshIFace* mesh = _meshiface(create_grid(name, cols, rows));
+    MeshBase* mesh = _mesh_base(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -241,7 +241,7 @@ Mesh* PrimitiveFactory::create_cone(
 {
     int        cols = slices;
     int        rows = 3;
-    MeshIFace* mesh = _meshiface(create_grid(name, cols, rows));
+    MeshBase* mesh = _mesh_base(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -303,7 +303,7 @@ Mesh* PrimitiveFactory::create_torus(
 {
     int        cols = slices;
     int        rows = stacks;
-    MeshIFace* mesh = _meshiface(create_grid(name, cols, rows));
+    MeshBase* mesh = _mesh_base(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -341,7 +341,7 @@ Mesh* PrimitiveFactory::create_box(
         float       height,
         float       length)
 {
-    MeshIFace* mesh = alloc_meshiface(name, 24, 12);
+    MeshBase* mesh = alloc_mesh_base(name, 24, 12);
 
     // ==============================
     // init mesh vertex/normal coords
@@ -407,10 +407,10 @@ Mesh* PrimitiveFactory::create_box(
         mesh->set_vert_tangent(5 * 4 + r, glm::vec3(1,  0, 0));
     }
 
-    glm::mat4 scale_xform = glm::scale(glm::mat4(1), glm::vec3(width, height, length));
+    glm::mat4 scale_transform = glm::scale(glm::mat4(1), glm::vec3(width, height, length));
     size_t num_vertex = mesh->get_num_vertex();
     for(int t = 1; t < static_cast<int>(num_vertex); t++) {
-        mesh->set_vert_coord(t, glm::vec3(glm::vec4(mesh->get_vert_coord(t), 1) * scale_xform));
+        mesh->set_vert_coord(t, glm::vec3(glm::vec4(mesh->get_vert_coord(t), 1) * scale_transform));
     }
 
     // ========================
@@ -469,7 +469,7 @@ Mesh* PrimitiveFactory::create_tetrahedron(
         float       height,
         float       length)
 {
-    MeshIFace* mesh = alloc_meshiface(name, 12, 4);
+    MeshBase* mesh = alloc_mesh_base(name, 12, 4);
 
     // triangle opposite to origin
     mesh->set_vert_coord(0, glm::vec3(1, 0, 0));
@@ -507,7 +507,7 @@ Mesh* PrimitiveFactory::create_geosphere(
         float       radius,
         int         tessellation_iters)
 {
-    MeshIFace* mesh = _meshiface(create_sphere(name, 4, 2, radius));
+    MeshBase* mesh = _mesh_base(create_sphere(name, 4, 2, radius));
     mesh->center_axis();
     for(int i = 0; i < tessellation_iters; i++) {
         mesh_tessellate(mesh, TESSELLATION_EDGE_CENTER, true);
@@ -544,7 +544,7 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
 
     int        num_vertex = 336;
     int        num_tri    = 112;
-    MeshIFace* mesh       = alloc_meshiface(name, num_vertex, num_tri);
+    MeshBase* mesh       = alloc_mesh_base(name, num_vertex, num_tri);
 
     float crown_height   = height * crown_height_to_total_height_ratio;
     float pavilion_depth = height - crown_height;

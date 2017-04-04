@@ -1,5 +1,5 @@
 #include <File3ds.h>
-#include <MeshIFace.h>
+#include <MeshBase.h>
 #include <Util.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
@@ -9,11 +9,11 @@
 
 namespace vt {
 
-MeshIFace* alloc_meshiface(std::string name, size_t num_vertex, size_t num_tri);
+MeshBase* alloc_mesh_base(std::string name, size_t num_vertex, size_t num_tri);
 
 class Mesh;
 
-Mesh* _mesh(MeshIFace* mesh);
+Mesh* _mesh(MeshBase* mesh);
 
 static void read_string(FILE* stream, char* buf)
 {
@@ -25,17 +25,17 @@ static void read_string(FILE* stream, char* buf)
 
 bool File3ds::load3ds(std::string filename, int index, std::vector<Mesh*>* meshes)
 {
-    std::vector<MeshIFace*> meshes_iface;
+    std::vector<MeshBase*> meshes_iface;
     if(!load3ds_impl(filename, index, &meshes_iface)) {
         return false;
     }
-    for(std::vector<MeshIFace*>::iterator p = meshes_iface.begin(); p != meshes_iface.end(); p++) {
+    for(std::vector<MeshBase*>::iterator p = meshes_iface.begin(); p != meshes_iface.end(); p++) {
         meshes->push_back(_mesh(*p));
     }
     return true;
 }
 
-bool File3ds::load3ds_impl(std::string filename, int index, std::vector<MeshIFace*>* meshes)
+bool File3ds::load3ds_impl(std::string filename, int index, std::vector<MeshBase*>* meshes)
 {
     if(!meshes) {
         return false;
@@ -72,7 +72,7 @@ bool File3ds::load3ds_impl(std::string filename, int index, std::vector<MeshIFac
                     int num_tri = read_short(stream);
                     fseek(stream, mesh_base, SEEK_SET);
 
-                    MeshIFace* mesh = alloc_meshiface(buf, num_vertex, num_tri);
+                    MeshBase* mesh = alloc_mesh_base(buf, num_vertex, num_tri);
 
                     enter_chunk(stream, TRI_VERTEXL, mesh_end);
                     read_vertices(stream, mesh);
@@ -102,7 +102,7 @@ bool File3ds::load3ds_impl(std::string filename, int index, std::vector<MeshIFac
         }
         fclose(stream);
         glm::vec3 global_center = (global_min + global_max) * 0.5f;
-        for(std::vector<MeshIFace*>::iterator p = meshes->begin(); p != meshes->end(); p++) {
+        for(std::vector<MeshBase*>::iterator p = meshes->begin(); p != meshes->end(); p++) {
             (*p)->set_axis(global_center);
             (*p)->update_normals_and_tangents();
             (*p)->update_bbox();
@@ -128,7 +128,7 @@ uint32_t File3ds::enter_chunk(FILE* stream, uint32_t chunk_id, uint32_t chunk_en
     return ftell(stream)+offset;
 }
 
-void File3ds::read_vertices(FILE* stream, MeshIFace* mesh)
+void File3ds::read_vertices(FILE* stream, MeshBase* mesh)
 {
     float* vert_coord = new float[3];
     fseek(stream, sizeof(uint16_t), SEEK_CUR); // skip list size
@@ -140,7 +140,7 @@ void File3ds::read_vertices(FILE* stream, MeshIFace* mesh)
     delete[] vert_coord;
 }
 
-void File3ds::read_faces(FILE* stream, MeshIFace* mesh)
+void File3ds::read_faces(FILE* stream, MeshBase* mesh)
 {
     uint16_t* tri_indices = new uint16_t[3];
     fseek(stream, sizeof(uint16_t), SEEK_CUR); // skip list size

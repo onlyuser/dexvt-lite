@@ -2,12 +2,12 @@
 #define VT_BUFFER_H_
 
 #include <IdentObject.h>
-#include <BindableObjectIFace.h>
+#include <BindableObjectBase.h>
 #include <GL/glew.h>
 
 namespace vt {
 
-class Buffer : public IdentObject, public BindableObjectIFace
+class Buffer : public IdentObject, public BindableObjectBase
 {
 public:
     Buffer(GLenum target, size_t size, void* data);

@@ -297,11 +297,11 @@ void Scene::render(bool                clear_canvas,
         if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_env_map_texture)) {
             shader_context->set_env_map_texture_index(0); // skymap texture index
         }
-        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_normal_xform)) {
-            shader_context->set_inv_normal_xform(glm::inverse(m_camera->get_normal_xform()));
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_normal_transform)) {
+            shader_context->set_inv_normal_transform(glm::inverse(m_camera->get_normal_transform()));
         }
-        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_projection_xform)) {
-            shader_context->set_inv_projection_xform(glm::inverse(m_camera->get_projection_xform()));
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_projection_transform)) {
+            shader_context->set_inv_projection_transform(glm::inverse(m_camera->get_projection_transform()));
         }
         shader_context->render();
     }
@@ -355,7 +355,7 @@ void Scene::render(bool                clear_canvas,
             continue;
         }
         program->use();
-        glm::mat4 vp_xform = m_camera->get_projection_xform()*m_camera->get_xform();
+        glm::mat4 vp_transform = m_camera->get_projection_transform()*m_camera->get_transform();
         if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_ambient_color)) {
             shader_context->set_ambient_color(glm::value_ptr(mesh->get_ambient_color()));
         }
@@ -398,14 +398,14 @@ void Scene::render(bool                clear_canvas,
         if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_glow_cutoff_threshold)) {
             shader_context->set_glow_cutoff_threshold(m_glow_cutoff_threshold);
         }
-        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_normal_xform)) {
-            shader_context->set_inv_normal_xform(glm::inverse(m_camera->get_normal_xform()));
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_normal_transform)) {
+            shader_context->set_inv_normal_transform(glm::inverse(m_camera->get_normal_transform()));
         }
-        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_projection_xform)) {
-            shader_context->set_inv_projection_xform(glm::inverse(m_camera->get_projection_xform()));
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_projection_transform)) {
+            shader_context->set_inv_projection_transform(glm::inverse(m_camera->get_projection_transform()));
         }
-        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_view_proj_xform)) {
-            shader_context->set_inv_view_proj_xform(glm::inverse(m_camera->get_xform())*glm::inverse(m_camera->get_projection_xform()));
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_inv_view_proj_transform)) {
+            shader_context->set_inv_view_proj_transform(glm::inverse(m_camera->get_transform())*glm::inverse(m_camera->get_projection_transform()));
         }
         if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_light_color)) {
             shader_context->set_light_color(NUM_LIGHTS, m_light_color);
@@ -419,14 +419,14 @@ void Scene::render(bool                clear_canvas,
         if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_light_pos)) {
             shader_context->set_light_pos(NUM_LIGHTS, m_light_pos);
         }
-        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_model_xform)) {
-            shader_context->set_model_xform(mesh->get_xform());
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_model_transform)) {
+            shader_context->set_model_transform(mesh->get_transform());
         }
-        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_mvp_xform)) {
-            shader_context->set_mvp_xform(vp_xform*mesh->get_xform());
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_mvp_transform)) {
+            shader_context->set_mvp_transform(vp_transform*mesh->get_transform());
         }
-        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_normal_xform)) {
-            shader_context->set_normal_xform(mesh->get_normal_xform());
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_normal_transform)) {
+            shader_context->set_normal_transform(mesh->get_normal_transform());
         }
         if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_random_texture)) {
             shader_context->set_random_texture_index(material->get_texture_index_by_name("random_texture"));
@@ -443,8 +443,8 @@ void Scene::render(bool                clear_canvas,
         if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_color_texture2)) {
             shader_context->set_texture2_index(m_overlay->get_texture2_index());
         }
-        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_view_proj_xform)) {
-            shader_context->set_view_proj_xform(vp_xform);
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_view_proj_transform)) {
+            shader_context->set_view_proj_transform(vp_transform);
         }
         if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_viewport_dim)) {
             if(texture) {
@@ -485,12 +485,12 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
     glUseProgram(0);
 
     glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(glm::value_ptr(m_camera->get_projection_xform()));
+    glLoadMatrixf(glm::value_ptr(m_camera->get_projection_transform()));
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
 
     if(draw_guide_wires) {
-        glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * glm::translate(glm::mat4(1), m_debug_target)));
+        glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * glm::translate(glm::mat4(1), m_debug_target)));
         glLineWidth(guide_wire_width);
         glBegin(GL_LINES);
 
@@ -499,7 +499,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
         glutWireSphere(TARGET_RADIUS, 4, 2);
 
         for(std::vector<glm::vec3>::const_iterator p = m_debug_targets.begin(); p != m_debug_targets.end(); p++) {
-            glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * glm::translate(glm::mat4(1), *p)));
+            glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * glm::translate(glm::mat4(1), *p)));
 
             // red
             glColor3f(1, 0, 0);
@@ -516,7 +516,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
         }
 
         if(draw_guide_wires && ((*p)->get_parent() || (*p)->get_children().size())) {
-            glLoadMatrixf(glm::value_ptr(m_camera->get_xform()));
+            glLoadMatrixf(glm::value_ptr(m_camera->get_transform()));
             glLineWidth(guide_wire_width);
             glBegin(GL_LINES);
 
@@ -524,7 +524,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
             glColor3f(1, 1, 1);
             glm::vec3 abs_origin = (*p)->in_abs_system();
             glVertex3fv(&abs_origin.x);
-            glm::vec3 endpoint = glm::vec3((*p)->get_xform() * glm::vec4(VEC_UP * up_arm_length, 1));
+            glm::vec3 endpoint = glm::vec3((*p)->get_transform() * glm::vec4(VEC_UP * up_arm_length, 1));
             glVertex3fv(&endpoint.x);
 
             glEnd();
@@ -532,7 +532,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
         }
 
         if(draw_guide_wires && (*p)->get_parent()) {
-            glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_parent()->get_xform()));
+            glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * (*p)->get_parent()->get_transform()));
             glLineWidth(guide_wire_width);
             glBegin(GL_LINES);
 
@@ -577,7 +577,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
         }
 
         if(draw_axis) {
-            glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
+            glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * (*p)->get_transform()));
             glLineWidth(axis_line_width);
             glBegin(GL_LINES);
 
@@ -629,7 +629,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
             glm::vec3 urf(max.x, max.y, max.z);
             glm::vec3 ulf(min.x, max.y, max.z);
 
-            glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
+            glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * (*p)->get_transform()));
             glLineWidth(bbox_line_width);
             glBegin(GL_LINES);
 
@@ -664,7 +664,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
         if(draw_normals) {
             glEnable(GL_DEPTH_TEST);
 
-            glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
+            glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * (*p)->get_transform()));
             glLineWidth(normal_line_width);
             glBegin(GL_LINES);
 
@@ -708,15 +708,15 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
         }
 
         if(draw_axis_labels) {
-            glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
+            glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * (*p)->get_transform()));
             std::string axis_label;
 #if 1
             axis_label = (*p)->get_name();
 #else
             glm::vec3 abs_origin;
-            XformObject* parent = (*p)->get_parent();
+            TransformObject* parent = (*p)->get_parent();
             if(parent) {
-                abs_origin = glm::vec3(parent->get_xform() * glm::vec4((*p)->get_origin(), 1));
+                abs_origin = glm::vec3(parent->get_transform() * glm::vec4((*p)->get_origin(), 1));
             } else {
                 abs_origin = (*p)->get_origin();
             }
@@ -734,7 +734,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
         glMatrixMode(GL_PROJECTION);
         Camera::projection_mode_t prev_projection_mode = m_camera->get_projection_mode();
         m_camera->set_projection_mode(Camera::PROJECTION_MODE_ORTHO);
-        glLoadMatrixf(glm::value_ptr(m_camera->get_projection_xform()));
+        glLoadMatrixf(glm::value_ptr(m_camera->get_projection_transform()));
         m_camera->set_projection_mode(prev_projection_mode);
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
@@ -748,7 +748,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
         if(dim.x < dim.y) {
             half_height /= aspect_ratio;
         }
-        glLoadMatrixf(glm::value_ptr(glm::translate(glm::mat4(1), glm::vec3(-half_width, half_height, 0)) * m_camera->get_xform()));
+        glLoadMatrixf(glm::value_ptr(glm::translate(glm::mat4(1), glm::vec3(-half_width, half_height, 0)) * m_camera->get_transform()));
         glColor3f(1, 1, 1);
         glRasterPos2f(0, 0);
         print_bitmap_string(GLUT_BITMAP_HELVETICA_18, hud_text);
@@ -762,11 +762,11 @@ void Scene::render_lights() const
 {
     glUseProgram(0);
     glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(glm::value_ptr(m_camera->get_projection_xform()));
+    glLoadMatrixf(glm::value_ptr(m_camera->get_projection_transform()));
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     for(lights_t::const_iterator p = m_lights.begin(); p != m_lights.end(); p++) {
-        glLoadMatrixf(glm::value_ptr(m_camera->get_xform() * (*p)->get_xform()));
+        glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * (*p)->get_transform()));
         glColor3f(1, 1, 0);
         glutWireSphere(TARGET_RADIUS, 4, 2);
     }

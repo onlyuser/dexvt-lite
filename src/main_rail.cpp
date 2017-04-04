@@ -131,7 +131,7 @@ static void create_linked_segments(vt::Scene*              scene,
         mesh->center_axis();
         mesh->set_origin(glm::vec3(0, 0, 0));
         mesh->set_scale(box_dim);
-        mesh->rebase();
+        mesh->flatten();
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
         if(!prev_mesh) {
             mesh->set_origin(glm::vec3(0, 0, 0));
@@ -217,7 +217,7 @@ int init_resources()
     ground->center_axis(vt::BBoxObject::ALIGN_Y_MAX);
     ground->set_origin(glm::vec3(0));
     ground->set_scale(glm::vec3(IK_RAIL_LENGTH, GROUND_THICKNESS, IK_RAIL_LENGTH));
-    ground->rebase();
+    ground->flatten();
     ground->set_origin(glm::vec3(0, -IK_RAIL_HEIGHT, 0));
     ground->set_material(phong_material);
     ground->set_ambient_color(glm::vec3(0));
@@ -227,10 +227,10 @@ int init_resources()
     ik_hrail->center_axis();
     ik_hrail->set_origin(glm::vec3(0));
     ik_hrail->set_scale(glm::vec3(IK_RAIL_LENGTH, IK_RAIL_HEIGHT, IK_RAIL_WIDTH));
-    ik_hrail->rebase();
+    ik_hrail->flatten();
     ik_hrail->set_material(phong_material);
     ik_hrail->set_ambient_color(glm::vec3(0));
-    ik_hrail->set_ik_joint_type(vt::XformObject::IK_JOINT_TYPE_PRISMATIC);
+    ik_hrail->set_ik_joint_type(vt::TransformObject::IK_JOINT_TYPE_PRISMATIC);
     ik_hrail->set_enable_ik_joint_constraints(glm::ivec3(1, 1, 1));
     ik_hrail->set_ik_joint_constraints_center(glm::vec3(0, 0, 0));
     ik_hrail->set_ik_joint_constraints_max_deviation(glm::vec3(0, 0, IK_RAIL_LENGTH * 0.5));
@@ -240,10 +240,10 @@ int init_resources()
     ik_vrail->center_axis();
     ik_vrail->set_origin(glm::vec3(0));
     ik_vrail->set_scale(glm::vec3(IK_RAIL_WIDTH, IK_RAIL_HEIGHT, IK_RAIL_LENGTH));
-    ik_vrail->rebase();
+    ik_vrail->flatten();
     ik_vrail->set_material(phong_material);
     ik_vrail->set_ambient_color(glm::vec3(0));
-    ik_vrail->set_ik_joint_type(vt::XformObject::IK_JOINT_TYPE_PRISMATIC);
+    ik_vrail->set_ik_joint_type(vt::TransformObject::IK_JOINT_TYPE_PRISMATIC);
     ik_vrail->set_enable_ik_joint_constraints(glm::ivec3(1, 1, 1));
     ik_vrail->set_ik_joint_constraints_center(glm::vec3(0, 0, 0));
     ik_vrail->set_ik_joint_constraints_max_deviation(glm::vec3(IK_RAIL_LENGTH * 0.5, 0, 0));
@@ -253,10 +253,10 @@ int init_resources()
     ik_base->center_axis();
     ik_base->set_origin(glm::vec3(0));
     ik_base->set_scale(glm::vec3(IK_BASE_WIDTH, IK_BASE_HEIGHT, IK_BASE_LENGTH));
-    ik_base->rebase();
+    ik_base->flatten();
     ik_base->set_material(phong_material);
     ik_base->set_ambient_color(glm::vec3(0));
-    ik_base->set_ik_joint_type(vt::XformObject::IK_JOINT_TYPE_PRISMATIC);
+    ik_base->set_ik_joint_type(vt::TransformObject::IK_JOINT_TYPE_PRISMATIC);
     ik_base->set_enable_ik_joint_constraints(glm::ivec3(1, 1, 1));
     ik_base->set_ik_joint_constraints_center(glm::vec3(0, 0, 0));
     ik_base->set_ik_joint_constraints_max_deviation(glm::vec3(0, 0, IK_RAIL_LENGTH * 0.5));

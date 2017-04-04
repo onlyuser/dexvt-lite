@@ -29,12 +29,12 @@ glm::vec3 orient_to_offset(glm::vec3  orient,
                            glm::vec3* up_direction) // out
 {
     if(up_direction) {
-        glm::mat4 orient_xform = GLM_EULER_ANGLE(ORIENT_YAW(orient), ORIENT_PITCH(orient), ORIENT_ROLL(orient));
-        *up_direction = glm::vec3(orient_xform * glm::vec4(VEC_UP, 1));
-        return glm::vec3(orient_xform * glm::vec4(VEC_FORWARD, 1));
+        glm::mat4 orient_transform = GLM_EULER_ANGLE(ORIENT_YAW(orient), ORIENT_PITCH(orient), ORIENT_ROLL(orient));
+        *up_direction = glm::vec3(orient_transform * glm::vec4(VEC_UP, 1));
+        return glm::vec3(orient_transform * glm::vec4(VEC_FORWARD, 1));
     }
-    glm::mat4 orient_xform_sans_roll = GLM_EULER_ANGLE_SANS_ROLL(ORIENT_YAW(orient), ORIENT_PITCH(orient));
-    return glm::vec3(orient_xform_sans_roll * glm::vec4(VEC_FORWARD, 1));
+    glm::mat4 orient_transform_sans_roll = GLM_EULER_ANGLE_SANS_ROLL(ORIENT_YAW(orient), ORIENT_PITCH(orient));
+    return glm::vec3(orient_transform_sans_roll * glm::vec4(VEC_FORWARD, 1));
 }
 
 glm::vec3 orient_to_offset(glm::vec3 orient)
@@ -73,9 +73,9 @@ glm::vec3 offset_to_orient(glm::vec3  offset,
 
     // roll
     if(up_direction) {
-        glm::mat4 orient_xform_sans_roll = GLM_EULER_ANGLE_SANS_ROLL(ORIENT_YAW(orient), ORIENT_PITCH(orient));
+        glm::mat4 orient_transform_sans_roll = GLM_EULER_ANGLE_SANS_ROLL(ORIENT_YAW(orient), ORIENT_PITCH(orient));
         glm::vec3 local_up_direction_roll_component =
-                glm::vec3(glm::inverse(orient_xform_sans_roll) * glm::vec4(*up_direction, 1));
+                glm::vec3(glm::inverse(orient_transform_sans_roll) * glm::vec4(*up_direction, 1));
         ORIENT_ROLL(orient) = glm::degrees(glm::angle(glm::normalize(local_up_direction_roll_component), VEC_UP));
         if(local_up_direction_roll_component.x > 0) {
             ORIENT_ROLL(orient) = -fabs(ORIENT_ROLL(orient));

@@ -15,7 +15,7 @@
 namespace vt {
 
 class Mesh;
-class MeshIFace;
+class MeshBase;
 
 class File3ds
 {
@@ -23,10 +23,10 @@ public:
     static bool load3ds(std::string filename, int index, std::vector<Mesh*>* meshes);
 
 private:
-    static bool load3ds_impl(std::string filename, int index, std::vector<MeshIFace*>* meshes);
+    static bool load3ds_impl(std::string filename, int index, std::vector<MeshBase*>* meshes);
 	static uint32_t enter_chunk(FILE* stream, uint32_t chunk_id, uint32_t chunk_end);
-	static void read_vertices(FILE* stream, MeshIFace* mesh);
-	static void read_faces(FILE* stream, MeshIFace* mesh);
+	static void read_vertices(FILE* stream, MeshBase* mesh);
+	static void read_faces(FILE* stream, MeshBase* mesh);
 	static uint16_t read_short(FILE* stream);
 	static uint32_t read_long(FILE* stream);
 };

@@ -9,7 +9,7 @@
 namespace vt {
 
 class Mesh;
-class MeshIFace;
+class MeshBase;
 
 class PrimitiveFactory
 {

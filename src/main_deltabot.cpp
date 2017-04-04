@@ -141,7 +141,7 @@ static void create_linked_segments(vt::Scene*              scene,
             mesh->center_axis();
             mesh->set_origin(glm::vec3(0, 0, 0));
             mesh->set_orient(glm::vec3(0, 90, 0));
-            mesh->rebase();
+            mesh->flatten();
         }
         mesh->set_origin(glm::vec3(0, 0, 0));
         if(!prev_mesh) {
@@ -149,7 +149,7 @@ static void create_linked_segments(vt::Scene*              scene,
         } else {
             mesh->set_scale(glm::vec3(box_dim_inner, ik_segment_lengths[i]));
         }
-        mesh->rebase();
+        mesh->flatten();
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
         if(!prev_mesh) {
             mesh->set_origin(glm::vec3(0, 0, 0));

@@ -43,22 +43,22 @@ public:
     void set_env_map_texture_index(GLint texture_id);
     void set_frontface_depth_overlay_texture_index(GLint texture_id);
     void set_glow_cutoff_threshold(GLfloat glow_cutoff_threshold);
-    void set_inv_normal_xform(glm::mat4 inv_normal_xform);
-    void set_inv_projection_xform(glm::mat4 inv_projection_xform);
-    void set_inv_view_proj_xform(glm::mat4 inv_view_proj_xform);
+    void set_inv_normal_transform(glm::mat4 inv_normal_transform);
+    void set_inv_projection_transform(glm::mat4 inv_projection_transform);
+    void set_inv_view_proj_transform(glm::mat4 inv_view_proj_transform);
     void set_light_color(size_t num_lights, const float* light_color_arr);
     void set_light_count(GLint light_count);
     void set_light_enabled(size_t num_lights, GLint* light_enabled_arr);
     void set_light_pos(size_t num_lights, const float* light_pos_arr);
-    void set_model_xform(glm::mat4 model_xform);
-    void set_mvp_xform(glm::mat4 mvp_xform);
-    void set_normal_xform(glm::mat4 normal_xform);
+    void set_model_transform(glm::mat4 model_transform);
+    void set_mvp_transform(glm::mat4 mvp_transform);
+    void set_normal_transform(glm::mat4 normal_transform);
     void set_random_texture_index(GLint texture_id);
     void set_reflect_to_refract_ratio(GLfloat reflect_to_refract_ratio);
     void set_ssao_sample_kernel_pos(size_t num_kernels, const float* kernel_pos_arr);
     void set_texture_index(GLint texture_id);
     void set_texture2_index(GLint texture_id);
-    void set_view_proj_xform(glm::mat4 view_proj_xform);
+    void set_view_proj_transform(glm::mat4 view_proj_transform);
     void set_viewport_dim(const float* viewport_dim_arr);
 
 private:

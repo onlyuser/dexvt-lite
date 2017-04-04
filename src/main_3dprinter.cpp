@@ -143,7 +143,7 @@ static void create_linked_segments(vt::Scene*              scene,
             mesh->center_axis();
             mesh->set_origin(glm::vec3(0, 0, 0));
             mesh->set_orient(glm::vec3(0, 90, 0));
-            mesh->rebase();
+            mesh->flatten();
         }
         mesh->set_origin(glm::vec3(0, 0, 0));
         if(!prev_mesh) {
@@ -151,7 +151,7 @@ static void create_linked_segments(vt::Scene*              scene,
         } else {
             mesh->set_scale(glm::vec3(box_dim_inner, ik_segment_lengths[i]));
         }
-        mesh->rebase();
+        mesh->flatten();
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
         if(!prev_mesh) {
             mesh->set_origin(glm::vec3(0, 0, 0));
@@ -281,7 +281,7 @@ int init_resources()
             (*p)->set_ambient_color(glm::vec3(0));
             (*p)->set_orient(glm::vec3(0, 90, angle));
             if(!leg_segment_index) {
-                (*p)->set_ik_joint_type(vt::XformObject::IK_JOINT_TYPE_PRISMATIC);
+                (*p)->set_ik_joint_type(vt::TransformObject::IK_JOINT_TYPE_PRISMATIC);
                 (*p)->set_enable_ik_joint_constraints(glm::ivec3(1, 1, 1));
                 (*p)->set_ik_joint_constraints_center(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS - IK_SEGMENT_HEIGHT) -
                                              glm::vec3(0, BODY_ELEVATION * 0.5, 0));

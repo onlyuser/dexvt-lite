@@ -1,5 +1,5 @@
 #include <Modifiers.h>
-#include <MeshIFace.h>
+#include <MeshBase.h>
 #include <Scene.h>
 #include <Util.h>
 #include <glm/glm.hpp>
@@ -9,16 +9,16 @@ namespace vt {
 
 class Mesh;
 
-Mesh* _mesh(MeshIFace* mesh);
+Mesh* _mesh(MeshBase* mesh);
 
-void mesh_attach(Scene* scene, MeshIFace* mesh1, MeshIFace* mesh2)
+void mesh_attach(Scene* scene, MeshBase* mesh1, MeshBase* mesh2)
 {
     mesh2->set_axis(mesh1->in_abs_system());
     mesh2->merge(mesh1, mesh1->get_material() == mesh2->get_material());
     scene->remove_mesh(_mesh(mesh1));
 }
 
-void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase, bool smooth)
+void mesh_apply_ripple(MeshBase* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase, bool smooth)
 {
     size_t num_vertex = mesh->get_num_vertex();
     for(int i = 0; i < static_cast<int>(num_vertex); i++) {
@@ -35,7 +35,7 @@ void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float
     mesh->update_bbox();
 }
 
-void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation, bool smooth)
+void mesh_tessellate(MeshBase* mesh, tessellation_t tessellation, bool smooth)
 {
     size_t prev_num_vert = mesh->get_num_vertex();
     size_t prev_num_tri  = mesh->get_num_tri();

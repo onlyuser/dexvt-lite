@@ -14,7 +14,7 @@ namespace vt {
 Mesh::Mesh(std::string name,
            size_t      num_vertex,
            size_t      num_tri)
-    : XformObject(name),
+    : TransformObject(name),
       m_num_vertex(num_vertex),
       m_num_tri(num_tri),
       m_visible(true),
@@ -139,7 +139,7 @@ void Mesh::resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry
     }
 }
 
-void Mesh::merge(const MeshIFace* other, bool copy_tex_coords)
+void Mesh::merge(const MeshBase* other, bool copy_tex_coords)
 {
     size_t prev_num_vertex  = get_num_vertex();
     size_t prev_num_tri     = get_num_tri();
@@ -306,7 +306,7 @@ void Mesh::get_min_max(glm::vec3* min, glm::vec3* max) const
 // NOTE: strangely required by pure virtual (already defined in base class!)
 glm::vec3 Mesh::in_abs_system(glm::vec3 local_point)
 {
-    return XformObject::in_abs_system(local_point);
+    return TransformObject::in_abs_system(local_point);
 }
 
 void Mesh::init_buffers()
@@ -455,59 +455,59 @@ void Mesh::set_ambient_color(glm::vec3 ambient_color)
     m_ambient_color[2] = ambient_color.b;
 }
 
-void Mesh::xform_vertices(glm::mat4 xform)
+void Mesh::transform_vertices(glm::mat4 transform)
 {
-    glm::mat4 normal_xform = glm::transpose(glm::inverse(xform));
+    glm::mat4 normal_transform = glm::transpose(glm::inverse(transform));
     for(int i = 0; i < static_cast<int>(m_num_vertex); i++) {
-        set_vert_coord(i,   glm::vec3(xform        * glm::vec4(get_vert_coord(i),   1)));
-        set_vert_normal(i,  glm::vec3(normal_xform * glm::vec4(get_vert_normal(i),  1)));
-        set_vert_tangent(i, glm::vec3(normal_xform * glm::vec4(get_vert_tangent(i), 1)));
+        set_vert_coord(i,   glm::vec3(transform        * glm::vec4(get_vert_coord(i),   1)));
+        set_vert_normal(i,  glm::vec3(normal_transform * glm::vec4(get_vert_normal(i),  1)));
+        set_vert_tangent(i, glm::vec3(normal_transform * glm::vec4(get_vert_tangent(i), 1)));
     }
     update_bbox();
 }
 
-void Mesh::rebase(glm::mat4* basis)
+void Mesh::flatten(glm::mat4* basis)
 {
     if(basis) {
-        xform_vertices((*basis) * get_xform());
+        transform_vertices((*basis) * get_transform());
     } else {
-        xform_vertices(get_xform());
+        transform_vertices(get_transform());
     }
-    reset_xform();
+    reset_transform();
 }
 
 void Mesh::set_axis(glm::vec3 axis)
 {
-    glm::vec3 local_axis = glm::vec3(glm::inverse(get_xform()) * glm::vec4(axis, 1));
-    xform_vertices(glm::translate(glm::mat4(1), -local_axis));
+    glm::vec3 local_axis = glm::vec3(glm::inverse(get_transform()) * glm::vec4(axis, 1));
+    transform_vertices(glm::translate(glm::mat4(1), -local_axis));
     m_origin = in_parent_system(axis);
-    mark_dirty_xform();
+    mark_dirty_transform();
 }
 
 void Mesh::center_axis(align_t align)
 {
     update_bbox();
-    set_axis(glm::vec3(get_xform() * glm::vec4(get_center(align), 1)));
+    set_axis(glm::vec3(get_transform() * glm::vec4(get_center(align), 1)));
 }
 
-void Mesh::update_xform()
+void Mesh::update_transform()
 {
-    m_xform = glm::translate(glm::mat4(1), m_origin) * get_local_orient_xform() * glm::scale(glm::mat4(1), m_scale);
+    m_transform = glm::translate(glm::mat4(1), m_origin) * get_local_orient_transform() * glm::scale(glm::mat4(1), m_scale);
 }
 
-MeshIFace* alloc_meshiface(std::string name, size_t num_vertex, size_t num_tri)
+MeshBase* alloc_mesh_base(std::string name, size_t num_vertex, size_t num_tri)
 {
     return new Mesh(name, num_vertex, num_tri);
 }
 
-Mesh* _mesh(MeshIFace* mesh)
+Mesh* _mesh(MeshBase* mesh)
 {
     return dynamic_cast<Mesh*>(mesh);
 }
 
-MeshIFace* _meshiface(Mesh* mesh)
+MeshBase* _mesh_base(Mesh* mesh)
 {
-    return dynamic_cast<MeshIFace*>(mesh);
+    return dynamic_cast<MeshBase*>(mesh);
 }
 
 }

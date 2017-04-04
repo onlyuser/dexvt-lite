@@ -143,7 +143,7 @@ static void create_linked_segments(vt::Scene*              scene,
         mesh->center_axis();
         mesh->set_origin(glm::vec3(0, 0, 0));
         mesh->set_scale(box_dim);
-        mesh->rebase();
+        mesh->flatten();
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
         if(!prev_mesh) {
             mesh->set_origin(glm::vec3(0, 0, 0));
@@ -449,7 +449,7 @@ int init_resources()
                                                                                 IK_SEGMENT_WIDTH,
                                                                                 IK_SEGMENT_WIDTH);
         ik_leg->m_joint->center_axis();
-        ik_leg->m_joint->link_parent(dummy); // one extra layer of xform indirection to convert yaw around z-axis to yaw around y-axis
+        ik_leg->m_joint->link_parent(dummy); // one extra layer of transform indirection to convert yaw around z-axis to yaw around y-axis
         ik_leg->m_joint->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
         scene->add_mesh(ik_leg->m_joint);
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;

@@ -1,5 +1,5 @@
 #include <OctTree.h>
-#include <XformObject.h>
+#include <TransformObject.h>
 #include <vector>
 
 namespace vt {
@@ -21,17 +21,17 @@ void OctTreeNode::clear()
 {
 }
 
-bool OctTreeNode::add(XformObject* object)
+bool OctTreeNode::add(TransformObject* object)
 {
     return false;
 }
 
-bool OctTreeNode::remove(XformObject* object)
+bool OctTreeNode::remove(TransformObject* object)
 {
     return false;
 }
 
-int OctTreeNode::find_k_nearest(int k, std::vector<XformObject*> &k_nearest_objects)
+int OctTreeNode::find_k_nearest(int k, std::vector<TransformObject*> &k_nearest_objects)
 {
     return 0;
 }
@@ -52,17 +52,17 @@ void OctTree::clear()
 {
 }
 
-bool OctTree::add(XformObject* object)
+bool OctTree::add(TransformObject* object)
 {
     return false;
 }
 
-bool OctTree::remove(XformObject* object)
+bool OctTree::remove(TransformObject* object)
 {
     return false;
 }
 
-int OctTree::find_k_nearest(int k, std::vector<XformObject*> &k_nearest_objects)
+int OctTree::find_k_nearest(int k, std::vector<TransformObject*> &k_nearest_objects)
 {
     return 0;
 }

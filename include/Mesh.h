@@ -3,9 +3,9 @@
 
 #include <ShaderContext.h>
 #include <Buffer.h>
-#include <XformObject.h>
+#include <TransformObject.h>
 #include <BBoxObject.h>
-#include <MeshIFace.h>
+#include <MeshBase.h>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <string>
@@ -16,9 +16,9 @@ namespace vt {
 
 class Material;
 
-class Mesh : public XformObject,
+class Mesh : public TransformObject,
              public BBoxObject,
-             public MeshIFace
+             public MeshBase
 {
 public:
     Mesh(std::string name,
@@ -26,7 +26,7 @@ public:
          size_t      num_tri);
     virtual ~Mesh();
     void resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry = false);
-    void merge(const MeshIFace* other, bool copy_tex_coords = false);
+    void merge(const MeshBase* other, bool copy_tex_coords = false);
 
     size_t get_num_vertex() const
     {
@@ -178,8 +178,8 @@ public:
     glm::vec3 get_ambient_color() const;
     void set_ambient_color(glm::vec3 ambient_color);
 
-    void xform_vertices(glm::mat4 xform);
-    void rebase(glm::mat4* basis = NULL);
+    void transform_vertices(glm::mat4 transform);
+    void flatten(glm::mat4* basis = NULL);
     void set_axis(glm::vec3 axis);
     void center_axis(BBoxObject::align_t align = BBoxObject::ALIGN_CENTER);
 
@@ -216,12 +216,12 @@ private:
     float          m_reflect_to_refract_ratio;
     GLfloat*       m_ambient_color;
 
-    void update_xform();
+    void update_transform();
 };
 
-MeshIFace* alloc_meshiface(std::string name, size_t num_vertex, size_t num_tri);
-Mesh* _mesh(MeshIFace* mesh);
-MeshIFace* _meshiface(Mesh* mesh);
+MeshBase* alloc_mesh_base(std::string name, size_t num_vertex, size_t num_tri);
+Mesh* _mesh(MeshBase* mesh);
+MeshBase* _mesh_base(Mesh* mesh);
 
 }
 

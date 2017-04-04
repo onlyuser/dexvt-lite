@@ -117,7 +117,7 @@ static void create_boids(vt::Scene*              scene,
                            static_cast<float>(rand()) / RAND_MAX);
         mesh->set_origin(scatter_min + rand_vec * (scatter_max - scatter_min));
         mesh->set_scale(box_dim);
-        mesh->rebase();
+        mesh->flatten();
         mesh->center_axis();
         boid_meshes->push_back(mesh);
     }

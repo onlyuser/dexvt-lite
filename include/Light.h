@@ -1,13 +1,13 @@
 #ifndef VT_LIGHT_H_
 #define VT_LIGHT_H_
 
-#include <XformObject.h>
+#include <TransformObject.h>
 #include <glm/glm.hpp>
 #include <string>
 
 namespace vt {
 
-class Light : public XformObject
+class Light : public TransformObject
 {
 public:
     Light(std::string name   = "",
@@ -32,7 +32,7 @@ private:
     glm::vec3 m_color;
     bool      m_enabled;
 
-    void update_xform();
+    void update_transform();
 };
 
 }

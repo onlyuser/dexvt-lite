@@ -5,7 +5,7 @@
 
 namespace vt {
 
-class MeshIFace;
+class MeshBase;
 class Scene;
 
 enum tessellation_t {
@@ -13,9 +13,9 @@ enum tessellation_t {
     TESSELLATION_TRI_CENTER
 };
 
-void mesh_attach(Scene* scene, MeshIFace* mesh1, MeshIFace* mesh2);
-void mesh_apply_ripple(MeshIFace* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase, bool smooth);
-void mesh_tessellate(MeshIFace* mesh, tessellation_t tessellation, bool smooth);
+void mesh_attach(Scene* scene, MeshBase* mesh1, MeshBase* mesh2);
+void mesh_apply_ripple(MeshBase* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase, bool smooth);
+void mesh_tessellate(MeshBase* mesh, tessellation_t tessellation, bool smooth);
 
 }
 

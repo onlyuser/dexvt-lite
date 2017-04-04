@@ -1,7 +1,7 @@
 #ifndef VT_CAMERA_H_
 #define VT_CAMERA_H_
 
-#include <XformObject.h>
+#include <TransformObject.h>
 #include <FrameObject.h>
 #include <string>
 #include <glm/glm.hpp>
@@ -19,7 +19,7 @@ namespace vt {
 
 class FrameBuffer;
 
-class Camera : public XformObject,
+class Camera : public TransformObject,
                public FrameObject<glm::vec2, float>
 {
 public:
@@ -105,7 +105,7 @@ public:
     }
     void set_frame_buffer(FrameBuffer* frame_buffer);
 
-    const glm::mat4 &get_projection_xform();
+    const glm::mat4 &get_projection_transform();
 
 private:
     std::string       m_name;
@@ -113,15 +113,15 @@ private:
     float             m_fov;
     float             m_near_plane;
     float             m_far_plane;
-    glm::mat4         m_projection_xform;
-    bool              m_is_dirty_projection_xform;
+    glm::mat4         m_projection_transform;
+    bool              m_is_dirty_projection_transform;
     glm::vec2         m_ortho_dim;
     float             m_zoom;
     projection_mode_t m_projection_mode;
     FrameBuffer*      m_frame_buffer;
 
-    void update_projection_xform();
-    void update_xform();
+    void update_projection_transform();
+    void update_transform();
 };
 
 }

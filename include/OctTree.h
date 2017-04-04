@@ -6,7 +6,7 @@
 
 namespace vt {
 
-class XformObject;
+class TransformObject;
 class OctTreeNode
 {
 public:
@@ -17,9 +17,9 @@ public:
     ~OctTreeNode();
 
     void clear();
-    bool add(XformObject* object);
-    bool remove(XformObject* object);
-    int find_k_nearest(int k, std::vector<XformObject*> &k_nearest_objects);
+    bool add(TransformObject* object);
+    bool remove(TransformObject* object);
+    int find_k_nearest(int k, std::vector<TransformObject*> &k_nearest_objects);
 
 private:
     glm::vec3     m_origin;
@@ -37,9 +37,9 @@ public:
     ~OctTree();
 
     void clear();
-    bool add(XformObject* object);
-    bool remove(XformObject* object);
-    int find_k_nearest(int k, std::vector<XformObject*> &k_nearest_objects);
+    bool add(TransformObject* object);
+    bool remove(TransformObject* object);
+    int find_k_nearest(int k, std::vector<TransformObject*> &k_nearest_objects);
     void update();
 
 private:

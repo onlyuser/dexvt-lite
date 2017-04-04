@@ -200,19 +200,19 @@ void ShaderContext::set_glow_cutoff_threshold(GLfloat glow_cutoff_threshold)
     m_var_uniforms[Program::var_uniform_type_glow_cutoff_threshold]->uniform_1f(glow_cutoff_threshold);
 }
 
-void ShaderContext::set_inv_normal_xform(glm::mat4 inv_normal_xform)
+void ShaderContext::set_inv_normal_transform(glm::mat4 inv_normal_transform)
 {
-    m_var_uniforms[Program::var_uniform_type_inv_normal_xform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(inv_normal_xform));
+    m_var_uniforms[Program::var_uniform_type_inv_normal_transform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(inv_normal_transform));
 }
 
-void ShaderContext::set_inv_projection_xform(glm::mat4 inv_projection_xform)
+void ShaderContext::set_inv_projection_transform(glm::mat4 inv_projection_transform)
 {
-    m_var_uniforms[Program::var_uniform_type_inv_projection_xform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(inv_projection_xform));
+    m_var_uniforms[Program::var_uniform_type_inv_projection_transform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(inv_projection_transform));
 }
 
-void ShaderContext::set_inv_view_proj_xform(glm::mat4 inv_view_proj_xform)
+void ShaderContext::set_inv_view_proj_transform(glm::mat4 inv_view_proj_transform)
 {
-    m_var_uniforms[Program::var_uniform_type_inv_view_proj_xform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(inv_view_proj_xform));
+    m_var_uniforms[Program::var_uniform_type_inv_view_proj_transform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(inv_view_proj_transform));
 }
 
 void ShaderContext::set_light_color(size_t num_lights, const float* light_color_arr)
@@ -235,19 +235,19 @@ void ShaderContext::set_light_pos(size_t num_lights, const float* light_pos_arr)
     m_var_uniforms[Program::var_uniform_type_light_pos]->uniform_3fv(num_lights, light_pos_arr);
 }
 
-void ShaderContext::set_model_xform(glm::mat4 model_xform)
+void ShaderContext::set_model_transform(glm::mat4 model_transform)
 {
-    m_var_uniforms[Program::var_uniform_type_model_xform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(model_xform));
+    m_var_uniforms[Program::var_uniform_type_model_transform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(model_transform));
 }
 
-void ShaderContext::set_mvp_xform(glm::mat4 mvp_xform)
+void ShaderContext::set_mvp_transform(glm::mat4 mvp_transform)
 {
-    m_var_uniforms[Program::var_uniform_type_mvp_xform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(mvp_xform));
+    m_var_uniforms[Program::var_uniform_type_mvp_transform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(mvp_transform));
 }
 
-void ShaderContext::set_normal_xform(glm::mat4 normal_xform)
+void ShaderContext::set_normal_transform(glm::mat4 normal_transform)
 {
-    m_var_uniforms[Program::var_uniform_type_normal_xform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(normal_xform));
+    m_var_uniforms[Program::var_uniform_type_normal_transform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(normal_transform));
 }
 
 void ShaderContext::set_random_texture_index(GLint texture_id)
@@ -278,9 +278,9 @@ void ShaderContext::set_texture2_index(GLint texture_id)
     m_var_uniforms[Program::var_uniform_type_color_texture2]->uniform_1i(texture_id);
 }
 
-void ShaderContext::set_view_proj_xform(glm::mat4 view_proj_xform)
+void ShaderContext::set_view_proj_transform(glm::mat4 view_proj_transform)
 {
-    m_var_uniforms[Program::var_uniform_type_view_proj_xform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(view_proj_xform));
+    m_var_uniforms[Program::var_uniform_type_view_proj_transform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(view_proj_transform));
 }
 
 void ShaderContext::set_viewport_dim(const float* viewport_dim_arr)

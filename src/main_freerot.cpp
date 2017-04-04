@@ -147,7 +147,7 @@ int init_resources()
     for(std::vector<vt::Mesh*>::iterator p = meshes_imported.begin(); p != meshes_imported.end(); p++) {
         (*p)->set_origin(glm::vec3(0));
         (*p)->set_scale(glm::vec3(0.33, 0.33, 0.33));
-        (*p)->rebase();
+        (*p)->flatten();
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         (*p)->link_parent(dummy);
@@ -323,7 +323,7 @@ void onSpecial(int key, int x, int y)
             break;
         case GLUT_KEY_HOME:
             dummy->set_orient(glm::vec3(0));
-            dummy->get_xform(true); // TODO: why is this necessary?
+            dummy->get_transform(true); // TODO: why is this necessary?
             break;
         case GLUT_KEY_LEFT:
             left_key = true;

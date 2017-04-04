@@ -1,5 +1,5 @@
-#ifndef VT_MESH_IFACE_H_
-#define VT_MESH_IFACE_H_
+#ifndef VT_MESH_BASE_H_
+#define VT_MESH_BASE_H_
 
 #include <BBoxObject.h>
 #include <glm/glm.hpp>
@@ -8,16 +8,16 @@ namespace vt {
 
 class Material;
 
-class MeshIFace
+class MeshBase
 {
 public:
-    virtual ~MeshIFace() {}
+    virtual ~MeshBase() {}
     virtual bool       is_visible() const = 0;
     virtual void       set_visible(bool visible) = 0;
     virtual bool       is_smooth() const = 0;
     virtual void       set_smooth(bool smooth) = 0;
     virtual void       resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry = false) = 0;
-    virtual void       merge(const MeshIFace* other, bool copy_tex_coords = false) = 0;
+    virtual void       merge(const MeshBase* other, bool copy_tex_coords = false) = 0;
     virtual Material*  get_material() const = 0;
     virtual size_t     get_num_vertex() const = 0;
     virtual size_t     get_num_tri() const = 0;
