@@ -19,11 +19,11 @@ XformObject::XformObject(
       m_origin(origin),
       m_orient(orient),
       m_scale(scale),
-      m_enable_constraints(       glm::ivec3(0)),
-      m_constraints_center(       glm::vec3(0)),
-      m_constraints_max_deviation(glm::vec3(0)),
+      m_enable_ik_joint_constraints(       glm::ivec3(0)),
+      m_ik_joint_constraints_center(       glm::vec3(0)),
+      m_ik_joint_constraints_max_deviation(glm::vec3(0)),
       m_parent(NULL),
-      m_ik_joint(IK_JOINT_REVOLUTE),
+      m_ik_joint_type(IK_JOINT_TYPE_REVOLUTE),
       m_is_dirty_xform(true),
       m_is_dirty_normal_xform(true)
 {
@@ -36,14 +36,14 @@ XformObject::~XformObject()
 void XformObject::set_origin(glm::vec3 origin)
 {
     m_origin = origin;
-    apply_constraints();
+    apply_ik_joint_constraints();
     mark_dirty_xform();
 }
 
 void XformObject::set_orient(glm::vec3 orient)
 {
     m_orient = orient;
-    apply_constraints();
+    apply_ik_joint_constraints();
     mark_dirty_xform();
 }
 
@@ -61,17 +61,17 @@ void XformObject::reset_xform()
     mark_dirty_xform();
 }
 
-void XformObject::apply_constraints()
+void XformObject::apply_ik_joint_constraints()
 {
-    switch(m_ik_joint) {
-        case IK_JOINT_REVOLUTE:
+    switch(m_ik_joint_type) {
+        case IK_JOINT_TYPE_REVOLUTE:
             for(int i = 0; i < 3; i++) {
-                if(!m_enable_constraints[i]) {
+                if(!m_enable_ik_joint_constraints[i]) {
                     continue;
                 }
-                if(angle_distance(m_orient[i], m_constraints_center[i]) > m_constraints_max_deviation[i]) {
-                    float min_angle = m_constraints_center[i] - m_constraints_max_deviation[i];
-                    float max_angle = m_constraints_center[i] + m_constraints_max_deviation[i];
+                if(angle_distance(m_orient[i], m_ik_joint_constraints_center[i]) > m_ik_joint_constraints_max_deviation[i]) {
+                    float min_angle = m_ik_joint_constraints_center[i] - m_ik_joint_constraints_max_deviation[i];
+                    float max_angle = m_ik_joint_constraints_center[i] + m_ik_joint_constraints_max_deviation[i];
                     float distance_to_lower_bound = angle_distance(m_orient[i], min_angle);
                     float distance_to_upper_bound = angle_distance(m_orient[i], max_angle);
                     if(distance_to_lower_bound < distance_to_upper_bound) {
@@ -82,14 +82,14 @@ void XformObject::apply_constraints()
                 }
             }
             break;
-        case IK_JOINT_PRISMATIC:
+        case IK_JOINT_TYPE_PRISMATIC:
             for(int i = 0; i < 3; i++) {
-                if(!m_enable_constraints[i]) {
+                if(!m_enable_ik_joint_constraints[i]) {
                     continue;
                 }
-                if(fabs(m_origin[i] - m_constraints_center[i]) > m_constraints_max_deviation[i]) {
-                    float min_pos = m_constraints_center[i] - m_constraints_max_deviation[i];
-                    float max_pos = m_constraints_center[i] + m_constraints_max_deviation[i];
+                if(fabs(m_origin[i] - m_ik_joint_constraints_center[i]) > m_ik_joint_constraints_max_deviation[i]) {
+                    float min_pos = m_ik_joint_constraints_center[i] - m_ik_joint_constraints_max_deviation[i];
+                    float max_pos = m_ik_joint_constraints_center[i] + m_ik_joint_constraints_max_deviation[i];
                     float distance_to_lower_bound = fabs(m_origin[i] - min_pos);
                     float distance_to_upper_bound = fabs(m_origin[i] - max_pos);
                     if(distance_to_lower_bound < distance_to_upper_bound) {
@@ -229,7 +229,7 @@ bool XformObject::solve_ik_ccd(XformObject* root,
             } else {
                 tmp_target = target;
             }
-            if(current_segment->get_ik_joint() == IK_JOINT_PRISMATIC) {
+            if(current_segment->get_ik_joint_type() == IK_JOINT_TYPE_PRISMATIC) {
                 current_segment->set_origin(current_segment->get_origin() + (current_segment->from_origin_in_parent_system(tmp_target) -
                                                                              current_segment->from_origin_in_parent_system(end_effector_tip)));
                 continue;

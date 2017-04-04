@@ -230,10 +230,10 @@ int init_resources()
     ik_hrail->rebase();
     ik_hrail->set_material(phong_material);
     ik_hrail->set_ambient_color(glm::vec3(0));
-    ik_hrail->set_ik_joint(vt::XformObject::IK_JOINT_PRISMATIC);
-    ik_hrail->set_enable_constraints(glm::ivec3(1, 1, 1));
-    ik_hrail->set_constraints_center(glm::vec3(0, 0, 0));
-    ik_hrail->set_constraints_max_deviation(glm::vec3(0, 0, IK_RAIL_LENGTH * 0.5));
+    ik_hrail->set_ik_joint_type(vt::XformObject::IK_JOINT_TYPE_PRISMATIC);
+    ik_hrail->set_enable_ik_joint_constraints(glm::ivec3(1, 1, 1));
+    ik_hrail->set_ik_joint_constraints_center(glm::vec3(0, 0, 0));
+    ik_hrail->set_ik_joint_constraints_max_deviation(glm::vec3(0, 0, IK_RAIL_LENGTH * 0.5));
 
     ik_vrail = vt::PrimitiveFactory::create_box("vrail");
     scene->add_mesh(ik_vrail);
@@ -243,10 +243,10 @@ int init_resources()
     ik_vrail->rebase();
     ik_vrail->set_material(phong_material);
     ik_vrail->set_ambient_color(glm::vec3(0));
-    ik_vrail->set_ik_joint(vt::XformObject::IK_JOINT_PRISMATIC);
-    ik_vrail->set_enable_constraints(glm::ivec3(1, 1, 1));
-    ik_vrail->set_constraints_center(glm::vec3(0, 0, 0));
-    ik_vrail->set_constraints_max_deviation(glm::vec3(IK_RAIL_LENGTH * 0.5, 0, 0));
+    ik_vrail->set_ik_joint_type(vt::XformObject::IK_JOINT_TYPE_PRISMATIC);
+    ik_vrail->set_enable_ik_joint_constraints(glm::ivec3(1, 1, 1));
+    ik_vrail->set_ik_joint_constraints_center(glm::vec3(0, 0, 0));
+    ik_vrail->set_ik_joint_constraints_max_deviation(glm::vec3(IK_RAIL_LENGTH * 0.5, 0, 0));
 
     ik_base = vt::PrimitiveFactory::create_box("base");
     scene->add_mesh(ik_base);
@@ -256,10 +256,10 @@ int init_resources()
     ik_base->rebase();
     ik_base->set_material(phong_material);
     ik_base->set_ambient_color(glm::vec3(0));
-    ik_base->set_ik_joint(vt::XformObject::IK_JOINT_PRISMATIC);
-    ik_base->set_enable_constraints(glm::ivec3(1, 1, 1));
-    ik_base->set_constraints_center(glm::vec3(0, 0, 0));
-    ik_base->set_constraints_max_deviation(glm::vec3(0, 0, IK_RAIL_LENGTH * 0.5));
+    ik_base->set_ik_joint_type(vt::XformObject::IK_JOINT_TYPE_PRISMATIC);
+    ik_base->set_enable_ik_joint_constraints(glm::ivec3(1, 1, 1));
+    ik_base->set_ik_joint_constraints_center(glm::vec3(0, 0, 0));
+    ik_base->set_ik_joint_constraints_max_deviation(glm::vec3(0, 0, IK_RAIL_LENGTH * 0.5));
     ik_base->link_parent(ik_vrail);
 
     create_linked_segments(scene,
@@ -278,14 +278,14 @@ int init_resources()
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         if(!leg_segment_index) {
-            (*p)->set_enable_constraints(glm::ivec3(1, 0, 0));
-            (*p)->set_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_constraints_max_deviation(glm::vec3(0, 0, 0));
+            (*p)->set_enable_ik_joint_constraints(glm::ivec3(1, 0, 0));
+            (*p)->set_ik_joint_constraints_center(glm::vec3(0, 0, 0));
+            (*p)->set_ik_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
         }
         if(leg_segment_index) {
-            (*p)->set_enable_constraints(glm::ivec3(1, 0, 1));
-            (*p)->set_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_constraints_max_deviation(glm::vec3(0, 0, 0));
+            (*p)->set_enable_ik_joint_constraints(glm::ivec3(1, 0, 1));
+            (*p)->set_ik_joint_constraints_center(glm::vec3(0, 0, 0));
+            (*p)->set_ik_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
         }
         leg_segment_index++;
     }

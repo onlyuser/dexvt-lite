@@ -217,8 +217,8 @@ int init_resources()
         (*p)->set_bump_texture_index((*p)->get_material()->get_texture_index_by_name("chesterfield_normal"));
         (*p)->set_ambient_color(glm::vec3(0));
         if(leg_segment_index) {
-            (*p)->set_enable_constraints(glm::ivec3(0));
-            (*p)->set_constraints_max_deviation(glm::vec3(0));
+            (*p)->set_enable_ik_joint_constraints(glm::ivec3(0));
+            (*p)->set_ik_joint_constraints_max_deviation(glm::vec3(0));
         }
         leg_segment_index++;
     }
