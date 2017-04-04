@@ -35,12 +35,12 @@ void mesh_apply_ripple(MeshBase* mesh, glm::vec3 origin, float amplitude, float 
     mesh->update_bbox();
 }
 
-void mesh_tessellate(MeshBase* mesh, tessellation_t tessellation, bool smooth)
+void mesh_tessellate(MeshBase* mesh, tessellation_type_t tessellation_type, bool smooth)
 {
     size_t prev_num_vert = mesh->get_num_vertex();
     size_t prev_num_tri  = mesh->get_num_tri();
-    switch(tessellation) {
-        case TESSELLATION_EDGE_CENTER:
+    switch(tessellation_type) {
+        case TESSELLATION_TYPE_EDGE_CENTER:
             {
                 size_t new_num_vertex = prev_num_vert + prev_num_tri * 3;
                 size_t new_num_tri    = prev_num_tri * 4;
@@ -118,7 +118,7 @@ void mesh_tessellate(MeshBase* mesh, tessellation_t tessellation, bool smooth)
                 }
             }
             break;
-        case TESSELLATION_TRI_CENTER:
+        case TESSELLATION_TYPE_TRI_CENTER:
             {
                 size_t new_num_vertex = prev_num_vert + prev_num_tri;
                 size_t new_num_tri    = prev_num_tri * 3;

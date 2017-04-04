@@ -510,7 +510,7 @@ Mesh* PrimitiveFactory::create_geosphere(
     MeshBase* mesh = _mesh_base(create_sphere(name, 4, 2, radius));
     mesh->center_axis();
     for(int i = 0; i < tessellation_iters; i++) {
-        mesh_tessellate(mesh, TESSELLATION_EDGE_CENTER, true);
+        mesh_tessellate(mesh, TESSELLATION_TYPE_EDGE_CENTER, true);
         size_t num_vertex = mesh->get_num_vertex();
         for(int j = 0; j < static_cast<int>(num_vertex); j++) {
             mesh->set_vert_coord(j, glm::normalize(mesh->get_vert_coord(j)) * radius);
