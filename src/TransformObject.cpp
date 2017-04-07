@@ -10,11 +10,10 @@
 
 namespace vt {
 
-TransformObject::TransformObject(
-        std::string name,
-        glm::vec3   origin,
-        glm::vec3   orient,
-        glm::vec3   scale)
+TransformObject::TransformObject(std::string name,
+                                 glm::vec3   origin,
+                                 glm::vec3   orient,
+                                 glm::vec3   scale)
     : NamedObject(name),
       m_origin(origin),
       m_orient(orient),

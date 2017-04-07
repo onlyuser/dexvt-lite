@@ -23,9 +23,9 @@ public:
     glm::vec3 m_debug_local_target;
 
     TransformObject(std::string name,
-                glm::vec3   origin = glm::vec3(0),
-                glm::vec3   orient = glm::vec3(0),
-                glm::vec3   scale  = glm::vec3(1));
+                    glm::vec3   origin = glm::vec3(0),
+                    glm::vec3   orient = glm::vec3(0),
+                    glm::vec3   scale  = glm::vec3(1));
     virtual ~TransformObject();
 
     // basic features
