@@ -198,7 +198,7 @@ void TransformObject::point_at(glm::vec3 target, glm::vec3* up_direction)
 
 void TransformObject::rotate(float angle_delta, glm::vec3 pivot)
 {
-    glm::mat4 rotate_transform           = GLM_ROTATE(glm::mat4(1), angle_delta, pivot);
+    glm::mat4 rotate_transform       = GLM_ROTATE(glm::mat4(1), angle_delta, pivot);
     glm::vec3 abs_origin             = in_abs_system();
     glm::vec3 local_new_heading      = from_origin_in_parent_system(abs_origin + glm::vec3(rotate_transform * glm::vec4(get_abs_heading(), 1)));
     glm::vec3 local_new_up_direction = from_origin_in_parent_system(abs_origin + glm::vec3(rotate_transform * glm::vec4(get_abs_up_direction(), 1)));
@@ -240,12 +240,12 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
             glm::vec3 local_arc_midpoint_dir     = glm::normalize((local_target_dir + local_end_effector_tip_dir) * 0.5f);
             glm::vec3 local_arc_pivot            = glm::cross(local_arc_dir, local_arc_midpoint_dir);
             float     angle_delta                = glm::degrees(glm::angle(local_target_dir, local_end_effector_tip_dir));
-            glm::mat4 local_arc_rotate_transform     = GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot);
+            glm::mat4 local_arc_rotate_transform = GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot);
     #if 1
             // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
             glm::mat4 new_current_segment_orient_transform = local_arc_rotate_transform * current_segment->get_local_orient_transform();
-            glm::vec3 new_current_segment_heading      = glm::vec3(new_current_segment_orient_transform * glm::vec4(VEC_FORWARD, 1));
-            glm::vec3 new_current_segment_up_direction = glm::vec3(new_current_segment_orient_transform * glm::vec4(VEC_UP, 1));
+            glm::vec3 new_current_segment_heading          = glm::vec3(new_current_segment_orient_transform * glm::vec4(VEC_FORWARD, 1));
+            glm::vec3 new_current_segment_up_direction     = glm::vec3(new_current_segment_orient_transform * glm::vec4(VEC_UP, 1));
             current_segment->point_at_local(new_current_segment_heading, &new_current_segment_up_direction);
 
             // update guide wires
@@ -306,8 +306,8 @@ void TransformObject::update_boid(glm::vec3 target,
 #if 1
     // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
     glm::mat4 new_current_segment_orient_transform = local_arc_rotate_transform * get_local_orient_transform();
-    glm::vec3 new_current_segment_heading      = glm::vec3(new_current_segment_orient_transform * glm::vec4(VEC_FORWARD, 1));
-    glm::vec3 new_current_segment_up_direction = glm::vec3(new_current_segment_orient_transform * glm::vec4(VEC_UP, 1));
+    glm::vec3 new_current_segment_heading          = glm::vec3(new_current_segment_orient_transform * glm::vec4(VEC_FORWARD, 1));
+    glm::vec3 new_current_segment_up_direction     = glm::vec3(new_current_segment_orient_transform * glm::vec4(VEC_UP, 1));
     point_at_local(new_current_segment_heading, &new_current_segment_up_direction);
 #else
     // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
