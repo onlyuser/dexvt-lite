@@ -19,11 +19,11 @@ TransformObject::TransformObject(
       m_origin(origin),
       m_orient(orient),
       m_scale(scale),
-      m_enable_ik_joint_constraints(       glm::ivec3(0)),
-      m_ik_joint_constraints_center(       glm::vec3(0)),
-      m_ik_joint_constraints_max_deviation(glm::vec3(0)),
+      m_joint_type(JOINT_TYPE_REVOLUTE),
+      m_enable_joint_constraints(       glm::ivec3(0)),
+      m_joint_constraints_center(       glm::vec3(0)),
+      m_joint_constraints_max_deviation(glm::vec3(0)),
       m_parent(NULL),
-      m_ik_joint_type(IK_JOINT_TYPE_REVOLUTE),
       m_is_dirty_transform(true),
       m_is_dirty_normal_transform(true)
 {
@@ -36,14 +36,14 @@ TransformObject::~TransformObject()
 void TransformObject::set_origin(glm::vec3 origin)
 {
     m_origin = origin;
-    apply_ik_joint_constraints();
+    apply_joint_constraints();
     mark_dirty_transform();
 }
 
 void TransformObject::set_orient(glm::vec3 orient)
 {
     m_orient = orient;
-    apply_ik_joint_constraints();
+    apply_joint_constraints();
     mark_dirty_transform();
 }
 
@@ -61,41 +61,41 @@ void TransformObject::reset_transform()
     mark_dirty_transform();
 }
 
-void TransformObject::apply_ik_joint_constraints()
+void TransformObject::apply_joint_constraints()
 {
-    switch(m_ik_joint_type) {
-        case IK_JOINT_TYPE_REVOLUTE:
+    switch(m_joint_type) {
+        case JOINT_TYPE_REVOLUTE:
             for(int i = 0; i < 3; i++) {
-                if(!m_enable_ik_joint_constraints[i]) {
+                if(!m_enable_joint_constraints[i]) {
                     continue;
                 }
-                if(angle_distance(m_orient[i], m_ik_joint_constraints_center[i]) > m_ik_joint_constraints_max_deviation[i]) {
-                    float min_angle = m_ik_joint_constraints_center[i] - m_ik_joint_constraints_max_deviation[i];
-                    float max_angle = m_ik_joint_constraints_center[i] + m_ik_joint_constraints_max_deviation[i];
-                    float distance_to_lower_bound = angle_distance(m_orient[i], min_angle);
-                    float distance_to_upper_bound = angle_distance(m_orient[i], max_angle);
+                if(angle_distance(m_orient[i], m_joint_constraints_center[i]) > m_joint_constraints_max_deviation[i]) {
+                    float min_value = m_joint_constraints_center[i] - m_joint_constraints_max_deviation[i];
+                    float max_value = m_joint_constraints_center[i] + m_joint_constraints_max_deviation[i];
+                    float distance_to_lower_bound = angle_distance(m_orient[i], min_value);
+                    float distance_to_upper_bound = angle_distance(m_orient[i], max_value);
                     if(distance_to_lower_bound < distance_to_upper_bound) {
-                        m_orient[i] = min_angle;
+                        m_orient[i] = min_value;
                     } else {
-                        m_orient[i] = max_angle;
+                        m_orient[i] = max_value;
                     }
                 }
             }
             break;
-        case IK_JOINT_TYPE_PRISMATIC:
+        case JOINT_TYPE_PRISMATIC:
             for(int i = 0; i < 3; i++) {
-                if(!m_enable_ik_joint_constraints[i]) {
+                if(!m_enable_joint_constraints[i]) {
                     continue;
                 }
-                if(fabs(m_origin[i] - m_ik_joint_constraints_center[i]) > m_ik_joint_constraints_max_deviation[i]) {
-                    float min_pos = m_ik_joint_constraints_center[i] - m_ik_joint_constraints_max_deviation[i];
-                    float max_pos = m_ik_joint_constraints_center[i] + m_ik_joint_constraints_max_deviation[i];
-                    float distance_to_lower_bound = fabs(m_origin[i] - min_pos);
-                    float distance_to_upper_bound = fabs(m_origin[i] - max_pos);
+                if(fabs(m_origin[i] - m_joint_constraints_center[i]) > m_joint_constraints_max_deviation[i]) {
+                    float min_value = m_joint_constraints_center[i] - m_joint_constraints_max_deviation[i];
+                    float max_value = m_joint_constraints_center[i] + m_joint_constraints_max_deviation[i];
+                    float distance_to_lower_bound = fabs(m_origin[i] - min_value);
+                    float distance_to_upper_bound = fabs(m_origin[i] - max_value);
                     if(distance_to_lower_bound < distance_to_upper_bound) {
-                        m_origin[i] = min_pos;
+                        m_origin[i] = min_value;
                     } else {
-                        m_origin[i] = max_pos;
+                        m_origin[i] = max_value;
                     }
                 }
             }
@@ -208,12 +208,12 @@ void TransformObject::rotate(float angle_delta, glm::vec3 pivot)
 
 // http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/
 bool TransformObject::solve_ik_ccd(TransformObject* root,
-                               glm::vec3    local_end_effector_tip,
-                               glm::vec3    target,
-                               glm::vec3*   end_effector_dir,
-                               int          iters,
-                               float        accept_end_effector_distance,
-                               float        accept_avg_angle_distance)
+                                   glm::vec3        local_end_effector_tip,
+                                   glm::vec3        target,
+                                   glm::vec3*       end_effector_dir,
+                                   int              iters,
+                                   float            accept_end_effector_distance,
+                                   float            accept_avg_angle_distance)
 {
     bool converge = false;
     bool find_solution = false;
@@ -229,7 +229,7 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
             } else {
                 tmp_target = target;
             }
-            if(current_segment->get_ik_joint_type() == IK_JOINT_TYPE_PRISMATIC) {
+            if(current_segment->get_joint_type() == JOINT_TYPE_PRISMATIC) {
                 current_segment->set_origin(current_segment->get_origin() + (current_segment->from_origin_in_parent_system(tmp_target) -
                                                                              current_segment->from_origin_in_parent_system(end_effector_tip)));
                 continue;
@@ -294,15 +294,15 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
 }
 
 void TransformObject::update_boid(glm::vec3 target,
-                              float     forward_speed,
-                              float     angle_delta,
-                              float     avoid_radius)
+                                  float     forward_speed,
+                                  float     angle_delta,
+                                  float     avoid_radius)
 {
-    glm::vec3 local_target_dir       = glm::normalize(from_origin_in_parent_system(target));
-    glm::vec3 local_heading          = glm::normalize(from_origin_in_parent_system(in_abs_system(VEC_FORWARD)));
-    glm::vec3 local_arc_dir          = glm::normalize(local_target_dir - local_heading);
-    glm::vec3 local_arc_midpoint_dir = glm::normalize((local_target_dir + local_heading) * 0.5f);
-    glm::vec3 local_arc_pivot        = glm::cross(local_arc_dir, local_arc_midpoint_dir);
+    glm::vec3 local_target_dir           = glm::normalize(from_origin_in_parent_system(target));
+    glm::vec3 local_heading              = glm::normalize(from_origin_in_parent_system(in_abs_system(VEC_FORWARD)));
+    glm::vec3 local_arc_dir              = glm::normalize(local_target_dir - local_heading);
+    glm::vec3 local_arc_midpoint_dir     = glm::normalize((local_target_dir + local_heading) * 0.5f);
+    glm::vec3 local_arc_pivot            = glm::cross(local_arc_dir, local_arc_midpoint_dir);
     glm::mat4 local_arc_rotate_transform = GLM_ROTATE(glm::mat4(1), -angle_delta * ((glm::distance(target, m_origin) < avoid_radius) ? -1 : 1), local_arc_pivot);
 #if 1
     // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)

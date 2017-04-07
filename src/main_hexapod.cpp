@@ -195,7 +195,7 @@ int init_resources()
     for(int i = 0; i < IK_LEG_COUNT; i++) {
         IK_Leg* ik_leg = new IK_Leg();
         std::stringstream joint_name_ss;
-        joint_name_ss << "ik_joint_type_" << i;
+        joint_name_ss << "joint_type_" << i;
         ik_leg->m_joint = vt::PrimitiveFactory::create_box(joint_name_ss.str(), IK_SEGMENT_WIDTH,
                                                                                 IK_SEGMENT_WIDTH,
                                                                                 IK_SEGMENT_WIDTH);
@@ -219,14 +219,14 @@ int init_resources()
             (*p)->set_material(phong_material);
             (*p)->set_ambient_color(glm::vec3(0));
             if(!leg_segment_index) {
-                (*p)->set_enable_ik_joint_constraints(glm::ivec3(1, 1, 0));
-                (*p)->set_ik_joint_constraints_center(glm::vec3(0, -45, 0));
-                (*p)->set_ik_joint_constraints_max_deviation(glm::vec3(0, 45, 0));
+                (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 0));
+                (*p)->set_joint_constraints_center(glm::vec3(0, -45, 0));
+                (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 45, 0));
             }
             if(leg_segment_index) {
-                (*p)->set_enable_ik_joint_constraints(glm::ivec3(1, 1, 1));
-                (*p)->set_ik_joint_constraints_center(glm::vec3(0, 45, 0));
-                (*p)->set_ik_joint_constraints_max_deviation(glm::vec3(0, 45, 0));
+                (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
+                (*p)->set_joint_constraints_center(glm::vec3(0, 45, 0));
+                (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 45, 0));
             }
             leg_segment_index++;
         }

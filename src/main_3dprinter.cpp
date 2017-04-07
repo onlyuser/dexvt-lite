@@ -243,7 +243,7 @@ int init_resources()
         IK_Leg* ik_leg = new IK_Leg();
 
         std::stringstream joint_body_name_ss;
-        joint_body_name_ss << "ik_joint_type_body_" << i;
+        joint_body_name_ss << "joint_type_body_" << i;
         ik_leg->m_joint_body = vt::PrimitiveFactory::create_box(joint_body_name_ss.str(), IK_SEGMENT_WIDTH,
                                                                                           IK_SEGMENT_WIDTH,
                                                                                           IK_SEGMENT_WIDTH);
@@ -281,16 +281,16 @@ int init_resources()
             (*p)->set_ambient_color(glm::vec3(0));
             (*p)->set_orient(glm::vec3(0, 90, angle));
             if(!leg_segment_index) {
-                (*p)->set_ik_joint_type(vt::TransformObject::IK_JOINT_TYPE_PRISMATIC);
-                (*p)->set_enable_ik_joint_constraints(glm::ivec3(1, 1, 1));
-                (*p)->set_ik_joint_constraints_center(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS - IK_SEGMENT_HEIGHT) -
-                                             glm::vec3(0, BODY_ELEVATION * 0.5, 0));
-                (*p)->set_ik_joint_constraints_max_deviation(glm::vec3(0, BODY_ELEVATION * 0.5, 0));
+                (*p)->set_joint_type(vt::TransformObject::JOINT_TYPE_PRISMATIC);
+                (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
+                (*p)->set_joint_constraints_center(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS - IK_SEGMENT_HEIGHT) -
+                                                   glm::vec3(0, BODY_ELEVATION * 0.5, 0));
+                (*p)->set_joint_constraints_max_deviation(glm::vec3(0, BODY_ELEVATION * 0.5, 0));
             }
             if(leg_segment_index) {
-                (*p)->set_enable_ik_joint_constraints(glm::ivec3(1, 1, 0));
-                (*p)->set_ik_joint_constraints_center(glm::vec3(0, 90, 0));
-                (*p)->set_ik_joint_constraints_max_deviation(glm::vec3(0, 90, 0));
+                (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 0));
+                (*p)->set_joint_constraints_center(glm::vec3(0, 90, 0));
+                (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 90, 0));
             }
             leg_segment_index++;
         }
