@@ -98,7 +98,7 @@ protected:
     glm::vec3    m_joint_constraints_max_deviation;
 
     // hierarchy related
-    TransformObject* m_parent;
+    TransformObject*           m_parent;
     std::set<TransformObject*> m_children;
 
     // caching

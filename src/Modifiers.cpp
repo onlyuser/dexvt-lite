@@ -9,13 +9,13 @@ namespace vt {
 
 class Mesh;
 
-Mesh* _mesh(MeshBase* mesh);
+Mesh* cast_mesh(MeshBase* mesh);
 
 void mesh_attach(Scene* scene, MeshBase* mesh1, MeshBase* mesh2)
 {
     mesh2->set_axis(mesh1->in_abs_system());
     mesh2->merge(mesh1, mesh1->get_material() == mesh2->get_material());
-    scene->remove_mesh(_mesh(mesh1));
+    scene->remove_mesh(cast_mesh(mesh1));
 }
 
 void mesh_apply_ripple(MeshBase* mesh, glm::vec3 origin, float amplitude, float wavelength, float phase, bool smooth)

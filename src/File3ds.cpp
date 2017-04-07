@@ -13,7 +13,7 @@ MeshBase* alloc_mesh_base(std::string name, size_t num_vertex, size_t num_tri);
 
 class Mesh;
 
-Mesh* _mesh(MeshBase* mesh);
+Mesh* cast_mesh(MeshBase* mesh);
 
 static void read_string(FILE* stream, char* buf)
 {
@@ -30,7 +30,7 @@ bool File3ds::load3ds(std::string filename, int index, std::vector<Mesh*>* meshe
         return false;
     }
     for(std::vector<MeshBase*>::iterator p = meshes_iface.begin(); p != meshes_iface.end(); p++) {
-        meshes->push_back(_mesh(*p));
+        meshes->push_back(cast_mesh(*p));
     }
     return true;
 }

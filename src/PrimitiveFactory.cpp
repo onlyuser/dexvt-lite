@@ -13,8 +13,8 @@ MeshBase* alloc_mesh_base(std::string name, size_t num_vertex, size_t num_tri);
 
 class Mesh;
 
-Mesh* _mesh(MeshBase* mesh);
-MeshBase* _mesh_base(Mesh* mesh);
+Mesh* cast_mesh(MeshBase* mesh);
+MeshBase* cast_mesh_base(Mesh* mesh);
 
 Mesh* PrimitiveFactory::create_grid(
         std::string name,
@@ -25,8 +25,8 @@ Mesh* PrimitiveFactory::create_grid(
         float       tex_width_scale,
         float       tex_length_scale)
 {
-    int        num_vertex = (rows + 1) * (cols + 1);
-    int        num_tri    = rows * cols * 2;
+    int       num_vertex = (rows + 1) * (cols + 1);
+    int       num_tri    = rows * cols * 2;
     MeshBase* mesh       = alloc_mesh_base(name, num_vertex, num_tri);
 
     // ==============================
@@ -79,7 +79,7 @@ Mesh* PrimitiveFactory::create_grid(
 
     assert(vert_index == num_vertex);
     assert(tri_index  == num_tri);
-    return _mesh(mesh);
+    return cast_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_sphere(
@@ -88,9 +88,9 @@ Mesh* PrimitiveFactory::create_sphere(
         int         stacks,
         float       radius)
 {
-    int        cols = slices;
-    int        rows = stacks;
-    MeshBase* mesh = _mesh_base(create_grid(name, cols, rows));
+    int       cols = slices;
+    int       rows = stacks;
+    MeshBase* mesh = cast_mesh_base(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -116,7 +116,7 @@ Mesh* PrimitiveFactory::create_sphere(
 
     mesh->update_bbox();
 
-    return _mesh(mesh);
+    return cast_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_hemisphere(
@@ -125,9 +125,9 @@ Mesh* PrimitiveFactory::create_hemisphere(
         int         stacks,
         float       radius)
 {
-    int        cols = slices;
-    int        rows = stacks * 0.5 + 2;
-    MeshBase* mesh = _mesh_base(create_grid(name, cols, rows));
+    int       cols = slices;
+    int       rows = stacks * 0.5 + 2;
+    MeshBase* mesh = cast_mesh_base(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -164,7 +164,7 @@ Mesh* PrimitiveFactory::create_hemisphere(
 
     mesh->update_bbox();
 
-    return _mesh(mesh);
+    return cast_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_cylinder(
@@ -173,9 +173,9 @@ Mesh* PrimitiveFactory::create_cylinder(
         float       radius,
         float       height)
 {
-    int        cols = slices;
-    int        rows = 5;
-    MeshBase* mesh = _mesh_base(create_grid(name, cols, rows));
+    int       cols = slices;
+    int       rows = 5;
+    MeshBase* mesh = cast_mesh_base(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -230,7 +230,7 @@ Mesh* PrimitiveFactory::create_cylinder(
 
     mesh->update_bbox();
 
-    return _mesh(mesh);
+    return cast_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_cone(
@@ -239,9 +239,9 @@ Mesh* PrimitiveFactory::create_cone(
         float       radius,
         float       height)
 {
-    int        cols = slices;
-    int        rows = 3;
-    MeshBase* mesh = _mesh_base(create_grid(name, cols, rows));
+    int       cols = slices;
+    int       rows = 3;
+    MeshBase* mesh = cast_mesh_base(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -291,7 +291,7 @@ Mesh* PrimitiveFactory::create_cone(
 
     mesh->update_bbox();
 
-    return _mesh(mesh);
+    return cast_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_torus(
@@ -301,9 +301,9 @@ Mesh* PrimitiveFactory::create_torus(
         float       radius_major,
         float       radius_minor)
 {
-    int        cols = slices;
-    int        rows = stacks;
-    MeshBase* mesh = _mesh_base(create_grid(name, cols, rows));
+    int       cols = slices;
+    int       rows = stacks;
+    MeshBase* mesh = cast_mesh_base(create_grid(name, cols, rows));
 
     // ==============================
     // init mesh vertex/normal coords
@@ -332,7 +332,7 @@ Mesh* PrimitiveFactory::create_torus(
 
     mesh->update_bbox();
 
-    return _mesh(mesh);
+    return cast_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_box(
@@ -460,7 +460,7 @@ Mesh* PrimitiveFactory::create_box(
 
     mesh->update_bbox();
 
-    return _mesh(mesh);
+    return cast_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_tetrahedron(
@@ -499,7 +499,7 @@ Mesh* PrimitiveFactory::create_tetrahedron(
     mesh->update_normals_and_tangents();
     mesh->update_bbox();
 
-    return _mesh(mesh);
+    return cast_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_geosphere(
@@ -507,7 +507,7 @@ Mesh* PrimitiveFactory::create_geosphere(
         float       radius,
         int         tessellation_iters)
 {
-    MeshBase* mesh = _mesh_base(create_sphere(name, 4, 2, radius));
+    MeshBase* mesh = cast_mesh_base(create_sphere(name, 4, 2, radius));
     mesh->center_axis();
     for(int i = 0; i < tessellation_iters; i++) {
         mesh_tessellate(mesh, TESSELLATION_TYPE_EDGE_CENTER, true);
@@ -517,7 +517,7 @@ Mesh* PrimitiveFactory::create_geosphere(
         }
         mesh->center_axis();
     }
-    return _mesh(mesh);
+    return cast_mesh(mesh);
 }
 
 Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
@@ -542,8 +542,8 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
     // total (faces):    16 * 7 = 112
     // total (vertices): 112 * 3 = 336
 
-    int        num_vertex = 336;
-    int        num_tri    = 112;
+    int       num_vertex = 336;
+    int       num_tri    = 112;
     MeshBase* mesh       = alloc_mesh_base(name, num_vertex, num_tri);
 
     float crown_height   = height * crown_height_to_total_height_ratio;
@@ -880,7 +880,7 @@ Mesh* PrimitiveFactory::create_diamond_brilliant_cut(
 
     assert(vert_index == num_vertex);
     assert(tri_index  == num_tri);
-    return _mesh(mesh);
+    return cast_mesh(mesh);
 }
 
 }

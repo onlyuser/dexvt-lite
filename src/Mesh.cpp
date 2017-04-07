@@ -185,10 +185,9 @@ void Mesh::set_vert_coord(int index, glm::vec3 coord)
 glm::vec3 Mesh::get_vert_normal(int index) const
 {
     int offset = index * 3;
-    return glm::vec3(
-            m_vert_normal[offset + 0],
-            m_vert_normal[offset + 1],
-            m_vert_normal[offset + 2]);
+    return glm::vec3(m_vert_normal[offset + 0],
+                     m_vert_normal[offset + 1],
+                     m_vert_normal[offset + 2]);
 }
 
 void Mesh::set_vert_normal(int index, glm::vec3 normal)
@@ -202,10 +201,9 @@ void Mesh::set_vert_normal(int index, glm::vec3 normal)
 glm::vec3 Mesh::get_vert_tangent(int index) const
 {
     int offset = index * 3;
-    return glm::vec3(
-            m_vert_tangent[offset + 0],
-            m_vert_tangent[offset + 1],
-            m_vert_tangent[offset + 2]);
+    return glm::vec3(m_vert_tangent[offset + 0],
+                     m_vert_tangent[offset + 1],
+                     m_vert_tangent[offset + 2]);
 }
 
 void Mesh::set_vert_tangent(int index, glm::vec3 tangent)
@@ -219,9 +217,8 @@ void Mesh::set_vert_tangent(int index, glm::vec3 tangent)
 glm::vec2 Mesh::get_tex_coord(int index) const
 {
     int offset = index * 2;
-    return glm::vec2(
-            m_tex_coords[offset + 0],
-            m_tex_coords[offset + 1]);
+    return glm::vec2(m_tex_coords[offset + 0],
+                     m_tex_coords[offset + 1]);
 }
 
 void Mesh::set_tex_coord(int index, glm::vec2 coord)
@@ -234,10 +231,9 @@ void Mesh::set_tex_coord(int index, glm::vec2 coord)
 glm::ivec3 Mesh::get_tri_indices(int index) const
 {
     int offset = index * 3;
-    return glm::ivec3(
-            m_tri_indices[offset + 0],
-            m_tri_indices[offset + 1],
-            m_tri_indices[offset + 2]);
+    return glm::ivec3(m_tri_indices[offset + 0],
+                      m_tri_indices[offset + 1],
+                      m_tri_indices[offset + 2]);
 }
 
 void Mesh::set_tri_indices(int index, glm::ivec3 indices)
@@ -500,12 +496,12 @@ MeshBase* alloc_mesh_base(std::string name, size_t num_vertex, size_t num_tri)
     return new Mesh(name, num_vertex, num_tri);
 }
 
-Mesh* _mesh(MeshBase* mesh)
+Mesh* cast_mesh(MeshBase* mesh)
 {
     return dynamic_cast<Mesh*>(mesh);
 }
 
-MeshBase* _mesh_base(Mesh* mesh)
+MeshBase* cast_mesh_base(Mesh* mesh)
 {
     return dynamic_cast<MeshBase*>(mesh);
 }

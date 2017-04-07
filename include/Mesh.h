@@ -220,8 +220,8 @@ private:
 };
 
 MeshBase* alloc_mesh_base(std::string name, size_t num_vertex, size_t num_tri);
-Mesh* _mesh(MeshBase* mesh);
-MeshBase* _mesh_base(Mesh* mesh);
+Mesh* cast_mesh(MeshBase* mesh);
+MeshBase* cast_mesh_base(Mesh* mesh);
 
 }
 
