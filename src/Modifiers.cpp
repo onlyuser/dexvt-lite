@@ -23,10 +23,11 @@ void mesh_apply_ripple(MeshBase* mesh, glm::vec3 origin, float amplitude, float 
     size_t num_vertex = mesh->get_num_vertex();
     for(int i = 0; i < static_cast<int>(num_vertex); i++) {
         glm::vec3 pos = mesh->get_vert_coord(i);
-        glm::vec3 new_pos = pos;
-        new_pos.y = origin.y + static_cast<float>(sin(glm::distance(glm::vec2(origin.x, origin.z),
-                               glm::vec2(pos.x, pos.z)) / (wavelength / (PI * 2)) + phase)) * amplitude;
-        mesh->set_vert_coord(i, new_pos);
+        glm::vec2 p1(origin.x, origin.z);
+        glm::vec2 p2(pos.x, pos.z);
+        float radius = glm::distance(p1, p2);
+        pos.y = origin.y + static_cast<float>(sin(radius / (wavelength / (PI * 2)) + phase)) * amplitude;
+        mesh->set_vert_coord(i, pos);
     }
     if(smooth) {
         mesh->set_smooth(true);

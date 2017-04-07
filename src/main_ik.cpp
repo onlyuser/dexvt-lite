@@ -189,7 +189,7 @@ int init_resources()
     scene->add_texture(               texture_box_normal);
     bump_mapped_material->add_texture(texture_box_normal);
 
-    glm::vec3 origin = glm::vec3();
+    glm::vec3 origin = glm::vec3(0);
     camera = new vt::Camera("camera", origin + glm::vec3(0, 0, orbit_radius), origin);
     scene->set_camera(camera);
 

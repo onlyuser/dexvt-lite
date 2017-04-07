@@ -29,7 +29,6 @@ Material::Material(std::string name,
     m_program->attach_shader(m_fragment_shader);
     if(!m_program->link()) {
         fprintf(stderr, "glLinkProgram:");
-//        print_log(m_program->id());
         return;
     }
 }

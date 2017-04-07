@@ -125,7 +125,7 @@ int init_resources()
     scene->add_texture(          texture_skybox);
     skybox_material->add_texture(texture_skybox);
 
-    glm::vec3 origin = glm::vec3();
+    glm::vec3 origin = glm::vec3(0);
     camera = new vt::Camera("camera", origin + glm::vec3(0, 0, orbit_radius), origin);
     scene->set_camera(camera);
 
