@@ -337,21 +337,30 @@ void onTick()
     //}
     if(left_key) {
         body->set_origin(body->get_origin() - body->get_abs_left_direction() * BODY_SPEED);
+        user_input = true;
     }
     if(right_key) {
         body->set_origin(body->get_origin() + body->get_abs_left_direction() * BODY_SPEED);
+        user_input = true;
     }
     if(up_key) {
         body->set_origin(body->get_origin() - body->get_abs_heading() * BODY_SPEED);
+        user_input = true;
     }
     if(down_key) {
         body->set_origin(body->get_origin() + body->get_abs_heading() * BODY_SPEED);
+        user_input = true;
     }
     if(page_up_key) {
         body->set_origin(body->get_origin() + body->get_abs_up_direction() * BODY_SPEED);
+        user_input = true;
     }
     if(page_down_key) {
         body->set_origin(body->get_origin() - body->get_abs_up_direction() * BODY_SPEED);
+        user_input = true;
+    }
+    if(user_input) {
+        user_input = false;
     }
     for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
         std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
@@ -490,27 +499,21 @@ void onSpecial(int key, int x, int y)
             break;
         case GLUT_KEY_LEFT:
             left_key = true;
-            user_input = true;
             break;
         case GLUT_KEY_RIGHT:
             right_key = true;
-            user_input = true;
             break;
         case GLUT_KEY_UP:
             up_key = true;
-            user_input = true;
             break;
         case GLUT_KEY_DOWN:
             down_key = true;
-            user_input = true;
             break;
         case GLUT_KEY_PAGE_UP:
             page_up_key = true;
-            user_input = true;
             break;
         case GLUT_KEY_PAGE_DOWN:
             page_down_key = true;
-            user_input = true;
             break;
     }
 }
@@ -520,27 +523,21 @@ void onSpecialUp(int key, int x, int y)
     switch(key) {
         case GLUT_KEY_LEFT:
             left_key = false;
-            user_input = true;
             break;
         case GLUT_KEY_RIGHT:
             right_key = false;
-            user_input = true;
             break;
         case GLUT_KEY_UP:
             up_key = false;
-            user_input = true;
             break;
         case GLUT_KEY_DOWN:
             down_key = false;
-            user_input = true;
             break;
         case GLUT_KEY_PAGE_UP:
             page_up_key = false;
-            user_input = true;
             break;
         case GLUT_KEY_PAGE_DOWN:
             page_down_key = false;
-            user_input = true;
             break;
     }
 }

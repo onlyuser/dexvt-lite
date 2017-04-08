@@ -307,42 +307,49 @@ void onTick()
         body->set_orient(glm::vec3(ORIENT_ROLL(body_orient),
                                    ORIENT_PITCH(body_orient),
                                    ORIENT_YAW(body_orient) - BODY_ANGLE_SPEED));
+        user_input = true;
     }
     if(right_key) {
         glm::vec3 body_orient = body->get_orient();
         body->set_orient(glm::vec3(ORIENT_ROLL(body_orient),
                                    ORIENT_PITCH(body_orient),
                                    ORIENT_YAW(body_orient) + BODY_ANGLE_SPEED));
+        user_input = true;
     }
     if(up_key) {
         glm::vec3 body_orient = body->get_orient();
         body->set_orient(glm::vec3(ORIENT_ROLL(body_orient),
                                    ORIENT_PITCH(body_orient) - BODY_ANGLE_SPEED,
                                    ORIENT_YAW(body_orient)));
+        user_input = true;
     }
     if(down_key) {
         glm::vec3 body_orient = body->get_orient();
         body->set_orient(glm::vec3(ORIENT_ROLL(body_orient),
                                    ORIENT_PITCH(body_orient) + BODY_ANGLE_SPEED,
                                    ORIENT_YAW(body_orient)));
+        user_input = true;
     }
     if(page_up_key) {
         glm::vec3 body_origin = body->get_origin();
         body->set_origin(glm::vec3(body_origin.x,
                                    body_origin.y + BODY_SPEED,
                                    body_origin.z));
+        user_input = true;
     }
     if(page_down_key) {
         glm::vec3 body_origin = body->get_origin();
         body->set_origin(glm::vec3(body_origin.x,
                                    body_origin.y - BODY_SPEED,
                                    body_origin.z));
+        user_input = true;
     }
     if(user_input) {
         for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
             std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
             ik_meshes[0]->set_origin((*q)->m_joint->in_abs_system());
         }
+        user_input = false;
     }
     for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
         std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
@@ -478,27 +485,21 @@ void onSpecial(int key, int x, int y)
             break;
         case GLUT_KEY_LEFT:
             left_key = true;
-            user_input = true;
             break;
         case GLUT_KEY_RIGHT:
             right_key = true;
-            user_input = true;
             break;
         case GLUT_KEY_UP:
             up_key = true;
-            user_input = true;
             break;
         case GLUT_KEY_DOWN:
             down_key = true;
-            user_input = true;
             break;
         case GLUT_KEY_PAGE_UP:
             page_up_key = true;
-            user_input = true;
             break;
         case GLUT_KEY_PAGE_DOWN:
             page_down_key = true;
-            user_input = true;
             break;
     }
 }
@@ -508,27 +509,21 @@ void onSpecialUp(int key, int x, int y)
     switch(key) {
         case GLUT_KEY_LEFT:
             left_key = false;
-            user_input = true;
             break;
         case GLUT_KEY_RIGHT:
             right_key = false;
-            user_input = true;
             break;
         case GLUT_KEY_UP:
             up_key = false;
-            user_input = true;
             break;
         case GLUT_KEY_DOWN:
             down_key = false;
-            user_input = true;
             break;
         case GLUT_KEY_PAGE_UP:
             page_up_key = false;
-            user_input = true;
             break;
         case GLUT_KEY_PAGE_DOWN:
             page_down_key = false;
-            user_input = true;
             break;
     }
 }

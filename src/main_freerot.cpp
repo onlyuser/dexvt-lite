@@ -216,6 +216,12 @@ void onTick()
         dummy->rotate(-angle_delta, dummy->get_abs_up_direction());
         user_input = true;
     }
+    if(user_input) {
+        std::stringstream ss;
+        ss << "Roll=" << ORIENT_YAW(dummy->get_orient()) << ", Pitch=" << ORIENT_PITCH(dummy->get_orient()) << ", Yaw=" << ORIENT_PITCH(dummy->get_orient());
+        std::cout << "\r" << std::setw(80) << std::left << ss.str() << std::flush;
+        user_input = false;
+    }
     static int angle = 0;
     angle = (angle + angle_delta) % 360;
 }
@@ -324,6 +330,7 @@ void onSpecial(int key, int x, int y)
         case GLUT_KEY_HOME:
             dummy->set_orient(glm::vec3(0));
             dummy->get_transform(true); // TODO: why is this necessary?
+            user_input = true;
             break;
         case GLUT_KEY_LEFT:
             left_key = true;
