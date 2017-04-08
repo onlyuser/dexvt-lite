@@ -57,7 +57,7 @@ public:
     glm::vec3 get_abs_heading();
 
     // hierarchy related
-    void link_parent(TransformObject* parent, bool keep_transform = false);
+    void link_parent(TransformObject* new_parent, bool keep_transform = false);
     TransformObject* get_parent() const        { return m_parent; }
     std::set<TransformObject*> &get_children() { return m_children; }
     void unlink_children();

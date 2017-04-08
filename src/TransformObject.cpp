@@ -135,25 +135,25 @@ glm::vec3 TransformObject::get_abs_heading()
     return glm::vec3(get_normal_transform() * glm::vec4(VEC_FORWARD, 1));
 }
 
-void TransformObject::link_parent(TransformObject* parent, bool keep_transform)
+void TransformObject::link_parent(TransformObject* new_parent, bool keep_transform)
 {
     glm::vec3 abs_origin;
     if(keep_transform) {
         abs_origin = in_abs_system();
     }
-    if(parent) {
+    if(new_parent) {
         if(keep_transform) {
-            // unproject to global space and reproject to parent space
-            glm::mat4 parent_inverse_transform = glm::inverse(parent->get_transform());
-            flatten(&parent_inverse_transform);
+            // unproject to global space and then reproject to new parent space
+            glm::mat4 new_parent_inverse_transform = glm::inverse(new_parent->get_transform());
+            flatten(&new_parent_inverse_transform);
 
             // break all connections -- TODO: review this
             link_parent(NULL, false);
             unlink_children();
         }
 
-        // make new parent remember you
-        parent->get_children().insert(this);
+        // make new new parent remember you
+        new_parent->get_children().insert(this);
     } else {
         if(keep_transform) {
             // unproject to global space
@@ -164,14 +164,14 @@ void TransformObject::link_parent(TransformObject* parent, bool keep_transform)
         }
 
         if(m_parent) {
-            // make parent disown you
+            // make old parent forget you
             std::set<TransformObject*>::iterator p = m_parent->get_children().find(this);
             if(p != m_parent->get_children().end()) {
                 m_parent->get_children().erase(p);
             }
         }
     }
-    m_parent = parent;
+    m_parent = new_parent;
     if(keep_transform) {
         set_axis(abs_origin);
     } else {
