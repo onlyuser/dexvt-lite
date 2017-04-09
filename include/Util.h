@@ -61,7 +61,7 @@ glm::vec3 offset_to_orient(glm::vec3 offset);
 glm::vec3 orient_modulo(glm::vec3 orient);
 float angle_modulo(float angle);
 float angle_distance(float angle1, float angle2);
-glm::vec3 bezier_lerp(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float t);
+glm::vec3 bezier_interpolate(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float t);
 bool read_file(std::string filename, std::string &s);
 bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups, size_t* start_pos);
 bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups);
