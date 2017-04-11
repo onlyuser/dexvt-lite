@@ -1,4 +1,5 @@
 #include <KeyframeMgr.h>
+#include <TransformObject.h>
 
 namespace vt {
 
@@ -19,49 +20,74 @@ MotionTrack::~MotionTrack()
     }
 }
 
-bool MotionTrack::add_keyframe(int frame_number, Keyframe* keyframe)
+void MotionTrack::insert_keyframe(int frame_number, Keyframe* keyframe)
 {
-    if(m_keyframes.find(frame_number) != m_keyframes.end()) {
-        return false;
+    keyframes_t::iterator p = m_keyframes.find(frame_number);
+    if(p == m_keyframes.end()) {
+        m_keyframes.insert(keyframes_t::value_type(frame_number, keyframe));
+        return;
     }
-    m_keyframes.insert(keyframes_t::value_type(frame_number, keyframe));
-    return true;
+    if((*p).second) { delete [](*p).second; }
+    (*p).second = keyframe;
 }
 
-bool MotionTrack::lerp_frame_data(int frame_number, glm::vec3* value) const
+void MotionTrack::erase_keyframe(int frame_number)
 {
-    //TODO: fix-me!
-    return true;
+    keyframes_t::iterator p = m_keyframes.find(frame_number);
+    if(p == m_keyframes.end()) {
+        return;
+    }
+    if((*p).second) { delete [](*p).second; }
+    (*p).second = NULL;
 }
 
-ObjectMotion::ObjectMotion()
+void MotionTrack::lerp_frame(int frame_number, glm::vec3* value) const
+{
+    keyframes_t::const_iterator p = m_keyframes.lower_bound(frame_number);
+    if(p == m_keyframes.end()) {
+        *value = (*(--p)).second->get_value();
+        return;
+    }
+    if((*p).first == frame_number) {
+        *value = (*p).second->get_value();
+        return;
+    }
+    keyframes_t::const_iterator q = p--;
+    float start_frame = (*p).first;
+    float end_frame   = (*q).first;
+    float alpha = (static_cast<float>(frame_number) - start_frame) / (end_frame - start_frame);
+    glm::vec3 p_value = (*p).second->get_value();
+    glm::vec3 q_value = (*q).second->get_value();
+    *value = LERP(p_value, q_value, alpha);
+}
+
+Motion::Motion()
 {
     m_motion_track[MotionTrack::MOTION_TYPE_ORIGIN] = new MotionTrack(MotionTrack::MOTION_TYPE_ORIGIN);
     m_motion_track[MotionTrack::MOTION_TYPE_ORIENT] = new MotionTrack(MotionTrack::MOTION_TYPE_ORIENT);
     m_motion_track[MotionTrack::MOTION_TYPE_SCALE]  = new MotionTrack(MotionTrack::MOTION_TYPE_SCALE);
 }
 
-ObjectMotion::~ObjectMotion()
+Motion::~Motion()
 {
     for(int i = 0; i < MotionTrack::MOTION_TYPE_COUNT; i++) {
         delete m_motion_track[i];
     }
 }
 
-bool ObjectMotion::add_keyframe(MotionTrack::motion_type_t motion_type, int frame_number, Keyframe* keyframe)
+void Motion::insert_keyframe(MotionTrack::motion_type_t motion_type, int frame_number, Keyframe* keyframe)
 {
-    if(!m_motion_track[motion_type]) {
-        return false;
-    }
-    return m_motion_track[motion_type]->add_keyframe(frame_number, keyframe);
+    m_motion_track[motion_type]->insert_keyframe(frame_number, keyframe);
 }
 
-bool ObjectMotion::lerp_frame_data(int frame_number, MotionTrack::motion_type_t motion_type, glm::vec3* value) const
+void Motion::erase_keyframe(MotionTrack::motion_type_t motion_type, int frame_number)
 {
-    if(!m_motion_track[motion_type]) {
-        return false;
-    }
-    return m_motion_track[motion_type]->lerp_frame_data(frame_number, value);
+    m_motion_track[motion_type]->erase_keyframe(frame_number);
+}
+
+void Motion::lerp_frame(int frame_number, MotionTrack::motion_type_t motion_type, glm::vec3* value) const
+{
+    m_motion_track[motion_type]->lerp_frame(frame_number, value);
 }
 
 KeyframeMgr::~KeyframeMgr()
@@ -71,23 +97,51 @@ KeyframeMgr::~KeyframeMgr()
     }
 }
 
-bool KeyframeMgr::add_keyframe(vt::Mesh* mesh, MotionTrack::motion_type_t motion_type, int frame_number, Keyframe* keyframe)
+void KeyframeMgr::insert_keyframe(vt::TransformObject* transform_object, MotionTrack::motion_type_t motion_type, int frame_number, Keyframe* keyframe)
 {
-    script_t::iterator p = m_script.find(mesh);
+    script_t::iterator p = m_script.find(transform_object);
     if(p == m_script.end()) {
-        m_script.insert(script_t::value_type(mesh, new ObjectMotion()));
-        p = m_script.find(mesh);
+        m_script.insert(script_t::value_type(transform_object, new Motion()));
+        p = m_script.find(transform_object);
     }
-    return (*p).second->add_keyframe(motion_type, frame_number, keyframe);
+    (*p).second->insert_keyframe(motion_type, frame_number, keyframe);
 }
 
-bool KeyframeMgr::lerp_frame_data(vt::Mesh* mesh, int frame_number, MotionTrack::motion_type_t motion_type, glm::vec3* value) const
+void KeyframeMgr::erase_keyframe(vt::TransformObject* transform_object, MotionTrack::motion_type_t motion_type, int frame_number)
 {
-    script_t::const_iterator p = m_script.find(mesh);
+    script_t::iterator p = m_script.find(transform_object);
+    if(p == m_script.end()) {
+        return;
+    }
+    if(frame_number == -1) {
+        delete (*p).second;
+        m_script.erase(p);
+        return;
+    }
+    (*p).second->erase_keyframe(motion_type, frame_number);
+}
+
+bool KeyframeMgr::lerp_frame(vt::TransformObject* transform_object, int frame_number, MotionTrack::motion_type_t motion_type, glm::vec3* value) const
+{
+    script_t::const_iterator p = m_script.find(transform_object);
     if(p == m_script.end()) {
         return false;
     }
-    return (*p).second->lerp_frame_data(frame_number, motion_type, value);
+    (*p).second->lerp_frame(frame_number, motion_type, value);
+    return true;
+}
+
+void KeyframeMgr::apply_lerp_frame(vt::TransformObject* transform_object, int frame_number) const
+{
+    glm::vec3 origin;
+    lerp_frame(transform_object, frame_number, MotionTrack::MOTION_TYPE_ORIGIN, &origin);
+    glm::vec3 orient;
+    lerp_frame(transform_object, frame_number, MotionTrack::MOTION_TYPE_ORIENT, &orient);
+    glm::vec3 scale;
+    lerp_frame(transform_object, frame_number, MotionTrack::MOTION_TYPE_SCALE, &scale);
+    transform_object->set_origin(origin);
+    transform_object->set_origin(orient);
+    transform_object->set_origin(scale);
 }
 
 }

@@ -7,7 +7,7 @@
 
 namespace vt {
 
-class Mesh;
+class TransformObject;
 
 class Keyframe
 {
@@ -34,22 +34,24 @@ public:
     MotionTrack(motion_type_t motion_type);
     ~MotionTrack();
     motion_type_t get_motion_type() const { return m_motion_type; }
-    bool add_keyframe(int frame_number, Keyframe* keyframe);
+    void insert_keyframe(int frame_number, Keyframe* keyframe);
+    void erase_keyframe(int frame_number);
     MotionTrack::keyframes_t get_keyframes() const { return m_keyframes; }
-    bool lerp_frame_data(int frame_number, glm::vec3* value) const;
+    void lerp_frame(int frame_number, glm::vec3* value) const;
 
 private:
     motion_type_t m_motion_type;
-    keyframes_t m_keyframes;
+    keyframes_t   m_keyframes;
 };
 
-class ObjectMotion
+class Motion
 {
 public:
-    ObjectMotion();
-    ~ObjectMotion();
-    bool add_keyframe(MotionTrack::motion_type_t motion_type, int frame_number, Keyframe* keyframe);
-    bool lerp_frame_data(int frame_number, MotionTrack::motion_type_t motion_type, glm::vec3* value) const;
+    Motion();
+    ~Motion();
+    void insert_keyframe(MotionTrack::motion_type_t motion_type, int frame_number, Keyframe* keyframe);
+    void erase_keyframe(MotionTrack::motion_type_t motion_type, int frame_number);
+    void lerp_frame(int frame_number, MotionTrack::motion_type_t motion_type, glm::vec3* value) const;
 
 private:
     MotionTrack* m_motion_track[MotionTrack::MOTION_TYPE_COUNT];
@@ -58,15 +60,17 @@ private:
 class KeyframeMgr
 {
 public:
-    typedef std::map<vt::Mesh*, ObjectMotion*> script_t;
+    typedef std::map<vt::TransformObject*, Motion*> script_t;
 
     static KeyframeMgr* instance()
     {
         static KeyframeMgr keyframe_mgr;
         return &keyframe_mgr;
     }
-    bool add_keyframe(vt::Mesh* mesh, MotionTrack::motion_type_t motion_type, int frame_number, Keyframe* keyframe);
-    bool lerp_frame_data(vt::Mesh* mesh, int frame_number, MotionTrack::motion_type_t motion_type, glm::vec3* value) const;
+    void insert_keyframe(vt::TransformObject* transform_object, MotionTrack::motion_type_t motion_type, int frame_number, Keyframe* keyframe);
+    void erase_keyframe(vt::TransformObject* transform_object, MotionTrack::motion_type_t motion_type, int frame_number = -1);
+    bool lerp_frame(vt::TransformObject* transform_object, int frame_number, MotionTrack::motion_type_t motion_type, glm::vec3* value) const;
+    void apply_lerp_frame(vt::TransformObject* transform_object, int frame_number) const;
 
 private:
     KeyframeMgr();
