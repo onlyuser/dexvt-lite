@@ -24,6 +24,7 @@
 #include <Camera.h>
 #include <File3ds.h>
 #include <FrameBuffer.h>
+#include <KeyframeMgr.h>
 #include <Light.h>
 #include <Material.h>
 #include <Mesh.h>
@@ -55,10 +56,11 @@
 #define IK_LEG_COUNT                 3
 #define IK_LEG_RADIUS                1
 #define IK_SEGMENT_0_LENGTH          0.25
-#define IK_SEGMENT_1_LENGTH          1.5
+#define IK_SEGMENT_1_LENGTH          1.0
 #define IK_SEGMENT_COUNT             2
 #define IK_SEGMENT_HEIGHT            0.125
 #define IK_SEGMENT_WIDTH             0.25
+#define PATH_RADIUS                  0.25
 #define PUMP_SHRINK_FACTOR           0.5
 #define PUMP_SIDES                   6
 
@@ -82,7 +84,7 @@ bool show_help = false;
 bool show_lights = false;
 bool show_normals = false;
 bool wireframe_mode = false;
-bool show_guide_wires = false;
+bool show_guide_wires = true;
 bool show_axis = false;
 bool show_axis_labels = false;
 bool do_animation = true;
@@ -297,6 +299,18 @@ int init_resources()
         ik_legs.push_back(ik_leg);
     }
 
+    long object_id = 0;
+    float low_height  = -(BODY_ELEVATION - BODY_HEIGHT);
+    float high_height = -(BODY_ELEVATION - BODY_HEIGHT) * 0.75;
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS)));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 25,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, high_height,  PATH_RADIUS)));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, low_height,  -PATH_RADIUS)));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( PATH_RADIUS, high_height, -PATH_RADIUS)));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS)));
+    vt::KeyframeMgr::instance()->generate_control_points(0.5);
+    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_targets;
+    vt::KeyframeMgr::instance()->export_object_frame_values(object_id, &origin_frame_values, NULL);
+
     return 1;
 }
 
@@ -374,6 +388,10 @@ void onTick()
     }
     static int angle = 0;
     angle = (angle + angle_delta) % 360;
+    static int target_index = 0;
+    body->set_origin(vt::Scene::instance()->m_debug_targets[target_index]);
+    user_input = true;
+    target_index = (target_index + 1) % vt::Scene::instance()->m_debug_targets.size();
 }
 
 char* get_help_string()
