@@ -1,76 +1,99 @@
 #ifndef VT_KEYFRAMER_MGR_H_
 #define VT_KEYFRAMER_MGR_H_
 
-#include <TransformObject.h>
 #include <glm/glm.hpp>
 #include <map>
+#include <vector>
 
 namespace vt {
-
-class TransformObject;
 
 class Keyframe
 {
 public:
     Keyframe(glm::vec3 value);
-    glm::vec3 get_value() const { return m_value; }
+    glm::vec3 get_value() const           { return m_value; }
+    glm::vec3 get_control_point_1() const { return m_control_point_1; }
+    glm::vec3 get_control_point_2() const { return m_control_point_2; }
 
 private:
     glm::vec3 m_value;
+    glm::vec3 m_control_point_1;
+    glm::vec3 m_control_point_2;
 };
 
 class MotionTrack
 {
 public:
     enum motion_type_t {
-        MOTION_TYPE_ORIGIN,
-        MOTION_TYPE_ORIENT,
-        MOTION_TYPE_SCALE,
-        MOTION_TYPE_COUNT
+        MOTION_TYPE_ORIGIN = 1,
+        MOTION_TYPE_ORIENT = 2,
+        MOTION_TYPE_SCALE  = 4
     };
 
     typedef std::map<int, Keyframe*> keyframes_t;
 
     MotionTrack(motion_type_t motion_type);
     ~MotionTrack();
-    motion_type_t get_motion_type() const { return m_motion_type; }
+
+    // get members
+    motion_type_t get_motion_type() const          { return m_motion_type; }
+    MotionTrack::keyframes_t get_keyframes() const { return m_keyframes; }
+
+    // insert / erase / lerp
     void insert_keyframe(int frame_number, Keyframe* keyframe);
     void erase_keyframe(int frame_number);
-    MotionTrack::keyframes_t get_keyframes() const { return m_keyframes; }
     void lerp_frame(int frame_number, glm::vec3* value) const;
+
+    // util
+    bool get_frame_range(int* start_frame_number, int* end_frame_number) const;
 
 private:
     motion_type_t m_motion_type;
     keyframes_t   m_keyframes;
 };
 
-class Motion
+class ObjectScript
 {
 public:
-    Motion();
-    ~Motion();
+    typedef std::map<unsigned char, MotionTrack*> motion_tracks_t;
+
+    ObjectScript();
+    ~ObjectScript();
+
+    // get members
+    motion_tracks_t get_motion_track() const { return m_motion_tracks; }
+
+    // insert / erase / lerp
     void insert_keyframe(MotionTrack::motion_type_t motion_type, int frame_number, Keyframe* keyframe);
-    void erase_keyframe(MotionTrack::motion_type_t motion_type, int frame_number);
-    void lerp_frame(int frame_number, MotionTrack::motion_type_t motion_type, glm::vec3* value) const;
+    void erase_keyframe(unsigned char motion_types, int frame_number);
+    void lerp_frame_for_motion_track(MotionTrack::motion_type_t motion_type, int frame_number, glm::vec3* value) const;
+
+    // util
+    bool get_frame_range(int* start_frame_number, int* end_frame_number) const;
 
 private:
-    MotionTrack* m_motion_track[MotionTrack::MOTION_TYPE_COUNT];
+    motion_tracks_t m_motion_tracks;
 };
 
 class KeyframeMgr
 {
 public:
-    typedef std::map<vt::TransformObject*, Motion*> script_t;
+    typedef std::map<long, ObjectScript*> script_t;
 
     static KeyframeMgr* instance()
     {
         static KeyframeMgr keyframe_mgr;
         return &keyframe_mgr;
     }
-    void insert_keyframe(vt::TransformObject* transform_object, MotionTrack::motion_type_t motion_type, int frame_number, Keyframe* keyframe);
-    void erase_keyframe(vt::TransformObject* transform_object, MotionTrack::motion_type_t motion_type, int frame_number = -1);
-    bool lerp_frame(vt::TransformObject* transform_object, int frame_number, MotionTrack::motion_type_t motion_type, glm::vec3* value) const;
-    void apply_lerp_frame(vt::TransformObject* transform_object, int frame_number) const;
+
+    // insert / erase / lerp
+    void insert_keyframe(long object_id, MotionTrack::motion_type_t motion_type, int frame_number, Keyframe* keyframe);
+    void erase_keyframe(long object_id, unsigned char motion_types, int frame_number = -1);
+    bool lerp_frame_for_object_motion_track(long object_id, int frame_number, glm::vec3* origin, glm::vec3* orient, glm::vec3* scale) const;
+
+    // util
+    bool get_frame_range(long object_id, int* start_frame_number, int* end_frame_number) const;
+    bool export_object_motion_track(long object_id, std::vector<glm::vec3>* origin_motion_track, std::vector<glm::vec3>* orient_motion_track) const;
 
 private:
     KeyframeMgr();
