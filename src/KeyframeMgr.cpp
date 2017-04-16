@@ -18,8 +18,8 @@ void Keyframe::generate_control_points(glm::vec3 prev_point, glm::vec3 next_poin
     glm::vec3 p2 = m_value;
     glm::vec3 p3 = next_point;
     glm::vec3 control_point_offset = (p3 - p1) * 0.5f * control_point_scale;
-    m_control_point_1 = p2 - control_point_offset;
-    m_control_point_2 = p2 + control_point_offset;
+    m_control_point1 = p2 - control_point_offset;
+    m_control_point2 = p2 + control_point_offset;
 }
 
 MotionTrack::MotionTrack(motion_type_t motion_type)
@@ -84,18 +84,18 @@ void MotionTrack::lerp_frame_value(int frame_number, glm::vec3* value) const
     int start_frame_number = (*p).first;
     int end_frame_number   = (*q).first;
     float alpha = static_cast<float>(frame_number - start_frame_number) / static_cast<float>(end_frame_number - start_frame_number);
-#if 1
-    // linear
+#if 0
+    // linear interpolation
     glm::vec3 start_frame_value = (*p).second->get_value();
     glm::vec3 end_frame_value   = (*q).second->get_value();
     *value = LERP(start_frame_value, end_frame_value, alpha);
 #else
-    // bezier
-    glm::vec3 p0 = (*p).second->get_value();
-    glm::vec3 p1 = (*p).second->get_control_point_2();
-    glm::vec3 p2 = (*q).second->get_control_point_1();
-    glm::vec3 p3 = (*q).second->get_value();
-    *value = bezier_interpolate(p0, p1, p2, p3, alpha);
+    // bezier interpolation
+    glm::vec3 p1 = (*p).second->get_value();
+    glm::vec3 p2 = (*p).second->get_control_point2();
+    glm::vec3 p3 = (*q).second->get_control_point1();
+    glm::vec3 p4 = (*q).second->get_value();
+    *value = bezier_interpolate(p1, p2, p3, p4, alpha);
 #endif
 }
 
@@ -123,13 +123,38 @@ bool MotionTrack::get_frame_number_range(int* start_frame_number, int* end_frame
 
 void MotionTrack::generate_control_points(float control_point_scale)
 {
+    if(m_keyframes.empty()) {
+        return;
+    }
+    bool is_loop = glm::distance((*m_keyframes.begin()).second->get_value(), (*(--m_keyframes.end())).second->get_value()) < EPSILON;
     for(keyframes_t::iterator p = m_keyframes.begin(); p != m_keyframes.end(); p++) {
         Keyframe* keyframe = (*p).second;
         if(!keyframe) {
             continue;
         }
-        glm::vec3 prev_point = (p != m_keyframes.begin()) ? (*(--p)).second->get_value() : (*p).second->get_value();
-        glm::vec3 next_point = (p != --m_keyframes.end()) ? (*(++p)).second->get_value() : (*p).second->get_value();
+        keyframes_t::iterator prev_iter = p;
+        keyframes_t::iterator next_iter = p;
+        if(is_loop) {
+            if(p == m_keyframes.begin()) {
+                prev_iter = --(--m_keyframes.end());
+            } else {
+                prev_iter--;
+            }
+            if(p == --m_keyframes.end()) {
+                next_iter = ++m_keyframes.begin();
+            } else {
+                next_iter++;
+            }
+        } else {
+            if(p != m_keyframes.begin()) {
+                prev_iter--;
+            }
+            if(p != --m_keyframes.end()) {
+                next_iter++;
+            }
+        }
+        glm::vec3 prev_point = (*prev_iter).second->get_value();
+        glm::vec3 next_point = (*next_iter).second->get_value();
         keyframe->generate_control_points(prev_point, next_point, control_point_scale);
     }
 }

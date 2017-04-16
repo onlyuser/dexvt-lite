@@ -60,6 +60,7 @@
 #define IK_SEGMENT_COUNT             2
 #define IK_SEGMENT_HEIGHT            0.125
 #define IK_SEGMENT_WIDTH             0.25
+#define PATH_RADIUS                  0.5
 #define PUMP_SHRINK_FACTOR           0.5
 #define PUMP_SIDES                   6
 
@@ -274,12 +275,12 @@ int init_resources()
     }
 
     long object_id = 0;
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(glm::vec3( 1, -BODY_ELEVATION,  0)));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 25,  new vt::Keyframe(glm::vec3( 0, -BODY_ELEVATION,  1)));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(glm::vec3(-1, -BODY_ELEVATION,  0)));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( 0, -BODY_ELEVATION, -1)));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( 1, -BODY_ELEVATION,  0)));
-    //vt::KeyframeMgr::instance()->generate_control_points(1);
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(glm::vec3( PATH_RADIUS, -BODY_ELEVATION,         PATH_RADIUS)));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 25,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, -BODY_ELEVATION * 0.75,  PATH_RADIUS)));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, -BODY_ELEVATION,        -PATH_RADIUS)));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( PATH_RADIUS, -BODY_ELEVATION * 0.75, -PATH_RADIUS)));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( PATH_RADIUS, -BODY_ELEVATION,         PATH_RADIUS)));
+    vt::KeyframeMgr::instance()->generate_control_points(0.5);
     std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_targets;
     vt::KeyframeMgr::instance()->export_object_frame_values(object_id, &origin_frame_values, NULL);
 

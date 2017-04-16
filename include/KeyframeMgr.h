@@ -13,17 +13,17 @@ public:
     Keyframe(glm::vec3 value);
 
     // get members
-    glm::vec3 get_value() const           { return m_value; }
-    glm::vec3 get_control_point_1() const { return m_control_point_1; }
-    glm::vec3 get_control_point_2() const { return m_control_point_2; }
+    glm::vec3 get_value() const          { return m_value; }
+    glm::vec3 get_control_point1() const { return m_control_point1; }
+    glm::vec3 get_control_point2() const { return m_control_point2; }
 
     // util
     void generate_control_points(glm::vec3 prev_point, glm::vec3 next_point, float control_point_scale);
 
 private:
     glm::vec3 m_value;
-    glm::vec3 m_control_point_1;
-    glm::vec3 m_control_point_2;
+    glm::vec3 m_control_point1;
+    glm::vec3 m_control_point2;
 };
 
 class MotionTrack
