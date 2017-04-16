@@ -37,6 +37,7 @@
 #include <Util.h>
 #include <VarAttribute.h>
 #include <VarUniform.h>
+#include <KeyframeMgr.h>
 #include <vector>
 #include <iostream> // std::cout
 #include <sstream> // std::stringstream
@@ -82,7 +83,7 @@ bool show_help = false;
 bool show_lights = false;
 bool show_normals = false;
 bool wireframe_mode = false;
-bool show_guide_wires = false;
+bool show_guide_wires = true;
 bool show_axis = false;
 bool show_axis_labels = false;
 bool do_animation = true;
@@ -272,6 +273,16 @@ int init_resources()
         ik_legs.push_back(ik_leg);
     }
 
+    long object_id = 0;
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(glm::vec3( 1, -BODY_ELEVATION,  0)));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 25,  new vt::Keyframe(glm::vec3( 0, -BODY_ELEVATION,  1)));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(glm::vec3(-1, -BODY_ELEVATION,  0)));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( 0, -BODY_ELEVATION, -1)));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( 1, -BODY_ELEVATION,  0)));
+    //vt::KeyframeMgr::instance()->generate_control_points(1);
+    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_targets;
+    vt::KeyframeMgr::instance()->export_object_frame_values(object_id, &origin_frame_values, NULL);
+
     return 1;
 }
 
@@ -349,6 +360,10 @@ void onTick()
     }
     static int angle = 0;
     angle = (angle + angle_delta) % 360;
+    static int target_index = 0;
+    body->set_origin(vt::Scene::instance()->m_debug_targets[target_index]);
+    user_input = true;
+    target_index = (target_index + 1) % vt::Scene::instance()->m_debug_targets.size();
 }
 
 char* get_help_string()

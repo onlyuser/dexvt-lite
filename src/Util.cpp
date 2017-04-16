@@ -133,12 +133,13 @@ float angle_distance(float angle1, float angle2)
     return angle_diff;
 }
 
-glm::vec3 bezier_interpolate(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float t)
+// https://en.wikipedia.org/wiki/Bernstein_polynomial
+glm::vec3 bezier_interpolate(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float alpha)
 {
-    float y0 = pow(1 - t, 3);
-    float y1 = 3 * pow(1 - t, 2) * t;
-    float y2 = 3 * (1 - t) * pow(t, 2);
-    float y3 = pow(t, 3);
+    float y0 = pow(1 - alpha, 3);
+    float y1 = 3 * alpha * pow(1 - alpha, 2);
+    float y2 = 3 * pow(alpha, 2) * (1 - alpha);
+    float y3 = pow(alpha, 3);
     return y0 * p0 + y1 * p1 + y2 * p2 + y3 * p3;
 }
 
