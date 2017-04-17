@@ -10,7 +10,7 @@ namespace vt {
 class Keyframe
 {
 public:
-    Keyframe(glm::vec3 value, bool is_smooth = false);
+    Keyframe(glm::vec3 value, bool is_smooth = false, float prev_control_point_scale = 1, float next_control_point_scale = 1);
 
     // get members
     glm::vec3 get_value() const          { return m_value; }
@@ -18,11 +18,13 @@ public:
     glm::vec3 get_control_point2() const { return m_control_point2; }
 
     // util
-    void generate_control_points(glm::vec3 prev_point, glm::vec3 next_point, float control_point_scale);
+    void update_control_points(glm::vec3 prev_point, glm::vec3 next_point, float control_point_scale);
 
 private:
     glm::vec3 m_value;
     bool m_is_smooth;
+    float m_prev_control_point_scale;
+    float m_next_control_point_scale;
     glm::vec3 m_control_point1;
     glm::vec3 m_control_point2;
 };
@@ -52,7 +54,7 @@ public:
 
     // util
     bool get_frame_number_range(int* start_frame_number, int* end_frame_number) const;
-    void generate_control_points(float control_point_scale);
+    void update_control_points(float control_point_scale);
 
 private:
     motion_type_t m_motion_type;
@@ -80,7 +82,7 @@ public:
 
     // util
     bool get_frame_number_range(int* start_frame_number, int* end_frame_number) const;
-    void generate_control_points(float control_point_scale);
+    void update_control_points(float control_point_scale);
 
 private:
     motion_tracks_t m_motion_tracks;
@@ -109,7 +111,7 @@ public:
 
     // util
     bool get_frame_number_range(long object_id, int* start_frame_number, int* end_frame_number) const;
-    void generate_control_points(float control_point_scale);
+    void update_control_points(float control_point_scale);
     bool export_object_frame_values(long                    object_id,
                                     std::vector<glm::vec3>* origin_frame_values,
                                     std::vector<glm::vec3>* orient_frame_values,

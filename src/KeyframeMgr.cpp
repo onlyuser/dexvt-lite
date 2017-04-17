@@ -7,20 +7,22 @@
 
 namespace vt {
 
-Keyframe::Keyframe(glm::vec3 value, bool is_smooth)
+Keyframe::Keyframe(glm::vec3 value, bool is_smooth, float prev_control_point_scale, float next_control_point_scale)
     : m_value(value),
-      m_is_smooth(is_smooth)
+      m_is_smooth(is_smooth),
+      m_prev_control_point_scale(prev_control_point_scale),
+      m_next_control_point_scale(next_control_point_scale)
 {
 }
 
-void Keyframe::generate_control_points(glm::vec3 prev_point, glm::vec3 next_point, float control_point_scale)
+void Keyframe::update_control_points(glm::vec3 prev_point, glm::vec3 next_point, float control_point_scale)
 {
     glm::vec3 p1 = prev_point;
     glm::vec3 p2 = m_value;
     glm::vec3 p3 = next_point;
     glm::vec3 control_point_offset = ((p3 - p1) * 0.5f * control_point_scale) * static_cast<float>(m_is_smooth);
-    m_control_point1 = p2 - control_point_offset;
-    m_control_point2 = p2 + control_point_offset;
+    m_control_point1 = p2 - control_point_offset * m_prev_control_point_scale;
+    m_control_point2 = p2 + control_point_offset * m_next_control_point_scale;
 }
 
 MotionTrack::MotionTrack(motion_type_t motion_type)
@@ -122,7 +124,7 @@ bool MotionTrack::get_frame_number_range(int* start_frame_number, int* end_frame
     return true;
 }
 
-void MotionTrack::generate_control_points(float control_point_scale)
+void MotionTrack::update_control_points(float control_point_scale)
 {
     if(m_keyframes.empty()) {
         return;
@@ -156,7 +158,7 @@ void MotionTrack::generate_control_points(float control_point_scale)
         }
         glm::vec3 prev_point = (*prev_iter).second->get_value();
         glm::vec3 next_point = (*next_iter).second->get_value();
-        keyframe->generate_control_points(prev_point, next_point, control_point_scale);
+        keyframe->update_control_points(prev_point, next_point, control_point_scale);
     }
 }
 
@@ -239,14 +241,14 @@ bool ObjectScript::get_frame_number_range(int* start_frame_number, int* end_fram
     return true;
 }
 
-void ObjectScript::generate_control_points(float control_point_scale)
+void ObjectScript::update_control_points(float control_point_scale)
 {
     for(motion_tracks_t::iterator p = m_motion_tracks.begin(); p != m_motion_tracks.end(); p++) {
         MotionTrack* motion_track = (*p).second;
         if(!motion_track) {
             continue;
         }
-        motion_track->generate_control_points(control_point_scale);
+        motion_track->update_control_points(control_point_scale);
     }
 }
 
@@ -353,14 +355,14 @@ bool KeyframeMgr::get_frame_number_range(long object_id, int* start_frame_number
     return true;
 }
 
-void KeyframeMgr::generate_control_points(float control_point_scale)
+void KeyframeMgr::update_control_points(float control_point_scale)
 {
     for(script_t::iterator p = m_script.begin(); p != m_script.end(); p++) {
         ObjectScript* object_script = (*p).second;
         if(!object_script) {
             continue;
         }
-        object_script->generate_control_points(control_point_scale);
+        object_script->update_control_points(control_point_scale);
     }
 }
 
