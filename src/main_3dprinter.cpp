@@ -302,11 +302,11 @@ int init_resources()
     long object_id = 0;
     float low_height  = -(BODY_ELEVATION - BODY_HEIGHT);
     float high_height = -(BODY_ELEVATION - BODY_HEIGHT) * 0.75;
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS)));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 25,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, high_height,  PATH_RADIUS)));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, low_height,  -PATH_RADIUS)));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( PATH_RADIUS, high_height, -PATH_RADIUS)));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS)));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 25,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, high_height,  PATH_RADIUS), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, low_height,  -PATH_RADIUS), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( PATH_RADIUS, high_height, -PATH_RADIUS), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS), true));
     vt::KeyframeMgr::instance()->generate_control_points(0.5);
     std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_targets;
     vt::KeyframeMgr::instance()->export_object_frame_values(object_id, &origin_frame_values, NULL);
