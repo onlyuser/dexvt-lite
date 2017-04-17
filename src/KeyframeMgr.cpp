@@ -67,7 +67,7 @@ void MotionTrack::erase_keyframe(int frame_number)
     motion_track_keyframe = NULL;
 }
 
-void MotionTrack::lerp_frame_value(int frame_number, glm::vec3* value, bool is_smooth) const
+void MotionTrack::interpolate_frame_value(int frame_number, glm::vec3* value, bool is_smooth) const
 {
     if(m_keyframes.empty()) {
         return;
@@ -192,7 +192,10 @@ void ObjectScript::erase_keyframe(unsigned char motion_types, int frame_number)
     }
 }
 
-void ObjectScript::lerp_frame_value_for_motion_track(MotionTrack::motion_type_t motion_type, int frame_number, glm::vec3* value, bool is_smooth) const
+void ObjectScript::interpolate_frame_value_for_motion_track(MotionTrack::motion_type_t motion_type,
+                                                            int                        frame_number,
+                                                            glm::vec3*                 value,
+                                                            bool                       is_smooth) const
 {
     motion_tracks_t::const_iterator p = m_motion_tracks.find(motion_type);
     if(p == m_motion_tracks.end()) {
@@ -202,7 +205,7 @@ void ObjectScript::lerp_frame_value_for_motion_track(MotionTrack::motion_type_t 
     if(!motion_track) {
         return;
     }
-    motion_track->lerp_frame_value(frame_number, value, is_smooth);
+    motion_track->interpolate_frame_value(frame_number, value, is_smooth);
 }
 
 bool ObjectScript::get_frame_number_range(int* start_frame_number, int* end_frame_number) const
@@ -290,7 +293,12 @@ void KeyframeMgr::erase_keyframe(long object_id, unsigned char motion_types, int
     object_script->erase_keyframe(motion_types, frame_number);
 }
 
-bool KeyframeMgr::lerp_frame_value_for_object(long object_id, int frame_number, glm::vec3* origin, glm::vec3* orient, glm::vec3* scale, bool is_smooth) const
+bool KeyframeMgr::interpolate_frame_value_for_object(long       object_id,
+                                                     int        frame_number,
+                                                     glm::vec3* origin,
+                                                     glm::vec3* orient,
+                                                     glm::vec3* scale,
+                                                     bool       is_smooth) const
 {
     script_t::const_iterator p = m_script.find(object_id);
     if(p == m_script.end()) {
@@ -301,13 +309,13 @@ bool KeyframeMgr::lerp_frame_value_for_object(long object_id, int frame_number, 
         return false;
     }
     if(origin) {
-        object_script->lerp_frame_value_for_motion_track(MotionTrack::MOTION_TYPE_ORIGIN, frame_number, origin, is_smooth);
+        object_script->interpolate_frame_value_for_motion_track(MotionTrack::MOTION_TYPE_ORIGIN, frame_number, origin, is_smooth);
     }
     if(orient) {
-        object_script->lerp_frame_value_for_motion_track(MotionTrack::MOTION_TYPE_ORIENT, frame_number, orient, is_smooth);
+        object_script->interpolate_frame_value_for_motion_track(MotionTrack::MOTION_TYPE_ORIENT, frame_number, orient, is_smooth);
     }
     if(scale) {
-        object_script->lerp_frame_value_for_motion_track(MotionTrack::MOTION_TYPE_SCALE, frame_number, scale, is_smooth);
+        object_script->interpolate_frame_value_for_motion_track(MotionTrack::MOTION_TYPE_SCALE, frame_number, scale, is_smooth);
     }
     return true;
 }
@@ -356,7 +364,10 @@ void KeyframeMgr::generate_control_points(float control_point_scale)
     }
 }
 
-bool KeyframeMgr::export_object_frame_values(long object_id, std::vector<glm::vec3>* origin_frame_values, std::vector<glm::vec3>* orient_frame_values, bool is_smooth) const
+bool KeyframeMgr::export_object_frame_values(long                    object_id,
+                                             std::vector<glm::vec3>* origin_frame_values,
+                                             std::vector<glm::vec3>* orient_frame_values,
+                                             bool                    is_smooth) const
 {
     if(!origin_frame_values && !orient_frame_values) {
         return false;
@@ -369,7 +380,7 @@ bool KeyframeMgr::export_object_frame_values(long object_id, std::vector<glm::ve
     for(int frame_number = start_frame_number; frame_number != end_frame_number; frame_number++) {
         glm::vec3 origin;
         glm::vec3 orient;
-        if(!lerp_frame_value_for_object(object_id, frame_number, &origin, &orient, NULL, is_smooth)) {
+        if(!interpolate_frame_value_for_object(object_id, frame_number, &origin, &orient, NULL, is_smooth)) {
             continue;
         }
         if(origin_frame_values) {
