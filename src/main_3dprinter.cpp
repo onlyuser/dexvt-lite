@@ -84,7 +84,8 @@ bool show_help = false;
 bool show_lights = false;
 bool show_normals = false;
 bool wireframe_mode = false;
-bool show_guide_wires = true;
+bool show_guide_wires = false;
+bool show_paths = true;
 bool show_axis = false;
 bool show_axis_labels = false;
 bool do_animation = true;
@@ -308,7 +309,7 @@ int init_resources()
     vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( PATH_RADIUS, high_height, -PATH_RADIUS), true));
     vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS), true));
     vt::KeyframeMgr::instance()->update_control_points(0.5);
-    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_targets;
+    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_origin_frame_values;
     vt::KeyframeMgr::instance()->export_frame_values_for_object(object_id, &origin_frame_values, NULL, NULL, true);
     std::vector<glm::vec3> &origin_keyframe_values = vt::Scene::instance()->m_debug_origin_keyframe_values;
     vt::KeyframeMgr::instance()->export_keyframe_values_for_object(object_id, &origin_keyframe_values, NULL, NULL, true);
@@ -415,8 +416,8 @@ void onDisplay()
     } else {
         scene->render();
     }
-    if(show_guide_wires || show_axis || show_axis_labels || show_bbox || show_normals || show_help) {
-        scene->render_lines_and_text(show_guide_wires, show_axis, show_axis_labels, show_bbox, show_normals, show_help, get_help_string());
+    if(show_guide_wires || show_paths || show_axis || show_axis_labels || show_bbox || show_normals || show_help) {
+        scene->render_lines_and_text(show_guide_wires, show_paths, show_axis, show_axis_labels, show_bbox, show_normals, show_help, get_help_string());
     }
     if(show_lights) {
         scene->render_lights();
@@ -454,6 +455,9 @@ void onKeyboard(unsigned char key, int x, int y)
             } else if(camera->get_projection_mode() == vt::Camera::PROJECTION_MODE_ORTHO) {
                 camera->set_projection_mode(vt::Camera::PROJECTION_MODE_PERSPECTIVE);
             }
+            break;
+        case 's': // paths
+            show_paths = !show_paths;
             break;
         case 'w': // wireframe
             wireframe_mode = !wireframe_mode;

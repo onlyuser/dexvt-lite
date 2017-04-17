@@ -68,6 +68,7 @@ bool show_lights = false;
 bool show_normals = false;
 bool wireframe_mode = false;
 bool show_guide_wires = true;
+bool show_paths = true;
 bool show_axis = false;
 bool show_axis_labels = false;
 bool do_animation = true;
@@ -255,8 +256,8 @@ void onDisplay()
     } else {
         scene->render();
     }
-    if(show_guide_wires || show_axis || show_axis_labels || show_bbox || show_normals || show_help) {
-        scene->render_lines_and_text(show_guide_wires, show_axis, show_axis_labels, show_bbox, show_normals, show_help, get_help_string());
+    if(show_guide_wires || show_paths || show_axis || show_axis_labels || show_bbox || show_normals || show_help) {
+        scene->render_lines_and_text(show_guide_wires, show_paths, show_axis, show_axis_labels, show_bbox, show_normals, show_help, get_help_string());
     }
     if(show_lights) {
         scene->render_lights();
@@ -297,6 +298,9 @@ void onKeyboard(unsigned char key, int x, int y)
             } else if(camera->get_projection_mode() == vt::Camera::PROJECTION_MODE_ORTHO) {
                 camera->set_projection_mode(vt::Camera::PROJECTION_MODE_PERSPECTIVE);
             }
+            break;
+        case 's': // paths
+            show_paths = !show_paths;
             break;
         case 'w': // wireframe
             wireframe_mode = !wireframe_mode;

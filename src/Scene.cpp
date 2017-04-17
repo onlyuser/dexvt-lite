@@ -461,6 +461,7 @@ void Scene::render(bool                clear_canvas,
 }
 
 void Scene::render_lines_and_text(bool  draw_guide_wires,
+                                  bool  draw_paths,
                                   bool  draw_axis,
                                   bool  draw_axis_labels,
                                   bool  draw_bbox,
@@ -474,6 +475,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
     const float end_effector_tip_dir_length = 10 * up_arm_length; // yellow
     const float target_dir_length           = 10 * up_arm_length; // cyan
     const float guide_wire_width            = 1;
+    const float path_width                  = 1;
     const float axis_arm_length             = 0.25;
     const float axis_line_width             = 3;
     const float bbox_line_width             = 1;
@@ -490,7 +492,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
     glPushMatrix();
 
     if(draw_guide_wires) {
-        glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * glm::translate(glm::mat4(1), m_debug_target)));
+        glLoadMatrixf(glm::value_ptr(m_camera->get_transform()));
         glLineWidth(guide_wire_width);
         glBegin(GL_LINES);
 
@@ -506,6 +508,15 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
             glutWireSphere(TARGETS_RADIUS, 4, 2);
         }
 
+        glEnd();
+        glLineWidth(1);
+    }
+
+    if(draw_paths) {
+        glLoadMatrixf(glm::value_ptr(m_camera->get_transform()));
+        glLineWidth(path_width);
+        glBegin(GL_LINES);
+
         for(std::vector<glm::vec3>::const_iterator q = m_debug_origin_keyframe_values.begin(); q != m_debug_origin_keyframe_values.end(); q++) {
             glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * glm::translate(glm::mat4(1), *q)));
 
@@ -519,7 +530,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
 
         for(std::vector<glm::vec3>::const_iterator r = m_debug_origin_keyframe_values.begin(); r != m_debug_origin_keyframe_values.end(); r++) {
             glLoadMatrixf(glm::value_ptr(m_camera->get_transform()));
-            glLineWidth(guide_wire_width);
+            glLineWidth(path_width);
             glBegin(GL_LINES);
 
             glm::vec3 p1 = *r++;
@@ -546,7 +557,7 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
             }
 
             glLoadMatrixf(glm::value_ptr(m_camera->get_transform()));
-            glLineWidth(guide_wire_width);
+            glLineWidth(path_width);
             glBegin(GL_LINES);
 
             glm::vec3 p1 = *t++;

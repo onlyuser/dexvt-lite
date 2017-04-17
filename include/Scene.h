@@ -123,6 +123,7 @@ public:
                 bool                render_skybox     = true,
                 use_material_type_t use_material_type = use_material_type_t::USE_MESH_MATERIAL);
     void render_lines_and_text(bool  draw_guide_wires,
+                               bool  draw_paths,
                                bool  draw_axis,
                                bool  draw_axis_labels,
                                bool  draw_bbox,
