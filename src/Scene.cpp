@@ -513,7 +513,6 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
     }
 
     if(draw_paths) {
-        glLoadMatrixf(glm::value_ptr(m_camera->get_transform()));
         glLineWidth(path_width);
         glBegin(GL_LINES);
 
