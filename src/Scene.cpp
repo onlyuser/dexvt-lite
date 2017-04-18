@@ -518,10 +518,23 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
         glBegin(GL_LINES);
 
         for(std::vector<glm::vec3>::const_iterator q = m_debug_origin_keyframe_values.begin(); q != m_debug_origin_keyframe_values.end(); q++) {
-            glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * glm::translate(glm::mat4(1), *q)));
+            glm::vec3 p1 = *q++;
+            glm::vec3 p2 = *q++;
+            glm::vec3 p3 = *q;
 
-            // red
-            glColor3f(1, 0, 0);
+            // yellow
+            glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * glm::translate(glm::mat4(1), p1)));
+            glColor3f(1, 1, 0);
+            glutWireSphere(TARGETS_RADIUS, 4, 2);
+
+            // cyan
+            glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * glm::translate(glm::mat4(1), p2)));
+            glColor3f(0, 1, 1);
+            glutWireSphere(TARGETS_RADIUS, 4, 2);
+
+            // yellow
+            glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * glm::translate(glm::mat4(1), p3)));
+            glColor3f(1, 1, 0);
             glutWireSphere(TARGETS_RADIUS, 4, 2);
         }
 
@@ -537,13 +550,13 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
             glm::vec3 p2 = *r++;
             glm::vec3 p3 = *r;
 
-            // red
-            glColor3f(1, 0, 0);
+            // orange
+            glColor3f(1, 0.66, 0);
             glVertex3fv(&p2.x);
             glVertex3fv(&p1.x);
 
-            // red
-            glColor3f(1, 0, 0);
+            // orange
+            glColor3f(1, 0.66, 0);
             glVertex3fv(&p2.x);
             glVertex3fv(&p3.x);
 
