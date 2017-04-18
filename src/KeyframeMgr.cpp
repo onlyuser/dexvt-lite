@@ -159,7 +159,7 @@ void MotionTrack::update_control_points(float control_point_scale)
         keyframes_t::iterator next_iter = p;
         if(is_loop) {
             if(p == m_keyframes.begin()) {
-                prev_iter = --(--m_keyframes.end());
+                prev_iter = --(--m_keyframes.end()); // decrement twice to skip the last frame, which is identical to the first
             } else {
                 prev_iter--;
             }

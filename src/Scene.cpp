@@ -572,8 +572,8 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
             glLineWidth(path_width);
             glBegin(GL_LINES);
 
-            glm::vec3 p1 = *t++;
-            glm::vec3 p2 = *t--;
+            glm::vec3 p1 = *t;
+            glm::vec3 p2 = *(t + 1);
 
             // yellow
             glColor3f(1, 1, 0);
