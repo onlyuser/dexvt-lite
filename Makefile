@@ -9,7 +9,7 @@ LIB_PATH = $(EXTERN_LIB_PATH)
 SRC_PATH = src
 BUILD_PATH = build
 BIN_PATH = bin
-BIN_STEMS = main_ik main_boids main_hexapod main_deltabot main_3dprinter main_terrain main_spider main_freerot main_rail main_stewart
+BIN_STEMS = main_ik main_boids main_hexapod main_deltabot main_3dprinter main_terrain main_spider main_freerot main_rail main_stewart main_fanta
 BINARIES = $(patsubst %, $(BIN_PATH)/%, $(BIN_STEMS))
 
 INCLUDE_PATHS = $(INCLUDE_PATH) $(EXTERN_INCLUDE_PATH)
@@ -68,7 +68,7 @@ $(BUILD_PATH)/%.o : $(SRC_PATH)/%.c
 
 .PHONY : clean_objects
 clean_objects :
-	-rm $(OBJECTS_IK) $(OBJECTS_BOIDS) $(OBJECTS_HEXAPOD) $(OBJECTS_DELTABOT) $(OBJECTS_3DPRINTER) $(OBJECTS_3DPRINTER) $(OBJECTS_TERRAIN) $(OBJECTS_SPIDER) $(OBJECTS_FREEROT) $(OBJECTS_RAIL) $(OBJECTS_STEWART)
+	-rm $(OBJECTS_IK) $(OBJECTS_BOIDS) $(OBJECTS_HEXAPOD) $(OBJECTS_DELTABOT) $(OBJECTS_3DPRINTER) $(OBJECTS_3DPRINTER) $(OBJECTS_TERRAIN) $(OBJECTS_SPIDER) $(OBJECTS_FREEROT) $(OBJECTS_RAIL) $(OBJECTS_STEWART) $(OBJECTS_FANTA)
 
 #==================
 # binaries
@@ -84,6 +84,7 @@ CPP_STEMS_SPIDER    = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject K
 CPP_STEMS_FREEROT   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_freerot   Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
 CPP_STEMS_RAIL      = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_rail      Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
 CPP_STEMS_STEWART   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_stewart   Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
+CPP_STEMS_FANTA     = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_fanta     Material Mesh NamedObject OctTree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
 OBJECTS_IK        = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK))
 OBJECTS_BOIDS     = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_BOIDS))
 OBJECTS_HEXAPOD   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_HEXAPOD))
@@ -94,6 +95,7 @@ OBJECTS_SPIDER    = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_SPIDER))
 OBJECTS_FREEROT   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_FREEROT))
 OBJECTS_RAIL      = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_RAIL))
 OBJECTS_STEWART   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_STEWART))
+OBJECTS_FANTA     = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_FANTA))
 
 $(BIN_PATH)/main_ik : $(OBJECTS_IK)
 	mkdir -p $(BIN_PATH)
@@ -123,6 +125,9 @@ $(BIN_PATH)/main_rail : $(OBJECTS_RAIL)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 $(BIN_PATH)/main_stewart : $(OBJECTS_STEWART)
+	mkdir -p $(BIN_PATH)
+	$(CXX) -o $@ $^ $(LDFLAGS)
+$(BIN_PATH)/main_fanta : $(OBJECTS_FANTA)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
