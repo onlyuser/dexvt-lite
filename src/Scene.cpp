@@ -513,76 +513,82 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
     }
 
     if(draw_paths) {
+        glEnable(GL_DEPTH_TEST);
+
         glLineWidth(path_width);
         glBegin(GL_LINES);
 
-        for(std::vector<glm::vec3>::const_iterator q = m_debug_origin_keyframe_values.begin(); q != m_debug_origin_keyframe_values.end(); q++) {
-            glm::vec3 p1 = *q++;
-            glm::vec3 p2 = *q++;
-            glm::vec3 p3 = *q;
+        for(std::map<long, DebugObjectContext>::const_iterator p = m_debug_object_context.begin(); p != m_debug_object_context.end(); p++) {
+            for(std::vector<glm::vec3>::const_iterator q = (*p).second.m_debug_origin_keyframe_values.begin(); q != (*p).second.m_debug_origin_keyframe_values.end(); q++) {
+                glm::vec3 p1 = *q++;
+                glm::vec3 p2 = *q++;
+                glm::vec3 p3 = *q;
 
-            // yellow
-            glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * glm::translate(glm::mat4(1), p1)));
-            glColor3f(1, 1, 0);
-            glutWireSphere(TARGETS_RADIUS, 4, 2);
+                // yellow
+                glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * (*p).second.m_transform * glm::translate(glm::mat4(1), p1)));
+                glColor3f(1, 1, 0);
+                glutWireSphere(TARGETS_RADIUS, 4, 2);
 
-            // cyan
-            glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * glm::translate(glm::mat4(1), p2)));
-            glColor3f(0, 1, 1);
-            glutWireSphere(TARGETS_RADIUS, 4, 2);
+                // cyan
+                glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * (*p).second.m_transform * glm::translate(glm::mat4(1), p2)));
+                glColor3f(0, 1, 1);
+                glutWireSphere(TARGETS_RADIUS, 4, 2);
 
-            // yellow
-            glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * glm::translate(glm::mat4(1), p3)));
-            glColor3f(1, 1, 0);
-            glutWireSphere(TARGETS_RADIUS, 4, 2);
-        }
-
-        glEnd();
-        glLineWidth(1);
-
-        for(std::vector<glm::vec3>::const_iterator r = m_debug_origin_keyframe_values.begin(); r != m_debug_origin_keyframe_values.end(); r++) {
-            glLoadMatrixf(glm::value_ptr(m_camera->get_transform()));
-            glLineWidth(path_width);
-            glBegin(GL_LINES);
-
-            glm::vec3 p1 = *r++;
-            glm::vec3 p2 = *r++;
-            glm::vec3 p3 = *r;
-
-            // orange
-            glColor3f(1, 0.66, 0);
-            glVertex3fv(&p2.x);
-            glVertex3fv(&p1.x);
-
-            // orange
-            glColor3f(1, 0.66, 0);
-            glVertex3fv(&p2.x);
-            glVertex3fv(&p3.x);
-
-            glEnd();
-            glLineWidth(1);
-        }
-
-        for(std::vector<glm::vec3>::const_iterator t = m_debug_origin_frame_values.begin(); t != m_debug_origin_frame_values.end(); t++) {
-            if(t == --m_debug_origin_frame_values.end()) {
-                break;
+                // yellow
+                glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * (*p).second.m_transform * glm::translate(glm::mat4(1), p3)));
+                glColor3f(1, 1, 0);
+                glutWireSphere(TARGETS_RADIUS, 4, 2);
             }
 
-            glLoadMatrixf(glm::value_ptr(m_camera->get_transform()));
-            glLineWidth(path_width);
-            glBegin(GL_LINES);
-
-            glm::vec3 p1 = *t;
-            glm::vec3 p2 = *(t + 1);
-
-            // yellow
-            glColor3f(1, 1, 0);
-            glVertex3fv(&p1.x);
-            glVertex3fv(&p2.x);
-
             glEnd();
             glLineWidth(1);
+
+            for(std::vector<glm::vec3>::const_iterator r = (*p).second.m_debug_origin_keyframe_values.begin(); r != (*p).second.m_debug_origin_keyframe_values.end(); r++) {
+                glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * (*p).second.m_transform));
+                glLineWidth(path_width);
+                glBegin(GL_LINES);
+
+                glm::vec3 p1 = *r++;
+                glm::vec3 p2 = *r++;
+                glm::vec3 p3 = *r;
+
+                // orange
+                glColor3f(1, 0.66, 0);
+                glVertex3fv(&p2.x);
+                glVertex3fv(&p1.x);
+
+                // orange
+                glColor3f(1, 0.66, 0);
+                glVertex3fv(&p2.x);
+                glVertex3fv(&p3.x);
+
+                glEnd();
+                glLineWidth(1);
+            }
+
+            for(std::vector<glm::vec3>::const_iterator t = (*p).second.m_debug_origin_frame_values.begin(); t != (*p).second.m_debug_origin_frame_values.end(); t++) {
+                if(t == --(*p).second.m_debug_origin_frame_values.end()) {
+                    break;
+                }
+
+                glLoadMatrixf(glm::value_ptr(m_camera->get_transform() * (*p).second.m_transform));
+                glLineWidth(path_width);
+                glBegin(GL_LINES);
+
+                glm::vec3 p1 = *t;
+                glm::vec3 p2 = *(t + 1);
+
+                // yellow
+                glColor3f(1, 1, 0);
+                glVertex3fv(&p1.x);
+                glVertex3fv(&p2.x);
+
+                glEnd();
+                glLineWidth(1);
+            }
         }
+
+        glDisable(GL_DEPTH_TEST);
     }
 
     for(meshes_t::const_iterator p = m_meshes.begin(); p != m_meshes.end(); p++) {

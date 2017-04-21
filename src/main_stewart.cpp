@@ -276,9 +276,9 @@ int init_resources()
     vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( PATH_RADIUS, high_height, -PATH_RADIUS), true));
     vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS), true));
     vt::KeyframeMgr::instance()->update_control_points(0.5);
-    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_origin_frame_values;
+    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_frame_values;
     vt::KeyframeMgr::instance()->export_frame_values_for_object(object_id, &origin_frame_values, NULL, NULL, true);
-    std::vector<glm::vec3> &origin_keyframe_values = vt::Scene::instance()->m_debug_origin_keyframe_values;
+    std::vector<glm::vec3> &origin_keyframe_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_keyframe_values;
     vt::KeyframeMgr::instance()->export_keyframe_values_for_object(object_id, &origin_keyframe_values, NULL, NULL, true);
     vt::Scene::instance()->m_debug_targets = origin_frame_values;
 

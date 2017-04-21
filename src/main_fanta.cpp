@@ -94,55 +94,47 @@ float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 
 int angle_delta = 1;
 
-int target_index = 0;
-glm::vec3 targets[] = {glm::vec3( 1,  1,  1),
-                       glm::vec3( 1,  1, -1),
-                       glm::vec3(-1,  1, -1),
-                       glm::vec3(-1,  1,  1),
-                       glm::vec3( 1, -1,  1),
-                       glm::vec3( 1, -1, -1),
-                       glm::vec3(-1, -1, -1),
-                       glm::vec3(-1, -1,  1)};
-
 std::vector<vt::Mesh*> ik_meshes;
 
 std::vector<vt::Mesh*> tray_meshes;
 std::vector<vt::Mesh*> tray_meshes2;
+std::vector<vt::Mesh*> tray_meshes3;
 
-//static void create_linked_segments(vt::Scene*              scene,
-//                                   std::vector<vt::Mesh*>* ik_meshes,
-//                                   int                     ik_segment_count,
-//                                   std::string             name,
-//                                   glm::vec3               box_dim)
-//{
-//    if(!scene || !ik_meshes) {
-//        return;
-//    }
-//    vt::Mesh* prev_mesh = NULL;
-//    for(int i = 0; i < ik_segment_count; i++) {
-//        std::stringstream ss;
-//        ss << name << "_" << i;
-//        vt::Mesh* mesh = vt::PrimitiveFactory::create_box(ss.str());
-//        mesh->center_axis();
-//        mesh->set_origin(glm::vec3(0, 0, 0));
-//        mesh->set_scale(box_dim);
-//        mesh->flatten();
-//        mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
-//        if(!prev_mesh) {
-//            mesh->set_origin(glm::vec3(0, 0, 0));
-//        } else {
-//            mesh->link_parent(prev_mesh, true);
-//            mesh->set_origin(glm::vec3(0, 0, box_dim.z)); // must go after link_parent
-//        }
-//        scene->add_mesh(mesh);
-//        ik_meshes->push_back(mesh);
-//        prev_mesh = mesh;
-//    }
-//}
+static void create_linked_segments(vt::Scene*              scene,
+                                   std::vector<vt::Mesh*>* ik_meshes,
+                                   int                     ik_segment_count,
+                                   std::string             name,
+                                   glm::vec3               box_dim)
+{
+    if(!scene || !ik_meshes) {
+        return;
+    }
+    vt::Mesh* prev_mesh = NULL;
+    for(int i = 0; i < ik_segment_count; i++) {
+        std::stringstream ss;
+        ss << name << "_" << i;
+        vt::Mesh* mesh = vt::PrimitiveFactory::create_box(ss.str());
+        mesh->center_axis();
+        mesh->set_origin(glm::vec3(0, 0, 0));
+        mesh->set_scale(box_dim);
+        mesh->flatten();
+        mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
+        if(!prev_mesh) {
+            mesh->set_origin(glm::vec3(0, 0, 0));
+        } else {
+            mesh->link_parent(prev_mesh, true);
+            mesh->set_origin(glm::vec3(0, 0, box_dim.z)); // must go after link_parent
+        }
+        scene->add_mesh(mesh);
+        ik_meshes->push_back(mesh);
+        prev_mesh = mesh;
+    }
+}
 
 static void create_tray_meshes(vt::Scene*              scene,
                                std::vector<vt::Mesh*>* tray_meshes,
-                               std::string             name)
+                               std::string             name,
+                               bool                    spike_only)
 {
     if(!scene || !tray_meshes) {
         return;
@@ -152,6 +144,10 @@ static void create_tray_meshes(vt::Scene*              scene,
     spike->set_origin(glm::vec3(0, 0, 0));
     tray_meshes->push_back(spike);
     scene->add_mesh(spike);
+
+    if(spike_only) {
+        return;
+    }
 
     vt::Mesh* tray = vt::PrimitiveFactory::create_box(name + "_tray");
     tray->link_parent(spike);
@@ -243,46 +239,53 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    //create_linked_segments(scene,
-    //                       &ik_meshes,
-    //                       IK_SEGMENT_COUNT,
-    //                       "ik_box",
-    //                       glm::vec3(IK_SEGMENT_WIDTH,
-    //                                 IK_SEGMENT_HEIGHT,
-    //                                 IK_SEGMENT_LENGTH));
-    //if(ik_meshes.size()) {
-    //    ik_meshes[0]->set_origin(glm::vec3(0));
-    //}
-    //int leg_segment_index = 0;
-    //for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
-    //    (*p)->set_material(phong_material);
-    //    (*p)->set_ambient_color(glm::vec3(0));
-    //    if(leg_segment_index) {
-    //        (*p)->set_enable_joint_constraints(glm::ivec3(0));
-    //        (*p)->set_joint_constraints_max_deviation(glm::vec3(0));
-    //    }
-    //    leg_segment_index++;
-    //}
+    create_linked_segments(scene,
+                           &ik_meshes,
+                           IK_SEGMENT_COUNT,
+                           "ik_box",
+                           glm::vec3(IK_SEGMENT_WIDTH,
+                                     IK_SEGMENT_HEIGHT,
+                                     IK_SEGMENT_LENGTH));
+    if(ik_meshes.size()) {
+        ik_meshes[0]->set_origin(glm::vec3(2, 0, 0));
+    }
+    int leg_segment_index = 0;
+    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+        (*p)->set_material(phong_material);
+        (*p)->set_ambient_color(glm::vec3(0));
+        if(leg_segment_index) {
+            (*p)->set_enable_joint_constraints(glm::ivec3(0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0));
+        }
+        leg_segment_index++;
+    }
 
-    create_tray_meshes(scene, &tray_meshes, "group1");
+    create_tray_meshes(scene, &tray_meshes, "group1", false);
     for(std::vector<vt::Mesh*>::iterator p = tray_meshes.begin(); p != tray_meshes.end(); p++) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
     }
 
-    create_tray_meshes(scene, &tray_meshes2, "group2");
+    create_tray_meshes(scene, &tray_meshes2, "group2", false);
     for(std::vector<vt::Mesh*>::iterator q = tray_meshes2.begin(); q != tray_meshes2.end(); q++) {
         (*q)->set_material(phong_material);
         (*q)->set_ambient_color(glm::vec3(0));
     }
-    tray_meshes2[0]->set_origin(glm::vec3(0, 1, 0));
+    tray_meshes2[0]->link_parent(tray_meshes[0]);
+
+    create_tray_meshes(scene, &tray_meshes3, "group3", true);
+    for(std::vector<vt::Mesh*>::iterator r = tray_meshes3.begin(); r != tray_meshes3.end(); r++) {
+        (*r)->set_material(phong_material);
+        (*r)->set_ambient_color(glm::vec3(0));
+    }
+    tray_meshes3[0]->link_parent(tray_meshes2[0]);
 
     long object_id = 0;
-    float height = BODY_ELEVATION + 0.1;
+    float height = BODY_ELEVATION + 0.3;
     vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(glm::vec3( 0,    height, -0.5),  true, 1, 0));
     vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(glm::vec3( 0,    height,  0.5),  true, 0, 1));
     vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( 0.25, height,  0.75), true));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100,  new vt::Keyframe(glm::vec3( 0.5,  height,  0.5),  true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( 0.5,  height,  0.5),  true));
     vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 125, new vt::Keyframe(glm::vec3( 0.25, height,  0.25), true, 1, 0));
     vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 150, new vt::Keyframe(glm::vec3(-0.25, height,  0.25), true, 0, 1));
     vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 175, new vt::Keyframe(glm::vec3(-0.5,  height,  0),    true));
@@ -292,11 +295,30 @@ int init_resources()
     vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 275, new vt::Keyframe(glm::vec3( 0.25, height, -0.75), true));
     vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 300, new vt::Keyframe(glm::vec3( 0,    height, -0.5),  true));
     vt::KeyframeMgr::instance()->update_control_points(0.5);
-    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_origin_frame_values;
+    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_frame_values;
     vt::KeyframeMgr::instance()->export_frame_values_for_object(object_id, &origin_frame_values, NULL, NULL, true);
-    std::vector<glm::vec3> &origin_keyframe_values = vt::Scene::instance()->m_debug_origin_keyframe_values;
+    std::vector<glm::vec3> &origin_keyframe_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_keyframe_values;
     vt::KeyframeMgr::instance()->export_keyframe_values_for_object(object_id, &origin_keyframe_values, NULL, NULL, true);
-    vt::Scene::instance()->m_debug_targets = origin_frame_values;
+
+    long object_id2 = 1;
+    float height2 = BODY_ELEVATION + 0.3;
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id2, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(glm::vec3( 0,    height2, -0.5),  true, 1, 0));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id2, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(glm::vec3( 0,    height2,  0.5),  true, 0, 1));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id2, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( 0.25, height2,  0.75), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id2, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( 0.5,  height2,  0.5),  true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id2, vt::MotionTrack::MOTION_TYPE_ORIGIN, 125, new vt::Keyframe(glm::vec3( 0.25, height2,  0.25), true, 1, 0));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id2, vt::MotionTrack::MOTION_TYPE_ORIGIN, 150, new vt::Keyframe(glm::vec3(-0.25, height2,  0.25), true, 0, 1));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id2, vt::MotionTrack::MOTION_TYPE_ORIGIN, 175, new vt::Keyframe(glm::vec3(-0.5,  height2,  0),    true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id2, vt::MotionTrack::MOTION_TYPE_ORIGIN, 200, new vt::Keyframe(glm::vec3(-0.25, height2, -0.25), true, 1, 0));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id2, vt::MotionTrack::MOTION_TYPE_ORIGIN, 225, new vt::Keyframe(glm::vec3( 0.25, height2, -0.25), true, 0, 1));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id2, vt::MotionTrack::MOTION_TYPE_ORIGIN, 250, new vt::Keyframe(glm::vec3( 0.5,  height2, -0.5),  true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id2, vt::MotionTrack::MOTION_TYPE_ORIGIN, 275, new vt::Keyframe(glm::vec3( 0.25, height2, -0.75), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id2, vt::MotionTrack::MOTION_TYPE_ORIGIN, 300, new vt::Keyframe(glm::vec3( 0,    height2, -0.5),  true));
+    vt::KeyframeMgr::instance()->update_control_points(0.5);
+    std::vector<glm::vec3> &origin_frame_values2 = vt::Scene::instance()->m_debug_object_context[object_id2].m_debug_origin_frame_values;
+    vt::KeyframeMgr::instance()->export_frame_values_for_object(object_id2, &origin_frame_values2, NULL, NULL, true);
+    std::vector<glm::vec3> &origin_keyframe_values2 = vt::Scene::instance()->m_debug_object_context[object_id2].m_debug_origin_keyframe_values;
+    vt::KeyframeMgr::instance()->export_keyframe_values_for_object(object_id2, &origin_keyframe_values2, NULL, NULL, true);
 
     return 1;
 }
@@ -333,57 +355,67 @@ void onTick()
         glutSetWindowTitle(ss.str().c_str());
     }
     frames++;
-    //if(!do_animation) {
-    //    return;
-    //}
-    //if(left_key) {
-    //    ik_meshes[0]->rotate(-angle_delta, ik_meshes[0]->get_abs_up_direction());
-    //    user_input = true;
-    //}
-    //if(right_key) {
-    //    ik_meshes[0]->rotate(angle_delta, ik_meshes[0]->get_abs_up_direction());
-    //    user_input = true;
-    //}
-    //if(up_key) {
-    //    ik_meshes[0]->rotate(-angle_delta, ik_meshes[0]->get_abs_left_direction());
-    //    user_input = true;
-    //}
-    //if(down_key) {
-    //    ik_meshes[0]->rotate(angle_delta, ik_meshes[0]->get_abs_left_direction());
-    //    user_input = true;
-    //}
-    //if(page_up_key) {
-    //    ik_meshes[0]->rotate(angle_delta, ik_meshes[0]->get_abs_heading());
-    //    user_input = true;
-    //}
-    //if(page_down_key) {
-    //    ik_meshes[0]->rotate(-angle_delta, ik_meshes[0]->get_abs_heading());
-    //    user_input = true;
-    //}
-    //if(user_input) {
-    //    glm::vec3 end_effector_orient;
-    //    if(angle_constraint) {
-    //        if(targets[target_index].y > 0) {
-    //            end_effector_orient = glm::vec3(0, 1, 0);
-    //        } else {
-    //            end_effector_orient = glm::vec3(0, -1, 0);
-    //        }
-    //    }
-    //    ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[1],
-    //                                                  glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-    //                                                  targets[target_index],
-    //                                                  angle_constraint ? &end_effector_orient : NULL,
-    //                                                  IK_ITERS,
-    //                                                  ACCEPT_END_EFFECTOR_DISTANCE,
-    //                                                  ACCEPT_AVG_ANGLE_DISTANCE);
-    //    user_input = false;
-    //}
+    if(!do_animation) {
+        return;
+    }
+    if(left_key) {
+        tray_meshes[0]->rotate(-angle_delta, tray_meshes[0]->get_abs_up_direction());
+        user_input = true;
+    }
+    if(right_key) {
+        tray_meshes[0]->rotate(angle_delta, tray_meshes[0]->get_abs_up_direction());
+        user_input = true;
+    }
+    if(up_key) {
+        tray_meshes[0]->rotate(-angle_delta, tray_meshes[0]->get_abs_left_direction());
+        user_input = true;
+    }
+    if(down_key) {
+        tray_meshes[0]->rotate(angle_delta, tray_meshes[0]->get_abs_left_direction());
+        user_input = true;
+    }
+    if(page_up_key) {
+        tray_meshes[0]->rotate(angle_delta, tray_meshes[0]->get_abs_heading());
+        user_input = true;
+    }
+    if(page_down_key) {
+        tray_meshes[0]->rotate(-angle_delta, tray_meshes[0]->get_abs_heading());
+        user_input = true;
+    }
+    if(user_input) {
+        glm::vec3 end_effector_orient;
+        if(angle_constraint) {
+            end_effector_orient = glm::vec3(0, -1, 0);
+        }
+        ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
+                                                      glm::vec3(0, 0, IK_SEGMENT_LENGTH),
+                                                      tray_meshes3[0]->in_abs_system(glm::vec3(0, BODY_ELEVATION, 0)),
+                                                      angle_constraint ? &end_effector_orient : NULL,
+                                                      IK_ITERS,
+                                                      ACCEPT_END_EFFECTOR_DISTANCE,
+                                                      ACCEPT_AVG_ANGLE_DISTANCE);
+        vt::Scene::instance()->m_debug_target = tray_meshes3[0]->in_abs_system(glm::vec3(0, BODY_ELEVATION, 0));
+        user_input = false;
+    }
     static int angle = 0;
+    tray_meshes[0]->set_orient(glm::vec3(angle, angle, angle));
     angle = (angle + angle_delta) % 360;
+
     static int target_index = 0;
-    tray_meshes2[0]->set_origin(vt::Scene::instance()->m_debug_targets[target_index]);
+    long object_id = 0;
+    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_frame_values;
+    tray_meshes2[0]->set_origin(origin_frame_values[target_index]);
+    vt::Scene::instance()->m_debug_object_context[object_id].m_transform = tray_meshes2[0]->get_parent()->get_transform();
+    target_index = (target_index + 1) % origin_frame_values.size();
+
+    static int target_index2 = 0;
+    long object_id2 = 1;
+    std::vector<glm::vec3> &origin_frame_values2 = vt::Scene::instance()->m_debug_object_context[object_id2].m_debug_origin_frame_values;
+    tray_meshes3[0]->set_origin(origin_frame_values2[target_index]);
+    vt::Scene::instance()->m_debug_object_context[object_id2].m_transform = tray_meshes3[0]->get_parent()->get_transform();
+    target_index2 = (target_index2 + 1) % origin_frame_values2.size();
+
     user_input = true;
-    target_index = (target_index + 1) % vt::Scene::instance()->m_debug_targets.size();
 }
 
 char* get_help_string()
@@ -431,9 +463,6 @@ void onKeyboard(unsigned char key, int x, int y)
             break;
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
-            if(show_guide_wires) {
-                vt::Scene::instance()->m_debug_target = targets[target_index];
-            }
             break;
         case 'h': // help
             show_help = !show_help;
@@ -467,6 +496,9 @@ void onKeyboard(unsigned char key, int x, int y)
                 for(std::vector<vt::Mesh*>::iterator r = tray_meshes2.begin(); r != tray_meshes2.end(); r++) {
                     (*r)->set_ambient_color(glm::vec3(1));
                 }
+                for(std::vector<vt::Mesh*>::iterator t = tray_meshes3.begin(); t != tray_meshes3.end(); t++) {
+                    (*t)->set_ambient_color(glm::vec3(1));
+                }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
                 for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
@@ -477,6 +509,9 @@ void onKeyboard(unsigned char key, int x, int y)
                 }
                 for(std::vector<vt::Mesh*>::iterator r = tray_meshes2.begin(); r != tray_meshes2.end(); r++) {
                     (*r)->set_ambient_color(glm::vec3(0));
+                }
+                for(std::vector<vt::Mesh*>::iterator t = tray_meshes3.begin(); t != tray_meshes3.end(); t++) {
+                    (*t)->set_ambient_color(glm::vec3(0));
                 }
             }
             break;
@@ -509,10 +544,7 @@ void onSpecial(int key, int x, int y)
             break;
         case GLUT_KEY_HOME: // target
             {
-                size_t target_count = sizeof(targets) / sizeof(targets[0]);
-                target_index = (target_index + 1) % target_count;
-                std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
-                vt::Scene::instance()->m_debug_target = targets[target_index];
+                tray_meshes[0]->set_orient(glm::vec3(0));
                 user_input = true;
             }
             break;

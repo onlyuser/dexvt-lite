@@ -15,15 +15,21 @@ class Material;
 class Mesh;
 class Texture;
 
+struct DebugObjectContext
+{
+    glm::mat4 m_transform;
+    std::vector<glm::vec3> m_debug_origin_frame_values;
+    std::vector<glm::vec3> m_debug_origin_keyframe_values;
+};
+
 class Scene
 {
 public:
     // for guide wires
-    glm::vec3              m_debug_target;
+    glm::vec3 m_debug_target;
     std::vector<glm::vec3> m_debug_targets;
 
-    std::vector<glm::vec3> m_debug_origin_frame_values;
-    std::vector<glm::vec3> m_debug_origin_keyframe_values;
+    std::map<long, DebugObjectContext> m_debug_object_context;
 
     typedef enum { USE_MESH_MATERIAL,
                    USE_NORMAL_MATERIAL,
