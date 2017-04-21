@@ -588,6 +588,9 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
             }
         }
 
+        glEnd();
+        glLineWidth(1);
+
         glDisable(GL_DEPTH_TEST);
     }
 
