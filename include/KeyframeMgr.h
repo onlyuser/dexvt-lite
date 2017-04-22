@@ -48,14 +48,14 @@ public:
     MotionTrack::keyframes_t get_keyframes() const { return m_keyframes; }
 
     // insert / erase / lerp
-    void insert_keyframe(int frame_number, Keyframe* keyframe);
-    void erase_keyframe(int frame_number);
-    void export_keyframe_values(std::vector<glm::vec3>* keyframe_values, bool include_control_points = false);
-    void interpolate_frame_value(int frame_number, glm::vec3* value, bool is_smooth = false) const;
+    bool insert_keyframe(int frame_number, Keyframe* keyframe);
+    bool erase_keyframe(int frame_number);
+    bool export_keyframe_values(std::vector<glm::vec3>* keyframe_values, bool include_control_points = false);
+    bool interpolate_frame_value(int frame_number, glm::vec3* value, bool is_smooth = false) const;
 
     // util
     bool get_frame_number_range(int* start_frame_number, int* end_frame_number) const;
-    void update_control_points(float control_point_scale);
+    bool update_control_points(float control_point_scale);
 
 private:
     motion_type_t m_motion_type;
@@ -76,10 +76,10 @@ public:
     // insert / erase / lerp
     void insert_keyframe(MotionTrack::motion_type_t motion_type, int frame_number, Keyframe* keyframe);
     void erase_keyframe(unsigned char motion_types, int frame_number);
-    void export_keyframe_values_for_motion_track(MotionTrack::motion_type_t motion_type,
+    bool export_keyframe_values_for_motion_track(MotionTrack::motion_type_t motion_type,
                                                  std::vector<glm::vec3>*    keyframe_values,
                                                  bool                       include_control_points = false);
-    void interpolate_frame_value_for_motion_track(MotionTrack::motion_type_t motion_type,
+    bool interpolate_frame_value_for_motion_track(MotionTrack::motion_type_t motion_type,
                                                   int                        frame_number,
                                                   glm::vec3*                 value,
                                                   bool                       is_smooth = false) const;
@@ -104,8 +104,8 @@ public:
     }
 
     // insert / erase / lerp
-    void insert_keyframe(long object_id, MotionTrack::motion_type_t motion_type, int frame_number, Keyframe* keyframe);
-    void erase_keyframe(long object_id, unsigned char motion_types, int frame_number = -1);
+    bool insert_keyframe(long object_id, MotionTrack::motion_type_t motion_type, int frame_number, Keyframe* keyframe);
+    bool erase_keyframe(long object_id, unsigned char motion_types, int frame_number = -1);
     bool export_keyframe_values_for_object(long                    object_id,
                                            std::vector<glm::vec3>* origin_keyframe_values,
                                            std::vector<glm::vec3>* orient_keyframe_values,
