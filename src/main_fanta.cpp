@@ -269,47 +269,68 @@ int init_resources()
 
     create_linked_segments(scene,
                            &ik_meshes,
-                           4,
+                           IK_SEGMENT_COUNT,
                            "ik_box",
                            glm::vec3(IK_SEGMENT_WIDTH,
                                      IK_SEGMENT_HEIGHT,
                                      IK_SEGMENT_LENGTH));
     if(ik_meshes.size()) {
-        ik_meshes[0]->set_origin(glm::vec3(2, 0, 0));
+        ik_meshes[0]->set_origin(glm::vec3(3, 0, 0));
     }
+    int leg_segment_index = 0;
     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
+        if(!leg_segment_index) {
+            (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
+            (*p)->set_joint_constraints_center(glm::vec3(0, -90, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+        }
+        leg_segment_index++;
     }
 
     create_linked_segments(scene,
                            &ik_meshes2,
-                           3,
+                           IK_SEGMENT_COUNT,
                            "ik_box2",
                            glm::vec3(IK_SEGMENT_WIDTH,
                                      IK_SEGMENT_HEIGHT,
                                      IK_SEGMENT_LENGTH));
     if(ik_meshes2.size()) {
-        ik_meshes2[0]->set_origin(glm::vec3(-2, 0, 0));
+        ik_meshes2[0]->set_origin(glm::vec3(-3, 0, 0));
     }
+    int leg_segment_index2 = 0;
     for(std::vector<vt::Mesh*>::iterator p = ik_meshes2.begin(); p != ik_meshes2.end(); p++) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
+        if(!leg_segment_index2) {
+            (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
+            (*p)->set_joint_constraints_center(glm::vec3(0, -90, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+        }
+        leg_segment_index2++;
     }
 
     create_linked_segments(scene,
                            &ik_meshes3,
-                           2,
+                           IK_SEGMENT_COUNT,
                            "ik_box3",
                            glm::vec3(IK_SEGMENT_WIDTH,
                                      IK_SEGMENT_HEIGHT,
                                      IK_SEGMENT_LENGTH));
     if(ik_meshes3.size()) {
-        ik_meshes3[0]->set_origin(glm::vec3(0, 0, -2));
+        ik_meshes3[0]->set_origin(glm::vec3(0, 0, -3));
     }
+    int leg_segment_index3 = 0;
     for(std::vector<vt::Mesh*>::iterator p = ik_meshes3.begin(); p != ik_meshes3.end(); p++) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
+        if(!leg_segment_index3) {
+            (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
+            (*p)->set_joint_constraints_center(glm::vec3(0, -90, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+        }
+        leg_segment_index3++;
     }
 
     create_tray_meshes(scene, &tray_meshes, &tray_handles, "group1", false);
@@ -439,31 +460,31 @@ void onTick()
         if(angle_constraint) {
             end_effector_orient = glm::vec3(0, -1, 0);
         }
-        ik_meshes[3]->solve_ik_ccd(ik_meshes[0],
-                                   glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-                                   tray_handles[4]->in_abs_system(),
-                                   angle_constraint ? &end_effector_orient : NULL,
-                                   IK_ITERS,
-                                   ACCEPT_END_EFFECTOR_DISTANCE,
-                                   ACCEPT_AVG_ANGLE_DISTANCE);
-        ik_meshes2[2]->solve_ik_ccd(ik_meshes2[0],
-                                    glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-                                    tray_handles[3]->in_abs_system(),
-                                    angle_constraint ? &end_effector_orient : NULL,
-                                    IK_ITERS,
-                                    ACCEPT_END_EFFECTOR_DISTANCE,
-                                    ACCEPT_AVG_ANGLE_DISTANCE);
-        ik_meshes3[1]->solve_ik_ccd(ik_meshes3[0],
-                                    glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-                                    tray_handles[1]->in_abs_system(),
-                                    angle_constraint ? &end_effector_orient : NULL,
-                                    IK_ITERS,
-                                    ACCEPT_END_EFFECTOR_DISTANCE,
-                                    ACCEPT_AVG_ANGLE_DISTANCE);
+        ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
+                                                      glm::vec3(0, 0, IK_SEGMENT_LENGTH),
+                                                      tray_handles[4]->in_abs_system(),
+                                                      angle_constraint ? &end_effector_orient : NULL,
+                                                      IK_ITERS,
+                                                      ACCEPT_END_EFFECTOR_DISTANCE,
+                                                      ACCEPT_AVG_ANGLE_DISTANCE);
+        ik_meshes2[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes2[0],
+                                                       glm::vec3(0, 0, IK_SEGMENT_LENGTH),
+                                                       tray_handles[3]->in_abs_system(),
+                                                       angle_constraint ? &end_effector_orient : NULL,
+                                                       IK_ITERS,
+                                                       ACCEPT_END_EFFECTOR_DISTANCE,
+                                                       ACCEPT_AVG_ANGLE_DISTANCE);
+        ik_meshes3[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes3[0],
+                                                       glm::vec3(0, 0, IK_SEGMENT_LENGTH),
+                                                       tray_handles[1]->in_abs_system(),
+                                                       angle_constraint ? &end_effector_orient : NULL,
+                                                       IK_ITERS,
+                                                       ACCEPT_END_EFFECTOR_DISTANCE,
+                                                       ACCEPT_AVG_ANGLE_DISTANCE);
         user_input = false;
     }
     static int angle = 0;
-    tray_meshes[0]->set_orient(glm::vec3(angle, angle, angle));
+    tray_meshes[0]->set_orient(glm::vec3(0, -15, angle));
     angle = (angle + angle_delta) % 360;
 
     static int target_index = 0;
