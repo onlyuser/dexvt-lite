@@ -369,6 +369,8 @@ void onTick()
         }
         user_input = false;
     }
+    std::stringstream ss;
+    int leg_index = 0;
     for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
         std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
         ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
@@ -378,7 +380,13 @@ void onTick()
                                                       IK_ITERS,
                                                       ACCEPT_END_EFFECTOR_DISTANCE,
                                                       ACCEPT_AVG_ANGLE_DISTANCE);
+        ss << "Leg #" << leg_index << ": Scale=" << glm::distance(ik_meshes[IK_SEGMENT_COUNT - 1]->in_abs_system(), (*r)->m_target) / IK_SEGMENT_LENGTH;
+        if(r != --ik_legs.end()) {
+            ss << ", ";
+        }
+        leg_index++;
     }
+    //std::cout << "\r" << std::setw(80) << std::left << ss.str() << std::flush;
     static int angle = 0;
     angle = (angle + angle_delta) % 360;
     static int target_index = 0;

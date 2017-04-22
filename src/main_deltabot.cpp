@@ -353,6 +353,8 @@ void onTick()
         user_input = true;
     }
     if(user_input) {
+        std::stringstream ss;
+        int leg_index = 0;
         for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
             std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
             ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
@@ -362,7 +364,13 @@ void onTick()
                                                           IK_ITERS,
                                                           ACCEPT_END_EFFECTOR_DISTANCE,
                                                           ACCEPT_AVG_ANGLE_DISTANCE);
+            ss << "Leg #" << leg_index << ": Pitch=" << ORIENT_PITCH(ik_meshes[0]->get_orient());
+            if(r != --ik_legs.end()) {
+                ss << ", ";
+            }
+            leg_index++;
         }
+        std::cout << "\r" << std::setw(80) << std::left << ss.str() << std::flush;
         user_input = false;
     }
     static int angle = 0;
