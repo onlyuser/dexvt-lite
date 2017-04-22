@@ -211,17 +211,11 @@ int init_resources()
     if(ik_meshes.size()) {
         ik_meshes[0]->set_origin(glm::vec3(0));
     }
-    int leg_segment_index = 0;
     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
         (*p)->set_material(bump_mapped_material);
         (*p)->set_texture_index(     (*p)->get_material()->get_texture_index_by_name("chesterfield_color"));
         (*p)->set_bump_texture_index((*p)->get_material()->get_texture_index_by_name("chesterfield_normal"));
         (*p)->set_ambient_color(glm::vec3(0));
-        if(leg_segment_index) {
-            (*p)->set_enable_joint_constraints(glm::ivec3(0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0));
-        }
-        leg_segment_index++;
     }
 
     vt::Scene::instance()->m_debug_target = targets[target_index];
