@@ -46,6 +46,7 @@
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define BODY_ELEVATION               (0.6 + 0.1)
+#define IK_ARM_DISTANCE              3
 #define IK_ITERS                     10
 #define IK_SEGMENT_COUNT             4
 #define IK_SEGMENT_HEIGHT            0.125
@@ -275,7 +276,7 @@ int init_resources()
                                      IK_SEGMENT_HEIGHT,
                                      IK_SEGMENT_LENGTH));
     if(ik_meshes.size()) {
-        ik_meshes[0]->set_origin(glm::vec3(3, 0, 0));
+        ik_meshes[0]->set_origin(glm::vec3(IK_ARM_DISTANCE, 0, 0));
     }
     int leg_segment_index = 0;
     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
@@ -297,7 +298,7 @@ int init_resources()
                                      IK_SEGMENT_HEIGHT,
                                      IK_SEGMENT_LENGTH));
     if(ik_meshes2.size()) {
-        ik_meshes2[0]->set_origin(glm::vec3(-3, 0, 0));
+        ik_meshes2[0]->set_origin(glm::vec3(-IK_ARM_DISTANCE, 0, 0));
     }
     int leg_segment_index2 = 0;
     for(std::vector<vt::Mesh*>::iterator p = ik_meshes2.begin(); p != ik_meshes2.end(); p++) {
@@ -319,7 +320,7 @@ int init_resources()
                                      IK_SEGMENT_HEIGHT,
                                      IK_SEGMENT_LENGTH));
     if(ik_meshes3.size()) {
-        ik_meshes3[0]->set_origin(glm::vec3(0, 0, -3));
+        ik_meshes3[0]->set_origin(glm::vec3(0, 0, -IK_ARM_DISTANCE));
     }
     int leg_segment_index3 = 0;
     for(std::vector<vt::Mesh*>::iterator p = ik_meshes3.begin(); p != ik_meshes3.end(); p++) {
