@@ -20,13 +20,15 @@ Screenshots
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_boids_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_boids.png)
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_freerot_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_freerot.png)
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_hexapod_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_hexapod.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_hexapod_wireframe_2_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_hexapod_wireframe_2.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_hexapod_wireframe_3_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_hexapod_wireframe_3.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_hexapod_wireframe_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_hexapod_wireframe.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_path_hexapod_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_path_hexapod.png)
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_rail_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_rail.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_path_stewart_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_path_stewart.png)
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_spider_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_spider.png)
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_spider_wireframe_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_spider_wireframe.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_stewart_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_stewart.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_path_deltabot_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_path_deltabot.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_path_3dprinter_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_path_3dprinter.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_path_fanta_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_path_fanta.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_path_fanta_wireframe_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_path_fanta_wireframe.png)
 
 Requirements
 ------------
