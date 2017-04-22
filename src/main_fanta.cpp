@@ -46,11 +46,11 @@
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define BODY_ELEVATION               (0.6 + 0.1)
-#define IK_ITERS                     50
-#define IK_SEGMENT_COUNT             5
-#define IK_SEGMENT_HEIGHT            0.25
-#define IK_SEGMENT_LENGTH            1
-#define IK_SEGMENT_WIDTH             0.25
+#define IK_ITERS                     10
+#define IK_SEGMENT_COUNT             3
+#define IK_SEGMENT_HEIGHT            0.125
+#define IK_SEGMENT_LENGTH            1.5
+#define IK_SEGMENT_WIDTH             0.125
 #define PATH_RADIUS                  0.5
 
 const char* DEFAULT_CAPTION = NULL;
@@ -95,10 +95,13 @@ float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 int angle_delta = 1;
 
 std::vector<vt::Mesh*> ik_meshes;
+std::vector<vt::Mesh*> ik_meshes2;
+std::vector<vt::Mesh*> ik_meshes3;
 
 std::vector<vt::Mesh*> tray_meshes;
 std::vector<vt::Mesh*> tray_meshes2;
 std::vector<vt::Mesh*> tray_meshes3;
+std::vector<vt::Mesh*> tray_handles;
 
 static void create_linked_segments(vt::Scene*              scene,
                                    std::vector<vt::Mesh*>* ik_meshes,
@@ -133,6 +136,7 @@ static void create_linked_segments(vt::Scene*              scene,
 
 static void create_tray_meshes(vt::Scene*              scene,
                                std::vector<vt::Mesh*>* tray_meshes,
+                               std::vector<vt::Mesh*>* tray_handles,
                                std::string             name,
                                bool                    spike_only)
 {
@@ -140,10 +144,22 @@ static void create_tray_meshes(vt::Scene*              scene,
         return;
     }
 
-    vt::Mesh* spike = vt::PrimitiveFactory::create_cylinder("", 8, 0.05, 0.6);
+    vt::Mesh* spike = vt::PrimitiveFactory::create_cylinder(name + "_spike", 8, 0.05, 0.6);
     spike->set_origin(glm::vec3(0, 0, 0));
     tray_meshes->push_back(spike);
     scene->add_mesh(spike);
+
+    if(tray_handles) {
+        vt::Mesh* spike_handle = vt::PrimitiveFactory::create_box(name + "_spike_handle");
+        spike_handle->link_parent(spike);
+        spike_handle->center_axis();
+        spike_handle->set_origin(glm::vec3(0, 0, 0));
+        spike_handle->set_scale(glm::vec3(0.1, 0.1, 0.1));
+        spike_handle->flatten();
+        spike_handle->set_origin(glm::vec3(0, 0.6, 0));
+        tray_handles->push_back(spike_handle);
+        scene->add_mesh(spike_handle);
+    }
 
     if(spike_only) {
         return;
@@ -157,6 +173,18 @@ static void create_tray_meshes(vt::Scene*              scene,
     tray->flatten();
     tray_meshes->push_back(tray);
     scene->add_mesh(tray);
+
+    if(tray_handles) {
+        vt::Mesh* tray_handle = vt::PrimitiveFactory::create_box(name + "_tray_handle");
+        tray_handle->link_parent(spike);
+        tray_handle->center_axis();
+        tray_handle->set_origin(glm::vec3(0, 0, 0));
+        tray_handle->set_scale(glm::vec3(0.1, 0.1, 0.1));
+        tray_handle->flatten();
+        tray_handle->set_origin(glm::vec3(0.55, 0.6, 0));
+        tray_handles->push_back(tray_handle);
+        scene->add_mesh(tray_handle);
+    }
 
     glm::vec3 offset(-0.55, 0.6 + 0.1, -0.8);
     for(int i = 0; i < 2; i++) {
@@ -249,31 +277,55 @@ int init_resources()
     if(ik_meshes.size()) {
         ik_meshes[0]->set_origin(glm::vec3(2, 0, 0));
     }
-    int leg_segment_index = 0;
     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
-        if(leg_segment_index) {
-            (*p)->set_enable_joint_constraints(glm::ivec3(0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0));
-        }
-        leg_segment_index++;
     }
 
-    create_tray_meshes(scene, &tray_meshes, "group1", false);
+    create_linked_segments(scene,
+                           &ik_meshes2,
+                           IK_SEGMENT_COUNT,
+                           "ik_box2",
+                           glm::vec3(IK_SEGMENT_WIDTH,
+                                     IK_SEGMENT_HEIGHT,
+                                     IK_SEGMENT_LENGTH));
+    if(ik_meshes2.size()) {
+        ik_meshes2[0]->set_origin(glm::vec3(-2, 0, 0));
+    }
+    for(std::vector<vt::Mesh*>::iterator p = ik_meshes2.begin(); p != ik_meshes2.end(); p++) {
+        (*p)->set_material(phong_material);
+        (*p)->set_ambient_color(glm::vec3(0));
+    }
+
+    create_linked_segments(scene,
+                           &ik_meshes3,
+                           IK_SEGMENT_COUNT,
+                           "ik_box3",
+                           glm::vec3(IK_SEGMENT_WIDTH,
+                                     IK_SEGMENT_HEIGHT,
+                                     IK_SEGMENT_LENGTH));
+    if(ik_meshes3.size()) {
+        ik_meshes3[0]->set_origin(glm::vec3(0, 0, -2));
+    }
+    for(std::vector<vt::Mesh*>::iterator p = ik_meshes3.begin(); p != ik_meshes3.end(); p++) {
+        (*p)->set_material(phong_material);
+        (*p)->set_ambient_color(glm::vec3(0));
+    }
+
+    create_tray_meshes(scene, &tray_meshes, &tray_handles, "group1", false);
     for(std::vector<vt::Mesh*>::iterator p = tray_meshes.begin(); p != tray_meshes.end(); p++) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
     }
 
-    create_tray_meshes(scene, &tray_meshes2, "group2", false);
+    create_tray_meshes(scene, &tray_meshes2, &tray_handles, "group2", false);
     for(std::vector<vt::Mesh*>::iterator q = tray_meshes2.begin(); q != tray_meshes2.end(); q++) {
         (*q)->set_material(phong_material);
         (*q)->set_ambient_color(glm::vec3(0));
     }
     tray_meshes2[0]->link_parent(tray_meshes[0]);
 
-    create_tray_meshes(scene, &tray_meshes3, "group3", true);
+    create_tray_meshes(scene, &tray_meshes3, &tray_handles, "group3", true);
     for(std::vector<vt::Mesh*>::iterator r = tray_meshes3.begin(); r != tray_meshes3.end(); r++) {
         (*r)->set_material(phong_material);
         (*r)->set_ambient_color(glm::vec3(0));
@@ -389,12 +441,25 @@ void onTick()
         }
         ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
                                                       glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-                                                      tray_meshes3[0]->in_abs_system(glm::vec3(0, BODY_ELEVATION, 0)),
+                                                      tray_handles[4]->in_abs_system(),
                                                       angle_constraint ? &end_effector_orient : NULL,
                                                       IK_ITERS,
                                                       ACCEPT_END_EFFECTOR_DISTANCE,
                                                       ACCEPT_AVG_ANGLE_DISTANCE);
-        vt::Scene::instance()->m_debug_target = tray_meshes3[0]->in_abs_system(glm::vec3(0, BODY_ELEVATION, 0));
+        ik_meshes2[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes2[0],
+                                                      glm::vec3(0, 0, IK_SEGMENT_LENGTH),
+                                                      tray_handles[3]->in_abs_system(),
+                                                      angle_constraint ? &end_effector_orient : NULL,
+                                                      IK_ITERS,
+                                                      ACCEPT_END_EFFECTOR_DISTANCE,
+                                                      ACCEPT_AVG_ANGLE_DISTANCE);
+        ik_meshes3[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes3[0],
+                                                      glm::vec3(0, 0, IK_SEGMENT_LENGTH),
+                                                      tray_handles[1]->in_abs_system(),
+                                                      angle_constraint ? &end_effector_orient : NULL,
+                                                      IK_ITERS,
+                                                      ACCEPT_END_EFFECTOR_DISTANCE,
+                                                      ACCEPT_AVG_ANGLE_DISTANCE);
         user_input = false;
     }
     static int angle = 0;
@@ -490,6 +555,12 @@ void onKeyboard(unsigned char key, int x, int y)
                 for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                     (*p)->set_ambient_color(glm::vec3(0, 1, 0));
                 }
+                for(std::vector<vt::Mesh*>::iterator p2 = ik_meshes2.begin(); p2 != ik_meshes2.end(); p2++) {
+                    (*p2)->set_ambient_color(glm::vec3(0, 1, 0));
+                }
+                for(std::vector<vt::Mesh*>::iterator p3 = ik_meshes3.begin(); p3 != ik_meshes3.end(); p3++) {
+                    (*p3)->set_ambient_color(glm::vec3(0, 1, 0));
+                }
                 for(std::vector<vt::Mesh*>::iterator q = tray_meshes.begin(); q != tray_meshes.end(); q++) {
                     (*q)->set_ambient_color(glm::vec3(1));
                 }
@@ -499,10 +570,19 @@ void onKeyboard(unsigned char key, int x, int y)
                 for(std::vector<vt::Mesh*>::iterator t = tray_meshes3.begin(); t != tray_meshes3.end(); t++) {
                     (*t)->set_ambient_color(glm::vec3(1));
                 }
+                for(std::vector<vt::Mesh*>::iterator u = tray_handles.begin(); u != tray_handles.end(); u++) {
+                    (*u)->set_ambient_color(glm::vec3(1, 0, 0));
+                }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
                 for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                     (*p)->set_ambient_color(glm::vec3(0));
+                }
+                for(std::vector<vt::Mesh*>::iterator p2 = ik_meshes2.begin(); p2 != ik_meshes2.end(); p2++) {
+                    (*p2)->set_ambient_color(glm::vec3(0));
+                }
+                for(std::vector<vt::Mesh*>::iterator p3 = ik_meshes3.begin(); p3 != ik_meshes3.end(); p3++) {
+                    (*p3)->set_ambient_color(glm::vec3(0));
                 }
                 for(std::vector<vt::Mesh*>::iterator q = tray_meshes.begin(); q != tray_meshes.end(); q++) {
                     (*q)->set_ambient_color(glm::vec3(0));
@@ -512,6 +592,9 @@ void onKeyboard(unsigned char key, int x, int y)
                 }
                 for(std::vector<vt::Mesh*>::iterator t = tray_meshes3.begin(); t != tray_meshes3.end(); t++) {
                     (*t)->set_ambient_color(glm::vec3(0));
+                }
+                for(std::vector<vt::Mesh*>::iterator u = tray_handles.begin(); u != tray_handles.end(); u++) {
+                    (*u)->set_ambient_color(glm::vec3(0));
                 }
             }
             break;
