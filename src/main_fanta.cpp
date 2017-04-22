@@ -47,7 +47,7 @@
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define BODY_ELEVATION               (0.6 + 0.1)
 #define IK_ITERS                     10
-#define IK_SEGMENT_COUNT             3
+#define IK_SEGMENT_COUNT             4
 #define IK_SEGMENT_HEIGHT            0.125
 #define IK_SEGMENT_LENGTH            1.5
 #define IK_SEGMENT_WIDTH             0.125
@@ -269,7 +269,7 @@ int init_resources()
 
     create_linked_segments(scene,
                            &ik_meshes,
-                           IK_SEGMENT_COUNT,
+                           4,
                            "ik_box",
                            glm::vec3(IK_SEGMENT_WIDTH,
                                      IK_SEGMENT_HEIGHT,
@@ -284,7 +284,7 @@ int init_resources()
 
     create_linked_segments(scene,
                            &ik_meshes2,
-                           IK_SEGMENT_COUNT,
+                           3,
                            "ik_box2",
                            glm::vec3(IK_SEGMENT_WIDTH,
                                      IK_SEGMENT_HEIGHT,
@@ -299,7 +299,7 @@ int init_resources()
 
     create_linked_segments(scene,
                            &ik_meshes3,
-                           IK_SEGMENT_COUNT,
+                           2,
                            "ik_box3",
                            glm::vec3(IK_SEGMENT_WIDTH,
                                      IK_SEGMENT_HEIGHT,
@@ -439,21 +439,21 @@ void onTick()
         if(angle_constraint) {
             end_effector_orient = glm::vec3(0, -1, 0);
         }
-        ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
+        ik_meshes[3]->solve_ik_ccd(ik_meshes[0],
                                                       glm::vec3(0, 0, IK_SEGMENT_LENGTH),
                                                       tray_handles[4]->in_abs_system(),
                                                       angle_constraint ? &end_effector_orient : NULL,
                                                       IK_ITERS,
                                                       ACCEPT_END_EFFECTOR_DISTANCE,
                                                       ACCEPT_AVG_ANGLE_DISTANCE);
-        ik_meshes2[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes2[0],
+        ik_meshes2[2]->solve_ik_ccd(ik_meshes2[0],
                                                       glm::vec3(0, 0, IK_SEGMENT_LENGTH),
                                                       tray_handles[3]->in_abs_system(),
                                                       angle_constraint ? &end_effector_orient : NULL,
                                                       IK_ITERS,
                                                       ACCEPT_END_EFFECTOR_DISTANCE,
                                                       ACCEPT_AVG_ANGLE_DISTANCE);
-        ik_meshes3[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes3[0],
+        ik_meshes3[1]->solve_ik_ccd(ik_meshes3[0],
                                                       glm::vec3(0, 0, IK_SEGMENT_LENGTH),
                                                       tray_handles[1]->in_abs_system(),
                                                       angle_constraint ? &end_effector_orient : NULL,
