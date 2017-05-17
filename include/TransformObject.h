@@ -47,7 +47,7 @@ public:
     const glm::vec3 &get_joint_constraints_max_deviation() const                        { return m_joint_constraints_max_deviation; }
     void set_joint_constraints_max_deviation(glm::vec3 joint_constraints_max_deviation) { m_joint_constraints_max_deviation = joint_constraints_max_deviation; }
     bool apply_joint_constraints();
-    glm::vec3 gen_random_orient_within_constraints() const;
+    glm::vec3 gen_random_orient_within_constraints(glm::vec3 *seed_pos = NULL, float max_radius_from_seed = 0);
 
     // coordinate system conversions
     glm::vec3 in_abs_system(glm::vec3 local_point = glm::vec3(0));
