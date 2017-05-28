@@ -7,12 +7,6 @@
 #include <set>
 
 //#define DEBUG
-//#define ENABLE_ORIENT_SEARCH
-#define BIG_NUMBER              1000
-#define ORIENT_SAMPLE_COUNT     20
-#define ANNEALING_ITER_COUNT    3
-#define ANNEALING_SHRINK_FACTOR 0.5
-#define SEED_SAMPLE_COUNT       10
 
 namespace vt {
 
@@ -47,35 +41,9 @@ void TransformObject::set_origin(glm::vec3 origin)
 
 void TransformObject::set_orient(glm::vec3 orient)
 {
-#ifdef ENABLE_ORIENT_SEARCH
-    glm::vec3 prev_orient = m_orient;
-    m_orient = orient;
-    if(apply_joint_constraints()) {
-        glm::vec3 target   = orient_to_offset(orient);
-        glm::vec3 seed_pos = orient_to_offset(m_orient);
-        float max_radius_from_seed = 1;
-        for(int j = 0; j < ANNEALING_ITER_COUNT; j++) {
-            glm::vec3 best_orient   = prev_orient;
-            float     best_distance = BIG_NUMBER;
-            for(int i = 0; i < ORIENT_SAMPLE_COUNT; i++) {
-                m_orient = gen_random_orient_within_constraints(!j ? NULL : &seed_pos, max_radius_from_seed);
-                float current_distance = glm::distance(orient_to_offset(m_orient), target);
-                if(current_distance < best_distance) {
-                    best_orient   = m_orient;
-                    best_distance = current_distance;
-                }
-            }
-            m_orient = best_orient;
-            seed_pos = orient_to_offset(m_orient);
-            max_radius_from_seed *= ANNEALING_SHRINK_FACTOR;
-        }
-    }
-    mark_dirty_transform();
-#else
     m_orient = orient;
     apply_joint_constraints();
     mark_dirty_transform();
-#endif
 }
 
 void TransformObject::set_scale(glm::vec3 scale)
@@ -134,38 +102,6 @@ bool TransformObject::apply_joint_constraints()
                 }
             }
             break;
-    }
-    return result;
-}
-
-glm::vec3 TransformObject::gen_random_orient_within_constraints(glm::vec3 *seed_pos, float max_radius_from_seed)
-{
-    glm::vec3 result;
-    if(seed_pos) {
-        glm::vec3 prev_orient = m_orient;
-        for(int j = 0; j < SEED_SAMPLE_COUNT; j++) {
-            glm::vec3 sample_point = *seed_pos + rand_vec(max_radius_from_seed);
-            m_orient = offset_to_orient(sample_point);
-            if(!apply_joint_constraints()) {
-                break;
-            }
-        }
-        result = m_orient;
-        m_orient = prev_orient;
-        return result;
-    }
-    for(int i = 0; i < 3; i++) {
-        float min_value;
-        float max_value;
-        if(m_enable_joint_constraints[i]) {
-            min_value = m_joint_constraints_center[i] - m_joint_constraints_max_deviation[i];
-            max_value = m_joint_constraints_center[i] + m_joint_constraints_max_deviation[i];
-        } else {
-            min_value = 0;
-            max_value = 360;
-        }
-        float alpha = static_cast<float>(rand()) / RAND_MAX;
-        result[i] = angle_modulo(LERP(min_value, max_value, alpha));
     }
     return result;
 }
