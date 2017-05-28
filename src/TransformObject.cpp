@@ -60,9 +60,8 @@ void TransformObject::reset_transform()
     mark_dirty_transform();
 }
 
-bool TransformObject::apply_joint_constraints()
+void TransformObject::apply_joint_constraints()
 {
-    bool result = false;
     switch(m_joint_type) {
         case JOINT_TYPE_REVOLUTE:
             for(int i = 0; i < 3; i++) {
@@ -79,7 +78,6 @@ bool TransformObject::apply_joint_constraints()
                     } else {
                         m_orient[i] = max_value;
                     }
-                    result = true;
                 }
             }
             break;
@@ -98,12 +96,10 @@ bool TransformObject::apply_joint_constraints()
                     } else {
                         m_origin[i] = max_value;
                     }
-                    result = true;
                 }
             }
             break;
     }
-    return result;
 }
 
 glm::vec3 TransformObject::in_abs_system(glm::vec3 local_point)

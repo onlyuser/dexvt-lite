@@ -25,11 +25,6 @@ void print_bitmap_string(void* font, const char* s)
     }
 }
 
-glm::vec3 rand_vec(float radius)
-{
-    return glm::normalize(glm::vec3(rand(), rand(), rand()) - glm::vec3(RAND_MAX * 0.5)) * radius;
-}
-
 glm::vec3 orient_to_offset(glm::vec3  orient,
                            glm::vec3* up_direction) // out
 {
