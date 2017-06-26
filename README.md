@@ -35,7 +35,7 @@ Requirements
 
 Unix tools and 3rd party components (accessible from $PATH):
 
-    gcc (with -std=c++0x support)
+gcc mesa-common-dev freeglut3-dev libglew-dev libglm-dev libpng-dev curl imagemagick
 
 Resource files not included:
 
@@ -64,16 +64,6 @@ Resource files not included:
         <td>Normal map texture</td>
     </tr>
 </table>
-
-**Ubuntu packages:**
-
-* sudo apt-get install mesa-common-dev
-* sudo apt-get install freeglut3-dev
-* sudo apt-get install libglew-dev
-* sudo apt-get install libglm-dev
-* sudo apt-get install libpng-dev
-* sudo apt-get install curl
-* sudo apt-get install imagemagick
 
 Make targets
 ------------
@@ -126,58 +116,40 @@ References
 <dl>
     <dt>"Setting up an OpenGL development environment in Ubuntu Linux"</dt>
     <dd>http://www.codeproject.com/Articles/182109/Setting-up-an-OpenGL-development-environment-in-Ub</dd>
-
     <dt>"OpenGL Programming/Intermediate/Textures - A simple libpng example"</dt>
     <dd>http://en.wikibooks.org/wiki/OpenGL_Programming/Intermediate/Textures#A_simple_libpng_example</dd>
-
     <dt>"Cube Maps: Sky Boxes and Environment Mapping"</dt>
     <dd>http://antongerdelan.net/opengl/cubemaps.html</dd>
-
     <dt>"3D C/C++ tutorials - OpenGL - GLSL cube mapping"</dt>
     <dd>http://www.belanecbn.sk/3dtutorials/index.php?id=24</dd>
-
     <dt>"Skyboxes using glsl Version 330"</dt>
     <dd>http://gamedev.stackexchange.com/questions/60313/skyboxes-using-glsl-version-330</dd>
-
     <dt>"Rioki's Corner - GLSL Skybox"</dt>
     <dd>http://www.rioki.org/2013/03/07/glsl-skybox.html</dd>
-
     <dt>"How would you implement chromatic aberration?"</dt>
     <dd>http://gamedev.stackexchange.com/questions/58408/how-would-you-implement-chromatic-aberration</dd>
-
     <dt>"How do you calculate the angle between two normals in glsl?"</dt>
     <dd>http://stackoverflow.com/questions/338762/how-do-you-calculate-the-angle-between-two-normals-in-glsl</dd>
-
     <dt>"Chapter 7. Environment Mapping Techniques"</dt>
     <dd>http://http.developer.nvidia.com/CgTutorial/cg_tutorial_chapter07.html</dd>
-
     <dt>"Humus Cube Map Textures - Colosseum"</dt>
     <dd>http://www.humus.name/index.php?page=Textures</dd>
-
     <dt>"Kay's Blog Texture and game development freebies! - Well Preserved Chesterfield"</dt>
     <dd>http://kay-vriend.blogspot.tw/2012/11/well-preserved-chesterfield.html</dd>
-
     <dt>"Philip Rideout's OpenGL Bloom Tutorial"</dt>
     <dd>http://prideout.net/archive/bloom/</dd>
-
     <dt>"An investigation of fast real-time GPU-based image blur algorithms"</dt>
     <dd>https://software.intel.com/en-us/blogs/2014/07/15/an-investigation-of-fast-real-time-gpu-based-image-blur-algorithms</dd>
-
     <dt>"john-chapman-graphics SSAO Tutorial"</dt>
     <dd>http://john-chapman-graphics.blogspot.tw/2013/01/ssao-tutorial.html</dd>
-
     <dt>"Know your SSAO artifacts"</dt>
     <dd>http://mtnphil.wordpress.com/2013/06/26/know-your-ssao-artifacts/</dd>
-
     <dt>"songho.ca OpenGL Projection Matrix"</dt>
     <dd>http://www.songho.ca/opengl/gl_projectionmatrix.html</dd>
-
     <dt>"3D MeshWorks"</dt>
     <dd>http://www.jrbassett.com</dd>
-
     <dt>"Missing gtc/constants.hpp #12"</dt>
     <dd>https://github.com/g-truc/glm/issues/12</dd>
-
     <dt>"Kinematics (Advanced Methods in Computer Graphics) Part 4"</dt>
     <dd>http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/</dd>
 </dl>
