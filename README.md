@@ -35,7 +35,7 @@ Requirements
 
 Unix tools and 3rd party components (accessible from $PATH):
 
-gcc mesa-common-dev freeglut3-dev libglew-dev libglm-dev libpng-dev curl imagemagick
+    gcc mesa-common-dev freeglut3-dev libglew-dev libglm-dev libpng-dev curl imagemagick
 
 Resource files not included:
 
