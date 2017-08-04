@@ -236,11 +236,11 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
 #if 1
             glm::vec3 local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(tmp_target));
             glm::vec3 local_end_effector_tip_dir = glm::normalize(current_segment->from_origin_in_parent_system(end_effector_tip));
-            glm::vec3 local_arc_dir              = glm::normalize(local_target_dir - local_end_effector_tip_dir);
+            glm::vec3 local_arc_delta_dir        = glm::normalize(local_target_dir - local_end_effector_tip_dir);
             glm::vec3 local_arc_midpoint_dir     = glm::normalize((local_target_dir + local_end_effector_tip_dir) * 0.5f);
-            glm::vec3 local_arc_pivot            = glm::cross(local_arc_dir, local_arc_midpoint_dir);
+            glm::vec3 local_arc_pivot_dir        = glm::cross(local_arc_delta_dir, local_arc_midpoint_dir);
             float     angle_delta                = glm::degrees(glm::angle(local_target_dir, local_end_effector_tip_dir));
-            glm::mat4 local_arc_rotate_transform = GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot);
+            glm::mat4 local_arc_rotate_transform = GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot_dir);
     #if 1
             // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
             glm::mat4 new_current_segment_orient_transform = local_arc_rotate_transform * current_segment->get_local_orient_transform();
@@ -251,18 +251,18 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
             // update guide wires
             local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(tmp_target));
             local_end_effector_tip_dir = glm::normalize(current_segment->from_origin_in_parent_system(end_effector_tip));
-            local_arc_dir              = glm::normalize(local_target_dir - local_end_effector_tip_dir);
+            local_arc_delta_dir        = glm::normalize(local_target_dir - local_end_effector_tip_dir);
             local_arc_midpoint_dir     = glm::normalize((local_target_dir + local_end_effector_tip_dir) * 0.5f);
-            local_arc_pivot            = glm::cross(local_arc_dir, local_arc_midpoint_dir);
+            local_arc_pivot_dir        = glm::cross(local_arc_delta_dir, local_arc_midpoint_dir);
             current_segment->m_debug_target_dir           = local_target_dir;
             current_segment->m_debug_end_effector_tip_dir = local_end_effector_tip_dir;
-            current_segment->m_debug_local_pivot          = local_arc_pivot;
+            current_segment->m_debug_local_pivot          = local_arc_pivot_dir;
             current_segment->m_debug_local_target         = current_segment->from_origin_in_parent_system(tmp_target);
         #ifdef DEBUG
             //std::cout << "TARGET: " << glm::to_string(local_target_dir) << ", END_EFF: " << glm::to_string(local_end_effector_tip_dir) << ", ANGLE: " << angle_delta << std::endl;
             //std::cout << "BEFORE: " << glm::to_string(new_current_segment_transform * glm::vec4(VEC_FORWARD, 1))
             //          << ", AFTER: " << glm::to_string(new_current_segment_heading) << std::endl;
-            //std::cout << "PIVOT: " << glm::to_string(local_arc_pivot) << std::endl;
+            //std::cout << "PIVOT: " << glm::to_string(local_arc_pivot_dir) << std::endl;
         #endif
     #else
             // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
@@ -299,10 +299,10 @@ void TransformObject::update_boid(glm::vec3 target,
 {
     glm::vec3 local_target_dir           = glm::normalize(from_origin_in_parent_system(target));
     glm::vec3 local_heading              = glm::normalize(from_origin_in_parent_system(in_abs_system(VEC_FORWARD)));
-    glm::vec3 local_arc_dir              = glm::normalize(local_target_dir - local_heading);
+    glm::vec3 local_arc_delta_dir        = glm::normalize(local_target_dir - local_heading);
     glm::vec3 local_arc_midpoint_dir     = glm::normalize((local_target_dir + local_heading) * 0.5f);
-    glm::vec3 local_arc_pivot            = glm::cross(local_arc_dir, local_arc_midpoint_dir);
-    glm::mat4 local_arc_rotate_transform = GLM_ROTATE(glm::mat4(1), -angle_delta * ((glm::distance(target, m_origin) < avoid_radius) ? -1 : 1), local_arc_pivot);
+    glm::vec3 local_arc_pivot_dir        = glm::cross(local_arc_delta_dir, local_arc_midpoint_dir);
+    glm::mat4 local_arc_rotate_transform = GLM_ROTATE(glm::mat4(1), -angle_delta * ((glm::distance(target, m_origin) < avoid_radius) ? -1 : 1), local_arc_pivot_dir);
 #if 1
     // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
     glm::mat4 new_current_segment_orient_transform = local_arc_rotate_transform * get_local_orient_transform();
