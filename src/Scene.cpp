@@ -5,6 +5,7 @@
 #include <Light.h>
 #include <Mesh.h>
 #include <Material.h>
+#include <OctTree.h>
 #include <Texture.h>
 #include <Util.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -28,6 +29,9 @@
 
 #define BROKEN_EDGE_ALPHA 0.125f
 
+#define draw_edge(p1, p2) \
+        glVertex3fv(&p1.x); \
+        glVertex3fv(&p2.x);
 #define draw_broken_edge(p1, p2, m1, m2) \
         m1 = LERP(p1, p2, BROKEN_EDGE_ALPHA); \
         m2 = LERP(p1, p2, 1 - BROKEN_EDGE_ALPHA); \
@@ -40,6 +44,7 @@ namespace vt {
 
 Scene::Scene()
     : m_camera(NULL),
+      m_oct_tree(NULL),
       m_skybox(NULL),
       m_overlay(NULL),
       m_normal_material(NULL),
@@ -460,6 +465,68 @@ void Scene::render(bool                clear_canvas,
     }
 }
 
+void Scene::render_oct_tree(OctTree*  node,
+                            glm::mat4 camera_transform) const
+{
+    const float normal_surface_distance = 0.05;
+    const float bbox_line_width         = 1;
+
+    glEnable(GL_DEPTH_TEST);
+
+    glm::vec3 min = node->get_origin();
+    glm::vec3 max = node->get_origin() + node->get_dim();
+    int depth = node->get_depth();
+    min += glm::vec3(normal_surface_distance * depth);
+    max -= glm::vec3(normal_surface_distance * depth);
+
+    glm::vec3 llb(min.x, min.y, min.z);
+    glm::vec3 lrb(max.x, min.y, min.z);
+    glm::vec3 urb(max.x, max.y, min.z);
+    glm::vec3 ulb(min.x, max.y, min.z);
+    glm::vec3 llf(min.x, min.y, max.z);
+    glm::vec3 lrf(max.x, min.y, max.z);
+    glm::vec3 urf(max.x, max.y, max.z);
+    glm::vec3 ulf(min.x, max.y, max.z);
+
+    glLoadMatrixf(glm::value_ptr(camera_transform));
+    glLineWidth(bbox_line_width);
+    glBegin(GL_LINES);
+
+    glColor3f(1, 0, 0);
+
+    // back quad
+    draw_edge(llb, lrb);
+    draw_edge(lrb, urb);
+    draw_edge(urb, ulb);
+    draw_edge(ulb, llb);
+
+    // front quad
+    draw_edge(llf, lrf);
+    draw_edge(lrf, urf);
+    draw_edge(urf, ulf);
+    draw_edge(ulf, llf);
+
+    // back to front segments
+    draw_edge(llb, llf);
+    draw_edge(lrb, lrf);
+    draw_edge(urb, urf);
+    draw_edge(ulb, ulf);
+
+    glEnd();
+    glLineWidth(1);
+
+    glDisable(GL_DEPTH_TEST);
+
+    for(int i = 0; i < 8; i++) {
+        OctTree* child_node = node->get_node(i);
+        if(!child_node) {
+            continue;
+        }
+        render_oct_tree(child_node,
+                        camera_transform);
+    }
+}
+
 void Scene::render_lines_and_text(bool  draw_guide_wires,
                                   bool  draw_paths,
                                   bool  draw_axis,
@@ -510,6 +577,11 @@ void Scene::render_lines_and_text(bool  draw_guide_wires,
 
         glEnd();
         glLineWidth(1);
+    }
+
+    if(draw_bbox && m_oct_tree) {
+        render_oct_tree(m_oct_tree,
+                        m_camera->get_transform());
     }
 
     if(draw_paths) {

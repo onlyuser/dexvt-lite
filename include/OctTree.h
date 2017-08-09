@@ -6,47 +6,28 @@
 
 namespace vt {
 
-class TransformObject;
-class OctTreeNode
-{
-public:
-    OctTreeNode(glm::vec3     origin,
-                glm::vec3     dim,
-                int           depth,
-                OctTreeNode** nodes);
-    ~OctTreeNode();
-
-    void clear();
-    bool add(TransformObject* object);
-    bool remove(TransformObject* object);
-    int find_k_nearest(int k, std::vector<TransformObject*> &k_nearest_objects);
-
-private:
-    glm::vec3     m_origin;
-    glm::vec3     m_dim;
-    int           m_depth;
-    OctTreeNode** m_nodes;
-};
-
 class OctTree
 {
 public:
     OctTree(glm::vec3 origin,
             glm::vec3 dim,
-            int depth);
+            int max_depth,
+            int depth = 0);
     ~OctTree();
-
-    void clear();
-    bool add(TransformObject* object);
-    bool remove(TransformObject* object);
-    int find_k_nearest(int k, std::vector<TransformObject*> &k_nearest_objects);
-    void update();
+    glm::vec3 get_origin() const        { return m_origin; }
+    glm::vec3 get_dim() const           { return m_dim; }
+    glm::vec3 get_center() const        { return m_center; }
+    int       get_max_depth() const     { return m_max_depth; }
+    int       get_depth() const         { return m_depth; }
+    OctTree*  get_node(int index) const { return m_nodes[index]; }
 
 private:
-    glm::vec3    m_origin;
-    glm::vec3    m_dim;
-    int          m_depth;
-    OctTreeNode* m_root;
+    glm::vec3 m_origin;
+    glm::vec3 m_dim;
+    glm::vec3 m_center;
+    int       m_max_depth;
+    int       m_depth;
+    OctTree*  m_nodes[8];
 };
 
 }

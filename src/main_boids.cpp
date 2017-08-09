@@ -22,6 +22,7 @@
 
 #include <Buffer.h>
 #include <Camera.h>
+#include <OctTree.h>
 #include <File3ds.h>
 #include <FrameBuffer.h>
 #include <Light.h>
@@ -51,6 +52,7 @@ const char* DEFAULT_CAPTION = NULL;
 
 int init_screen_width = 800, init_screen_height = 600;
 vt::Camera  *camera         = NULL;
+vt::OctTree *oct_tree       = NULL;
 vt::Mesh    *mesh_skybox    = NULL;
 vt::Light   *light          = NULL,
             *light2         = NULL,
@@ -165,6 +167,8 @@ int init_resources()
     glm::vec3 origin = glm::vec3(0);
     camera = new vt::Camera("camera", origin + glm::vec3(0, 0, orbit_radius), origin);
     scene->set_camera(camera);
+    oct_tree = new vt::OctTree(glm::vec3(-5, -5, -5), glm::vec3(10, 10, 10), 3);
+    scene->set_oct_tree(oct_tree);
 
     scene->add_light(light  = new vt::Light("light1", origin + glm::vec3(light_distance, 0, 0), glm::vec3(1, 0, 0)));
     scene->add_light(light2 = new vt::Light("light2", origin + glm::vec3(0, light_distance, 0), glm::vec3(0, 1, 0)));
