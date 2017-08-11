@@ -138,8 +138,7 @@ public:
                 bool                render_overlay    = false,
                 bool                render_skybox     = true,
                 use_material_type_t use_material_type = use_material_type_t::USE_MESH_MATERIAL);
-    void render_oct_tree(OctTree*  oct_tree,
-                         glm::mat4 camera_transform) const;
+    void render_oct_tree(OctTree* oct_tree, glm::mat4 camera_transform) const;
     void render_lines_and_text(bool  draw_guide_wires,
                                bool  draw_paths,
                                bool  draw_axis,

@@ -465,8 +465,7 @@ void Scene::render(bool                clear_canvas,
     }
 }
 
-void Scene::render_oct_tree(OctTree*  node,
-                            glm::mat4 camera_transform) const
+void Scene::render_oct_tree(OctTree* node, glm::mat4 camera_transform) const
 {
     const float normal_surface_distance = 0.05;
     const float bbox_line_width         = 1;
@@ -522,8 +521,7 @@ void Scene::render_oct_tree(OctTree*  node,
         if(!child_node) {
             continue;
         }
-        render_oct_tree(child_node,
-                        camera_transform);
+        render_oct_tree(child_node, camera_transform);
     }
 }
 
