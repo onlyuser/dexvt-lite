@@ -282,8 +282,7 @@ int init_resources()
             (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 0));
             (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
             (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
-        }
-        if(leg_segment_index) {
+        } else {
             (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 1));
             (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
             (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));

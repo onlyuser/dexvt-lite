@@ -228,6 +228,40 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
             } else {
                 tmp_target = target;
             }
+
+            // allow ONLY roll -- project onto XY plane
+            if(!current_segment->m_enable_joint_constraints[0] &&
+               current_segment->m_enable_joint_constraints[1] &&
+               current_segment->m_enable_joint_constraints[2])
+            {
+                glm::vec3 plane_origin = current_segment->in_abs_system();
+                glm::vec3 plane_normal = current_segment->get_abs_heading();
+                tmp_target       = nearest_point_on_plane(plane_origin, plane_normal, tmp_target);
+                end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, end_effector_tip);
+            }
+
+            // allow ONLY pitch -- project onto YZ plane
+            if(current_segment->m_enable_joint_constraints[0] &&
+               !current_segment->m_enable_joint_constraints[1] &&
+               current_segment->m_enable_joint_constraints[2])
+            {
+                glm::vec3 plane_origin = current_segment->in_abs_system();
+                glm::vec3 plane_normal = current_segment->get_abs_left_direction();
+                tmp_target       = nearest_point_on_plane(plane_origin, plane_normal, tmp_target);
+                end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, end_effector_tip);
+            }
+
+            // allow ONLY yaw -- project onto XZ plane
+            if(current_segment->m_enable_joint_constraints[0] &&
+               current_segment->m_enable_joint_constraints[1] &&
+               !current_segment->m_enable_joint_constraints[2])
+            {
+                glm::vec3 plane_origin = current_segment->in_abs_system();
+                glm::vec3 plane_normal = current_segment->get_abs_up_direction();
+                tmp_target       = nearest_point_on_plane(plane_origin, plane_normal, tmp_target);
+                end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, end_effector_tip);
+            }
+
             if(current_segment->get_joint_type() == JOINT_TYPE_PRISMATIC) {
                 current_segment->set_origin(current_segment->get_origin() + (current_segment->from_origin_in_parent_system(tmp_target) -
                                                                              current_segment->from_origin_in_parent_system(end_effector_tip)));

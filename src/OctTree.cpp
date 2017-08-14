@@ -57,9 +57,9 @@ const OctTree* OctTree::downtrace_leaf_enclosing(glm::vec3 pos) const
     if(m_depth + 1 == m_max_depth) {
         return this;
     }
-    int x_index = pos.x < m_center.x;
-    int y_index = pos.y < m_center.y;
-    int z_index = pos.z < m_center.z;
+    int x_index = pos.x > m_center.x;
+    int y_index = pos.y > m_center.y;
+    int z_index = pos.z > m_center.z;
     return m_nodes[x_index * 4 + y_index * 2 + z_index]->downtrace_leaf_enclosing(pos);
 }
 

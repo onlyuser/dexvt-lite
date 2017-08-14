@@ -133,6 +133,11 @@ float angle_distance(float angle1, float angle2)
     return angle_diff;
 }
 
+glm::vec3 nearest_point_on_plane(glm::vec3 plane_origin, glm::vec3 plane_normal, glm::vec3 from_point)
+{
+    return from_point - plane_normal * (glm::dot(from_point, plane_normal) - glm::dot(plane_origin, plane_normal));
+}
+
 // https://en.wikipedia.org/wiki/Bernstein_polynomial
 glm::vec3 bezier_interpolate(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4, float alpha)
 {

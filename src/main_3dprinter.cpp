@@ -289,8 +289,7 @@ int init_resources()
                 (*p)->set_joint_constraints_center(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS - IK_SEGMENT_HEIGHT) -
                                                    glm::vec3(0, BODY_ELEVATION * 0.5, 0));
                 (*p)->set_joint_constraints_max_deviation(glm::vec3(0, BODY_ELEVATION * 0.5, 0));
-            }
-            if(leg_segment_index) {
+            } else {
                 (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 0));
                 (*p)->set_joint_constraints_center(glm::vec3(0, 90, 0));
                 (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 90, 0));

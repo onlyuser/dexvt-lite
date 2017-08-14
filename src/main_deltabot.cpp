@@ -265,11 +265,6 @@ int init_resources()
                 (*p)->set_joint_constraints_center(glm::vec3(0, 0, angle));
                 (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
             }
-            if(leg_segment_index) {
-                (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 0));
-                (*p)->set_joint_constraints_center(glm::vec3(0, 90, 0));
-                (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 90, 0));
-            }
             leg_segment_index++;
         }
         ik_legs.push_back(ik_leg);

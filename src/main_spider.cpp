@@ -467,12 +467,11 @@ int init_resources()
         for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
             (*p)->set_material(phong_material);
             (*p)->set_ambient_color(glm::vec3(0));
-            if(leg_segment_index == 0) {
+            if(!leg_segment_index) {
                 (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 0));
                 (*p)->set_joint_constraints_center(glm::vec3(0, -45, 0));
                 (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 45, 0));
-            }
-            if(leg_segment_index >= 1) {
+            } else {
                 (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
                 (*p)->set_joint_constraints_center(glm::vec3(0, 45, 0));
                 (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 45, 0));
