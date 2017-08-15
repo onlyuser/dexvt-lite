@@ -22,6 +22,7 @@ TransformObject::TransformObject(std::string name,
       m_enable_joint_constraints(       glm::ivec3(0)),
       m_joint_constraints_center(       glm::vec3(0)),
       m_joint_constraints_max_deviation(glm::vec3(0)),
+      m_exclusive_pivot(-1),
       m_parent(NULL),
       m_is_dirty_transform(true),
       m_is_dirty_normal_transform(true)
@@ -58,6 +59,29 @@ void TransformObject::reset_transform()
     set_orient(glm::vec3(0));
     m_scale  = glm::vec3(1);
     mark_dirty_transform();
+}
+
+void TransformObject::set_enable_joint_constraints(glm::ivec3 enable_joint_constraints)
+{
+    m_enable_joint_constraints = enable_joint_constraints;
+    if(!m_enable_joint_constraints[0] &&
+       m_enable_joint_constraints[1] &&
+       m_enable_joint_constraints[2])
+    {
+        m_exclusive_pivot = 0;
+    } else if(m_enable_joint_constraints[0] &&
+              !m_enable_joint_constraints[1] &&
+              m_enable_joint_constraints[2])
+    {
+        m_exclusive_pivot = 1;
+    } else if(m_enable_joint_constraints[0] &&
+              m_enable_joint_constraints[1] &&
+              !m_enable_joint_constraints[2])
+    {
+        m_exclusive_pivot = 2;
+    } else {
+        m_exclusive_pivot = -1;
+    }
 }
 
 void TransformObject::apply_joint_constraints()
@@ -229,44 +253,37 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
                 tmp_target = target;
             }
 
-            // allow ONLY roll -- project onto XY plane
-            if(!current_segment->m_enable_joint_constraints[0] &&
-               current_segment->m_enable_joint_constraints[1] &&
-               current_segment->m_enable_joint_constraints[2])
-            {
-                glm::vec3 plane_origin = current_segment->in_abs_system();
-                glm::vec3 plane_normal = current_segment->get_abs_heading();
-                tmp_target       = nearest_point_on_plane(plane_origin, plane_normal, tmp_target);
-                end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, end_effector_tip);
-            }
-
-            // allow ONLY pitch -- project onto YZ plane
-            if(current_segment->m_enable_joint_constraints[0] &&
-               !current_segment->m_enable_joint_constraints[1] &&
-               current_segment->m_enable_joint_constraints[2])
-            {
-                glm::vec3 plane_origin = current_segment->in_abs_system();
-                glm::vec3 plane_normal = current_segment->get_abs_left_direction();
-                tmp_target       = nearest_point_on_plane(plane_origin, plane_normal, tmp_target);
-                end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, end_effector_tip);
-            }
-
-            // allow ONLY yaw -- project onto XZ plane
-            if(current_segment->m_enable_joint_constraints[0] &&
-               current_segment->m_enable_joint_constraints[1] &&
-               !current_segment->m_enable_joint_constraints[2])
-            {
-                glm::vec3 plane_origin = current_segment->in_abs_system();
-                glm::vec3 plane_normal = current_segment->get_abs_up_direction();
-                tmp_target       = nearest_point_on_plane(plane_origin, plane_normal, tmp_target);
-                end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, end_effector_tip);
-            }
-
             if(current_segment->get_joint_type() == JOINT_TYPE_PRISMATIC) {
                 current_segment->set_origin(current_segment->get_origin() + (current_segment->from_origin_in_parent_system(tmp_target) -
                                                                              current_segment->from_origin_in_parent_system(end_effector_tip)));
                 continue;
             }
+
+            if(current_segment->m_exclusive_pivot != -1) {
+                glm::vec3 plane_origin = current_segment->in_abs_system();
+                glm::vec3 plane_normal;
+                switch(current_segment->m_exclusive_pivot) {
+                    case 0:
+                        // allow ONLY roll -- project onto XY plane
+                        plane_normal     = current_segment->get_abs_heading();
+                        tmp_target       = nearest_point_on_plane(plane_origin, plane_normal, tmp_target);
+                        end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, end_effector_tip);
+                        break;
+                    case 1:
+                        // allow ONLY pitch -- project onto YZ plane
+                        plane_normal     = current_segment->get_abs_left_direction();
+                        tmp_target       = nearest_point_on_plane(plane_origin, plane_normal, tmp_target);
+                        end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, end_effector_tip);
+                        break;
+                    case 2:
+                        // allow ONLY yaw -- project onto XZ plane
+                        plane_normal     = current_segment->get_abs_up_direction();
+                        tmp_target       = nearest_point_on_plane(plane_origin, plane_normal, tmp_target);
+                        end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, end_effector_tip);
+                        break;
+                }
+            }
+
 #if 1
             glm::vec3 local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(tmp_target));
             glm::vec3 local_end_effector_tip_dir = glm::normalize(current_segment->from_origin_in_parent_system(end_effector_tip));

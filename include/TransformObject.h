@@ -41,11 +41,13 @@ public:
     joint_type_t get_joint_type() const                                                 { return m_joint_type; }
     void set_joint_type(joint_type_t joint_type)                                        { m_joint_type = joint_type; }
     const glm::ivec3 &get_enable_joint_constraints() const                              { return m_enable_joint_constraints; }
-    void set_enable_joint_constraints(glm::ivec3 enable_joint_constraints)              { m_enable_joint_constraints = enable_joint_constraints; }
+    void set_enable_joint_constraints(glm::ivec3 enable_joint_constraints);
     const glm::vec3 &get_joint_constraints_center() const                               { return m_joint_constraints_center; }
     void set_joint_constraints_center(glm::vec3 joint_constraints_center)               { m_joint_constraints_center = joint_constraints_center; }
     const glm::vec3 &get_joint_constraints_max_deviation() const                        { return m_joint_constraints_max_deviation; }
     void set_joint_constraints_max_deviation(glm::vec3 joint_constraints_max_deviation) { m_joint_constraints_max_deviation = joint_constraints_max_deviation; }
+    void set_eclusive_pivot(int exclusive_pivot)                                        { m_exclusive_pivot = exclusive_pivot; }
+    int get_exclusive_pivot() const                                                     { return m_exclusive_pivot; }
     void apply_joint_constraints();
 
     // coordinate system conversions
@@ -96,6 +98,7 @@ protected:
     glm::ivec3   m_enable_joint_constraints;
     glm::vec3    m_joint_constraints_center;
     glm::vec3    m_joint_constraints_max_deviation;
+    int          m_exclusive_pivot;
 
     // hierarchy related
     TransformObject*           m_parent;
