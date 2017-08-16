@@ -76,7 +76,7 @@ vt::Texture *texture_skybox = NULL;
 
 bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
-glm::vec3 prev_orient, orient, orbit_speed = glm::vec3(0, -0.5, -0.5);
+glm::vec3 prev_euler, euler, orbit_speed = glm::vec3(0, -0.5, -0.5);
 float prev_orbit_radius = 0, orbit_radius = 8, dolly_speed = 0.1, light_distance = 4;
 bool show_bbox = false;
 bool show_fps = false;
@@ -143,7 +143,7 @@ static void create_linked_segments(vt::Scene*              scene,
             mesh = vt::PrimitiveFactory::create_cylinder(ss.str(), PUMP_SIDES);
             mesh->center_axis();
             mesh->set_origin(glm::vec3(0, 0, 0));
-            mesh->set_orient(glm::vec3(0, 90, 0));
+            mesh->set_euler(glm::vec3(0, 90, 0));
             mesh->flatten();
         }
         mesh->set_origin(glm::vec3(0, 0, 0));
@@ -241,7 +241,7 @@ int init_resources()
                                                                                           IK_SEGMENT_WIDTH);
         ik_leg->m_joint_body->center_axis();
         ik_leg->m_joint_body->link_parent(body);
-        ik_leg->m_joint_body->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_FOOTING_RADIUS));
+        ik_leg->m_joint_body->set_origin(vt::euler_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_FOOTING_RADIUS));
         scene->add_mesh(ik_leg->m_joint_body);
 
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
@@ -260,7 +260,7 @@ int init_resources()
             (*p)->set_material(phong_material);
             (*p)->set_ambient_color(glm::vec3(0));
             if(!leg_segment_index) {
-                (*p)->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
+                (*p)->set_origin(vt::euler_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
                 (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 1));
                 (*p)->set_joint_constraints_center(glm::vec3(0, 0, angle));
                 (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
@@ -314,7 +314,7 @@ void onTick()
         std::stringstream ss;
         ss << std::setprecision(2) << std::fixed << fps << " FPS, "
             << "Mouse: {" << mouse_drag.x << ", " << mouse_drag.y << "}, "
-            << "Yaw=" << ORIENT_YAW(orient) << ", Pitch=" << ORIENT_PITCH(orient) << ", Radius=" << orbit_radius << ", "
+            << "Yaw=" << EULER_YAW(euler) << ", Pitch=" << EULER_PITCH(euler) << ", Radius=" << orbit_radius << ", "
             << "Zoom=" << zoom;
         //ss << "Width=" << camera->get_width() << ", Width=" << camera->get_height();
         glutSetWindowTitle(ss.str().c_str());
@@ -359,7 +359,7 @@ void onTick()
                                                           IK_ITERS,
                                                           ACCEPT_END_EFFECTOR_DISTANCE,
                                                           ACCEPT_AVG_ANGLE_DISTANCE);
-            ss << "Leg #" << leg_index << ": Pitch=" << ORIENT_PITCH(ik_meshes[0]->get_orient());
+            ss << "Leg #" << leg_index << ": Pitch=" << EULER_PITCH(ik_meshes[0]->get_euler());
             if(r != --ik_legs.end()) {
                 ss << ", ";
             }
@@ -548,7 +548,7 @@ void onMouse(int button, int state, int x, int y)
         prev_mouse_coord.y = y;
         if(button == GLUT_LEFT_BUTTON) {
             left_mouse_down = true;
-            prev_orient = orient;
+            prev_euler = euler;
         }
         if(button == GLUT_RIGHT_BUTTON) {
             right_mouse_down = true;
@@ -570,13 +570,13 @@ void onMotion(int x, int y)
         mouse_drag = glm::vec2(x, y) - prev_mouse_coord;
     }
     if(left_mouse_down) {
-        orient = prev_orient + glm::vec3(0, mouse_drag.y * ORIENT_PITCH(orbit_speed), mouse_drag.x * ORIENT_YAW(orbit_speed));
-        camera->orbit(orient, orbit_radius);
+        euler = prev_euler + glm::vec3(0, mouse_drag.y * EULER_PITCH(orbit_speed), mouse_drag.x * EULER_YAW(orbit_speed));
+        camera->orbit(euler, orbit_radius);
     }
     if(right_mouse_down) {
         if(camera->get_projection_mode() == vt::Camera::PROJECTION_MODE_PERSPECTIVE) {
             orbit_radius = prev_orbit_radius + mouse_drag.y * dolly_speed;
-            camera->orbit(orient, orbit_radius);
+            camera->orbit(euler, orbit_radius);
         } else if (camera->get_projection_mode() == vt::Camera::PROJECTION_MODE_ORTHO) {
             zoom = prev_zoom + mouse_drag.y * ortho_dolly_speed;
             camera->set_zoom(&zoom);

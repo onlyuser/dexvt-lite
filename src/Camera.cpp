@@ -48,21 +48,21 @@ Camera::~Camera()
 void Camera::set_origin(glm::vec3 origin)
 {
     m_origin = origin;
-    m_orient = offset_to_orient(m_target - m_origin);
+    m_euler  = offset_to_euler(m_target - m_origin);
     mark_dirty_transform();
 }
 
-void Camera::set_orient(glm::vec3 orient)
+void Camera::set_euler(glm::vec3 euler)
 {
-    m_orient = orient;
-    m_target = m_origin + orient_to_offset(orient);
+    m_euler  = euler;
+    m_target = m_origin + euler_to_offset(euler);
     mark_dirty_transform();
 }
 
 void Camera::set_target(glm::vec3 target)
 {
     m_target = target;
-    m_orient = offset_to_orient(m_target - m_origin);
+    m_euler  = offset_to_euler(m_target - m_origin);
     mark_dirty_transform();
 }
 
@@ -75,29 +75,29 @@ void Camera::move(glm::vec3 origin, glm::vec3 target)
 {
     m_origin = origin;
     m_target = target;
-    m_orient = offset_to_orient(m_target - m_origin);
+    m_euler  = offset_to_euler(m_target - m_origin);
     mark_dirty_transform();
 }
 
-void Camera::orbit(glm::vec3 &orient, float &radius)
+void Camera::orbit(glm::vec3 &euler, float &radius)
 {
-    if(ORIENT_PITCH(orient) > MAX_PITCH) {
-        ORIENT_PITCH(orient) = MAX_PITCH;
+    if(EULER_PITCH(euler) > MAX_PITCH) {
+        EULER_PITCH(euler) = MAX_PITCH;
     }
-    if(ORIENT_PITCH(orient) < MIN_PITCH) {
-        ORIENT_PITCH(orient) = MIN_PITCH;
+    if(EULER_PITCH(euler) < MIN_PITCH) {
+        EULER_PITCH(euler) = MIN_PITCH;
     }
-    if(ORIENT_YAW(orient) > 180) {
-        ORIENT_YAW(orient) -= 360;
+    if(EULER_YAW(euler) > 180) {
+        EULER_YAW(euler) -= 360;
     }
-    if(ORIENT_YAW(orient) < -180) {
-        ORIENT_YAW(orient) += 360;
+    if(EULER_YAW(euler) < -180) {
+        EULER_YAW(euler) += 360;
     }
     if(radius < 0) {
         radius = 0;
     }
-    m_orient = orient;
-    m_origin = m_target + orient_to_offset(orient) * radius;
+    m_euler  = euler;
+    m_origin = m_target + euler_to_offset(euler) * radius;
     mark_dirty_transform();
 }
 
@@ -196,7 +196,7 @@ void Camera::update_projection_transform()
 void Camera::update_transform()
 {
     glm::vec3 up_direction;
-    orient_to_offset(m_orient, &up_direction);
+    euler_to_offset(m_euler, &up_direction);
     m_transform = glm::lookAt(m_origin, m_target, up_direction);
 }
 

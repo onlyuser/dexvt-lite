@@ -44,7 +44,7 @@ public:
     virtual ~Camera();
 
     void set_origin(glm::vec3 origin);
-    void set_orient(glm::vec3 orient);
+    void set_euler(glm::vec3 euler);
 
     const glm::vec3 get_target() const
     {
@@ -55,7 +55,7 @@ public:
     const glm::vec3 get_dir() const;
 
     void move(glm::vec3 origin, glm::vec3 target = glm::vec3(0));
-    void orbit(glm::vec3 &orient, float &radius);
+    void orbit(glm::vec3 &euler, float &radius);
 
     float get_fov() const
     {

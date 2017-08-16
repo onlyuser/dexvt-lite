@@ -24,15 +24,15 @@ public:
 
     TransformObject(std::string name,
                     glm::vec3   origin = glm::vec3(0),
-                    glm::vec3   orient = glm::vec3(0),
+                    glm::vec3   euler  = glm::vec3(0),
                     glm::vec3   scale  = glm::vec3(1));
     virtual ~TransformObject();
 
     // basic features
     const glm::vec3 &get_origin() const { return m_origin; }
     void set_origin(glm::vec3 origin);
-    const glm::vec3 &get_orient() const { return m_orient; }
-    void set_orient(glm::vec3 orient);
+    const glm::vec3 &get_euler() const { return m_euler; }
+    void set_euler(glm::vec3 euler);
     const glm::vec3 &get_scale() const { return m_scale; }
     void set_scale(glm::vec3 scale);
     void reset_transform();
@@ -83,12 +83,12 @@ public:
     // basic features
     const glm::mat4 &get_transform(bool trace_down = true);
     const glm::mat4 &get_normal_transform();
-    glm::mat4 get_local_orient_transform() const;
+    glm::mat4 get_local_euler_transform() const;
 
 protected:
     // basic features
     glm::vec3 m_origin;
-    glm::vec3 m_orient;
+    glm::vec3 m_euler;
     glm::vec3 m_scale;
     glm::mat4 m_transform;
     glm::mat4 m_normal_transform;

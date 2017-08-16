@@ -25,92 +25,92 @@ void print_bitmap_string(void* font, const char* s)
     }
 }
 
-glm::vec3 orient_to_offset(glm::vec3  orient,
-                           glm::vec3* up_direction) // out
+glm::vec3 euler_to_offset(glm::vec3  euler,
+                          glm::vec3* up_direction) // out
 {
     if(up_direction) {
-        glm::mat4 orient_transform = GLM_EULER_ANGLE(ORIENT_YAW(orient), ORIENT_PITCH(orient), ORIENT_ROLL(orient));
-        *up_direction = glm::vec3(orient_transform * glm::vec4(VEC_UP, 1));
-        return glm::vec3(orient_transform * glm::vec4(VEC_FORWARD, 1));
+        glm::mat4 euler_transform = GLM_EULER_ANGLE(EULER_YAW(euler), EULER_PITCH(euler), EULER_ROLL(euler));
+        *up_direction = glm::vec3(euler_transform * glm::vec4(VEC_UP, 1));
+        return glm::vec3(euler_transform * glm::vec4(VEC_FORWARD, 1));
     }
-    glm::mat4 orient_transform_sans_roll = GLM_EULER_ANGLE_SANS_ROLL(ORIENT_YAW(orient), ORIENT_PITCH(orient));
-    return glm::vec3(orient_transform_sans_roll * glm::vec4(VEC_FORWARD, 1));
+    glm::mat4 euler_transform_sans_roll = GLM_EULER_ANGLE_SANS_ROLL(EULER_YAW(euler), EULER_PITCH(euler));
+    return glm::vec3(euler_transform_sans_roll * glm::vec4(VEC_FORWARD, 1));
 }
 
-glm::vec3 orient_to_offset(glm::vec3 orient)
+glm::vec3 euler_to_offset(glm::vec3 euler)
 {
-    return orient_to_offset(orient, NULL);
+    return euler_to_offset(euler, NULL);
 }
 
-glm::vec3 offset_to_orient(glm::vec3  offset,
-                           glm::vec3* up_direction) // in
+glm::vec3 offset_to_euler(glm::vec3  offset,
+                          glm::vec3* up_direction) // in
 {
-    glm::vec3 orient;
+    glm::vec3 euler;
 
     // yaw
     if(static_cast<float>(fabs(offset.x)) < EPSILON && static_cast<float>(fabs(offset.z)) < EPSILON) {
-        ORIENT_PITCH(orient) = 90;
+        EULER_PITCH(euler) = 90;
         if(up_direction) {
             glm::vec3 flattened_offset = -glm::vec3(up_direction->x, 0, up_direction->z);
-            ORIENT_YAW(orient) = glm::degrees(glm::angle(glm::normalize(flattened_offset), VEC_FORWARD));
+            EULER_YAW(euler) = glm::degrees(glm::angle(glm::normalize(flattened_offset), VEC_FORWARD));
             if(flattened_offset.x < 0) {
-                ORIENT_YAW(orient) = -fabs(ORIENT_YAW(orient));
+                EULER_YAW(euler) = -fabs(EULER_YAW(euler));
             }
         }
     } else {
         glm::vec3 flattened_offset = glm::normalize(glm::vec3(offset.x, 0, offset.z));
-        ORIENT_PITCH(orient) = glm::degrees(glm::angle(flattened_offset, glm::normalize(offset))),
-        ORIENT_YAW(orient)   = glm::degrees(glm::angle(flattened_offset, VEC_FORWARD));
+        EULER_PITCH(euler) = glm::degrees(glm::angle(flattened_offset, glm::normalize(offset))),
+        EULER_YAW(euler)   = glm::degrees(glm::angle(flattened_offset, VEC_FORWARD));
         if(flattened_offset.x < 0) {
-            ORIENT_YAW(orient) = -fabs(ORIENT_YAW(orient));
+            EULER_YAW(euler) = -fabs(EULER_YAW(euler));
         }
     }
 
     // pitch
     if(offset.y > 0) {
-        ORIENT_PITCH(orient) = -fabs(ORIENT_PITCH(orient));
+        EULER_PITCH(euler) = -fabs(EULER_PITCH(euler));
     }
 
     // roll
     if(up_direction) {
-        glm::mat4 orient_transform_sans_roll = GLM_EULER_ANGLE_SANS_ROLL(ORIENT_YAW(orient), ORIENT_PITCH(orient));
-        glm::vec3 local_up_direction_roll_component = glm::vec3(glm::inverse(orient_transform_sans_roll) *
+        glm::mat4 euler_transform_sans_roll = GLM_EULER_ANGLE_SANS_ROLL(EULER_YAW(euler), EULER_PITCH(euler));
+        glm::vec3 local_up_direction_roll_component = glm::vec3(glm::inverse(euler_transform_sans_roll) *
                                                       glm::vec4(*up_direction, 1));
-        ORIENT_ROLL(orient) = glm::degrees(glm::angle(glm::normalize(local_up_direction_roll_component), VEC_UP));
+        EULER_ROLL(euler) = glm::degrees(glm::angle(glm::normalize(local_up_direction_roll_component), VEC_UP));
         if(local_up_direction_roll_component.x > 0) {
-            ORIENT_ROLL(orient) = -fabs(ORIENT_ROLL(orient));
+            EULER_ROLL(euler) = -fabs(EULER_ROLL(euler));
         }
     }
 
-    return orient;
+    return euler;
 }
 
-glm::vec3 offset_to_orient(glm::vec3 offset)
+glm::vec3 offset_to_euler(glm::vec3 offset)
 {
-    return offset_to_orient(offset, NULL);
+    return offset_to_euler(offset, NULL);
 }
 
-glm::vec3 orient_modulo(glm::vec3 orient)
+glm::vec3 euler_modulo(glm::vec3 euler)
 {
-    if(fabs(ORIENT_YAW(orient)) > 180) {
+    if(fabs(EULER_YAW(euler)) > 180) {
         // yaw:  181 ==> -179
         // yaw: -181 ==>  179
-        ORIENT_YAW(orient) = -SIGN(ORIENT_YAW(orient)) * (360 - fabs(ORIENT_YAW(orient)));
+        EULER_YAW(euler) = -SIGN(EULER_YAW(euler)) * (360 - fabs(EULER_YAW(euler)));
     }
-    if(fabs(ORIENT_PITCH(orient)) > 90) {
+    if(fabs(EULER_PITCH(euler)) > 90) {
         // pitch:  91 ==>  89
         // pitch: -91 ==> -89
-        ORIENT_PITCH(orient) = SIGN(ORIENT_PITCH(orient)) * (180 - fabs(ORIENT_PITCH(orient)));
+        EULER_PITCH(euler) = SIGN(EULER_PITCH(euler)) * (180 - fabs(EULER_PITCH(euler)));
         // yaw:  179 ==> -1
         // yaw: -179 ==>  1
-        ORIENT_YAW(orient) = -SIGN(ORIENT_YAW(orient)) * (180 - fabs(ORIENT_YAW(orient)));
+        EULER_YAW(euler) = -SIGN(EULER_YAW(euler)) * (180 - fabs(EULER_YAW(euler)));
     }
-    if(fabs(ORIENT_ROLL(orient)) > 180) {
+    if(fabs(EULER_ROLL(euler)) > 180) {
         // roll:  181 ==> -179
         // roll: -181 ==>  179
-        ORIENT_ROLL(orient) = -SIGN(ORIENT_ROLL(orient)) * (360 - fabs(ORIENT_YAW(orient)));
+        EULER_ROLL(euler) = -SIGN(EULER_ROLL(euler)) * (360 - fabs(EULER_YAW(euler)));
     }
-    return orient;
+    return euler;
 }
 
 float angle_modulo(float angle)

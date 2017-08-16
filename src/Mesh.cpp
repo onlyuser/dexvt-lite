@@ -488,7 +488,7 @@ void Mesh::center_axis(align_t align)
 
 void Mesh::update_transform()
 {
-    m_transform = glm::translate(glm::mat4(1), m_origin) * get_local_orient_transform() * glm::scale(glm::mat4(1), m_scale);
+    m_transform = glm::translate(glm::mat4(1), m_origin) * get_local_euler_transform() * glm::scale(glm::mat4(1), m_scale);
 }
 
 MeshBase* alloc_mesh_base(std::string name, size_t num_vertex, size_t num_tri)

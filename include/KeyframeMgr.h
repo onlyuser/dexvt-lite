@@ -34,7 +34,7 @@ class MotionTrack
 public:
     enum motion_type_t {
         MOTION_TYPE_ORIGIN = 1,
-        MOTION_TYPE_ORIENT = 2,
+        MOTION_TYPE_EULER  = 2,
         MOTION_TYPE_SCALE  = 4
     };
 
@@ -108,13 +108,13 @@ public:
     bool erase_keyframe(long object_id, unsigned char motion_types, int frame_number = -1);
     bool export_keyframe_values_for_object(long                    object_id,
                                            std::vector<glm::vec3>* origin_keyframe_values,
-                                           std::vector<glm::vec3>* orient_keyframe_values,
+                                           std::vector<glm::vec3>* euler_keyframe_values,
                                            std::vector<glm::vec3>* scale_keyframe_values,
                                            bool                    include_control_points = false);
     bool interpolate_frame_value_for_object(long       object_id,
                                             int        frame_number,
                                             glm::vec3* origin,
-                                            glm::vec3* orient,
+                                            glm::vec3* euler,
                                             glm::vec3* scale,
                                             bool       is_smooth = false) const;
 
@@ -123,7 +123,7 @@ public:
     void update_control_points(float control_point_scale);
     bool export_frame_values_for_object(long                    object_id,
                                         std::vector<glm::vec3>* origin_frame_values,
-                                        std::vector<glm::vec3>* orient_frame_values,
+                                        std::vector<glm::vec3>* euler_frame_values,
                                         std::vector<glm::vec3>* scale_frame_values,
                                         bool                    is_smooth = false) const;
 

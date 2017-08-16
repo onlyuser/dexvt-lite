@@ -39,9 +39,9 @@
     #define GLM_EULER_ANGLE_SANS_ROLL(y, p) glm::eulerAngleYX((y), (p))
 #endif
 
-#define ORIENT_ROLL(v)  v[0]
-#define ORIENT_PITCH(v) v[1]
-#define ORIENT_YAW(v)   v[2]
+#define EULER_ROLL(v)  v[0]
+#define EULER_PITCH(v) v[1]
+#define EULER_YAW(v)   v[2]
 
 #define VEC_LEFT    glm::vec3(1, 0, 0)
 #define VEC_UP      glm::vec3(0, 1, 0)
@@ -52,13 +52,13 @@ namespace vt {
 class Mesh;
 
 void print_bitmap_string(void* font, const char* s);
-glm::vec3 orient_to_offset(glm::vec3  orient,
-                           glm::vec3* up_direction); // out
-glm::vec3 orient_to_offset(glm::vec3 orient);
-glm::vec3 offset_to_orient(glm::vec3  offset,
-                           glm::vec3* up_direction); // in
-glm::vec3 offset_to_orient(glm::vec3 offset);
-glm::vec3 orient_modulo(glm::vec3 orient);
+glm::vec3 euler_to_offset(glm::vec3  euler,
+                          glm::vec3* up_direction); // out
+glm::vec3 euler_to_offset(glm::vec3 euler);
+glm::vec3 offset_to_euler(glm::vec3  offset,
+                          glm::vec3* up_direction); // in
+glm::vec3 offset_to_euler(glm::vec3 offset);
+glm::vec3 euler_modulo(glm::vec3 euler);
 float angle_modulo(float angle);
 float angle_distance(float angle1, float angle2);
 glm::vec3 nearest_point_on_plane(glm::vec3 plane_origin, glm::vec3 plane_normal, glm::vec3 from_point);

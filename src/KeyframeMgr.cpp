@@ -196,14 +196,14 @@ bool MotionTrack::update_control_points(float control_point_scale)
 ObjectScript::ObjectScript()
 {
     m_motion_tracks[MotionTrack::MOTION_TYPE_ORIGIN] = new MotionTrack(MotionTrack::MOTION_TYPE_ORIGIN);
-    m_motion_tracks[MotionTrack::MOTION_TYPE_ORIENT] = new MotionTrack(MotionTrack::MOTION_TYPE_ORIENT);
+    m_motion_tracks[MotionTrack::MOTION_TYPE_EULER]  = new MotionTrack(MotionTrack::MOTION_TYPE_EULER);
     m_motion_tracks[MotionTrack::MOTION_TYPE_SCALE]  = new MotionTrack(MotionTrack::MOTION_TYPE_SCALE);
 }
 
 ObjectScript::~ObjectScript()
 {
     delete m_motion_tracks[MotionTrack::MOTION_TYPE_ORIGIN];
-    delete m_motion_tracks[MotionTrack::MOTION_TYPE_ORIENT];
+    delete m_motion_tracks[MotionTrack::MOTION_TYPE_EULER];
     delete m_motion_tracks[MotionTrack::MOTION_TYPE_SCALE];
 }
 
@@ -217,8 +217,8 @@ void ObjectScript::erase_keyframe(unsigned char motion_types, int frame_number)
     if(motion_types & MotionTrack::MOTION_TYPE_ORIGIN) {
         m_motion_tracks[MotionTrack::MOTION_TYPE_ORIGIN]->erase_keyframe(frame_number);
     }
-    if(motion_types & MotionTrack::MOTION_TYPE_ORIENT) {
-        m_motion_tracks[MotionTrack::MOTION_TYPE_ORIENT]->erase_keyframe(frame_number);
+    if(motion_types & MotionTrack::MOTION_TYPE_EULER) {
+        m_motion_tracks[MotionTrack::MOTION_TYPE_EULER]->erase_keyframe(frame_number);
     }
     if(motion_types & MotionTrack::MOTION_TYPE_SCALE) {
         m_motion_tracks[MotionTrack::MOTION_TYPE_SCALE]->erase_keyframe(frame_number);
@@ -351,11 +351,11 @@ bool KeyframeMgr::erase_keyframe(long object_id, unsigned char motion_types, int
 
 bool KeyframeMgr::export_keyframe_values_for_object(long                    object_id,
                                                     std::vector<glm::vec3>* origin_keyframe_values,
-                                                    std::vector<glm::vec3>* orient_keyframe_values,
+                                                    std::vector<glm::vec3>* euler_keyframe_values,
                                                     std::vector<glm::vec3>* scale_keyframe_values,
                                                     bool                    include_control_points)
 {
-    if(!origin_keyframe_values && !orient_keyframe_values && !scale_keyframe_values) {
+    if(!origin_keyframe_values && !euler_keyframe_values && !scale_keyframe_values) {
         return false;
     }
     script_t::const_iterator p = m_script.find(object_id);
@@ -369,8 +369,8 @@ bool KeyframeMgr::export_keyframe_values_for_object(long                    obje
     if(origin_keyframe_values) {
         object_script->export_keyframe_values_for_motion_track(MotionTrack::MOTION_TYPE_ORIGIN, origin_keyframe_values, include_control_points);
     }
-    if(orient_keyframe_values) {
-        object_script->export_keyframe_values_for_motion_track(MotionTrack::MOTION_TYPE_ORIENT, orient_keyframe_values, include_control_points);
+    if(euler_keyframe_values) {
+        object_script->export_keyframe_values_for_motion_track(MotionTrack::MOTION_TYPE_EULER, euler_keyframe_values, include_control_points);
     }
     if(scale_keyframe_values) {
         object_script->export_keyframe_values_for_motion_track(MotionTrack::MOTION_TYPE_SCALE, scale_keyframe_values, include_control_points);
@@ -381,11 +381,11 @@ bool KeyframeMgr::export_keyframe_values_for_object(long                    obje
 bool KeyframeMgr::interpolate_frame_value_for_object(long       object_id,
                                                      int        frame_number,
                                                      glm::vec3* origin,
-                                                     glm::vec3* orient,
+                                                     glm::vec3* euler,
                                                      glm::vec3* scale,
                                                      bool       is_smooth) const
 {
-    if(!origin && !orient && !scale) {
+    if(!origin && !euler && !scale) {
         return false;
     }
     script_t::const_iterator p = m_script.find(object_id);
@@ -399,8 +399,8 @@ bool KeyframeMgr::interpolate_frame_value_for_object(long       object_id,
     if(origin) {
         object_script->interpolate_frame_value_for_motion_track(MotionTrack::MOTION_TYPE_ORIGIN, frame_number, origin, is_smooth);
     }
-    if(orient) {
-        object_script->interpolate_frame_value_for_motion_track(MotionTrack::MOTION_TYPE_ORIENT, frame_number, orient, is_smooth);
+    if(euler) {
+        object_script->interpolate_frame_value_for_motion_track(MotionTrack::MOTION_TYPE_EULER, frame_number, euler, is_smooth);
     }
     if(scale) {
         object_script->interpolate_frame_value_for_motion_track(MotionTrack::MOTION_TYPE_SCALE, frame_number, scale, is_smooth);
@@ -454,11 +454,11 @@ void KeyframeMgr::update_control_points(float control_point_scale)
 
 bool KeyframeMgr::export_frame_values_for_object(long                    object_id,
                                                  std::vector<glm::vec3>* origin_frame_values,
-                                                 std::vector<glm::vec3>* orient_frame_values,
+                                                 std::vector<glm::vec3>* euler_frame_values,
                                                  std::vector<glm::vec3>* scale_frame_values,
                                                  bool                    is_smooth) const
 {
-    if(!origin_frame_values && !orient_frame_values && !scale_frame_values) {
+    if(!origin_frame_values && !euler_frame_values && !scale_frame_values) {
         return false;
     }
     int start_frame_number = -1;
@@ -468,16 +468,16 @@ bool KeyframeMgr::export_frame_values_for_object(long                    object_
     }
     for(int frame_number = start_frame_number; frame_number != end_frame_number; frame_number++) {
         glm::vec3 origin;
-        glm::vec3 orient;
+        glm::vec3 euler;
         glm::vec3 scale;
-        if(!interpolate_frame_value_for_object(object_id, frame_number, &origin, &orient, &scale, is_smooth)) {
+        if(!interpolate_frame_value_for_object(object_id, frame_number, &origin, &euler, &scale, is_smooth)) {
             continue;
         }
         if(origin_frame_values) {
             origin_frame_values->push_back(origin);
         }
-        if(orient_frame_values) {
-            orient_frame_values->push_back(orient);
+        if(euler_frame_values) {
+            euler_frame_values->push_back(euler);
         }
         if(scale_frame_values) {
             scale_frame_values->push_back(scale);

@@ -73,7 +73,7 @@ vt::Texture *texture_skybox = NULL;
 
 bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
-glm::vec3 prev_orient, orient, orbit_speed = glm::vec3(0, -0.5, -0.5);
+glm::vec3 prev_euler, euler, orbit_speed = glm::vec3(0, -0.5, -0.5);
 float prev_orbit_radius = 0, orbit_radius = 8, dolly_speed = 0.1, light_distance = 4;
 bool show_bbox = false;
 bool show_fps = false;
@@ -128,7 +128,7 @@ static void create_linked_segments(vt::Scene*              scene,
         ss << name << "_" << i;
         vt::Mesh* mesh = vt::PrimitiveFactory::create_cylinder(ss.str(), PUMP_SIDES);
         mesh->center_axis();
-        mesh->set_orient(glm::vec3(0, 90, 0));
+        mesh->set_euler(glm::vec3(0, 90, 0));
         mesh->flatten();
         mesh->set_origin(glm::vec3(0, 0, 0));
         if(!prev_mesh) {
@@ -208,7 +208,7 @@ int init_resources()
 
     base = vt::PrimitiveFactory::create_cylinder("base", IK_LEG_COUNT * 0.5, IK_FOOTING_RADIUS, BODY_HEIGHT);
     //body->center_axis(vt::BBoxObject::ALIGN_CENTER);
-    base->set_orient(glm::vec3(0, 0, 360 / IK_LEG_COUNT));
+    base->set_euler(glm::vec3(0, 0, 360 / IK_LEG_COUNT));
     base->flatten();
     base->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
     base->set_origin(glm::vec3(0, -BODY_ELEVATION, 0));
@@ -232,10 +232,10 @@ int init_resources()
                                                                                 IK_SEGMENT_WIDTH);
         ik_leg->m_joint->center_axis();
         ik_leg->m_joint->link_parent(body);
-        ik_leg->m_joint->set_origin(vt::orient_to_offset(glm::vec3(0, 0, angles[from_index])) * static_cast<float>(IK_LEG_RADIUS));
+        ik_leg->m_joint->set_origin(vt::euler_to_offset(glm::vec3(0, 0, angles[from_index])) * static_cast<float>(IK_LEG_RADIUS));
         scene->add_mesh(ik_leg->m_joint);
 
-        ik_leg->m_target = vt::orient_to_offset(glm::vec3(0, 0, angles[to_index])) * static_cast<float>(IK_FOOTING_RADIUS) +
+        ik_leg->m_target = vt::euler_to_offset(glm::vec3(0, 0, angles[to_index])) * static_cast<float>(IK_FOOTING_RADIUS) +
                            glm::vec3(0, -BODY_ELEVATION, 0);
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
         std::stringstream ik_segment_name_ss;
@@ -306,7 +306,7 @@ void onTick()
         std::stringstream ss;
         ss << std::setprecision(2) << std::fixed << fps << " FPS, "
             << "Mouse: {" << mouse_drag.x << ", " << mouse_drag.y << "}, "
-            << "Yaw=" << ORIENT_YAW(orient) << ", Pitch=" << ORIENT_PITCH(orient) << ", Radius=" << orbit_radius << ", "
+            << "Yaw=" << EULER_YAW(euler) << ", Pitch=" << EULER_PITCH(euler) << ", Radius=" << orbit_radius << ", "
             << "Zoom=" << zoom;
         //ss << "Width=" << camera->get_width() << ", Width=" << camera->get_height();
         glutSetWindowTitle(ss.str().c_str());
@@ -316,31 +316,31 @@ void onTick()
     //    return;
     //}
     if(left_key) {
-        glm::vec3 body_orient = body->get_orient();
-        body->set_orient(glm::vec3(ORIENT_ROLL(body_orient),
-                                   ORIENT_PITCH(body_orient),
-                                   ORIENT_YAW(body_orient) - BODY_ANGLE_SPEED));
+        glm::vec3 body_euler = body->get_euler();
+        body->set_euler(glm::vec3(EULER_ROLL(body_euler),
+                                  EULER_PITCH(body_euler),
+                                  EULER_YAW(body_euler) - BODY_ANGLE_SPEED));
         user_input = true;
     }
     if(right_key) {
-        glm::vec3 body_orient = body->get_orient();
-        body->set_orient(glm::vec3(ORIENT_ROLL(body_orient),
-                                   ORIENT_PITCH(body_orient),
-                                   ORIENT_YAW(body_orient) + BODY_ANGLE_SPEED));
+        glm::vec3 body_euler = body->get_euler();
+        body->set_euler(glm::vec3(EULER_ROLL(body_euler),
+                                  EULER_PITCH(body_euler),
+                                  EULER_YAW(body_euler) + BODY_ANGLE_SPEED));
         user_input = true;
     }
     if(up_key) {
-        glm::vec3 body_orient = body->get_orient();
-        body->set_orient(glm::vec3(ORIENT_ROLL(body_orient),
-                                   ORIENT_PITCH(body_orient) - BODY_ANGLE_SPEED,
-                                   ORIENT_YAW(body_orient)));
+        glm::vec3 body_euler = body->get_euler();
+        body->set_euler(glm::vec3(EULER_ROLL(body_euler),
+                                  EULER_PITCH(body_euler) - BODY_ANGLE_SPEED,
+                                  EULER_YAW(body_euler)));
         user_input = true;
     }
     if(down_key) {
-        glm::vec3 body_orient = body->get_orient();
-        body->set_orient(glm::vec3(ORIENT_ROLL(body_orient),
-                                   ORIENT_PITCH(body_orient) + BODY_ANGLE_SPEED,
-                                   ORIENT_YAW(body_orient)));
+        glm::vec3 body_euler = body->get_euler();
+        body->set_euler(glm::vec3(EULER_ROLL(body_euler),
+                                  EULER_PITCH(body_euler) + BODY_ANGLE_SPEED,
+                                  EULER_YAW(body_euler)));
         user_input = true;
     }
     if(page_up_key) {
@@ -499,7 +499,7 @@ void onSpecial(int key, int x, int y)
         case GLUT_KEY_HOME: // target
             {
                 body->set_origin(glm::vec3(0));
-                body->set_orient(glm::vec3(0));
+                body->set_euler(glm::vec3(0));
                 user_input = true;
             }
             break;
@@ -555,7 +555,7 @@ void onMouse(int button, int state, int x, int y)
         prev_mouse_coord.y = y;
         if(button == GLUT_LEFT_BUTTON) {
             left_mouse_down = true;
-            prev_orient = orient;
+            prev_euler = euler;
         }
         if(button == GLUT_RIGHT_BUTTON) {
             right_mouse_down = true;
@@ -577,13 +577,13 @@ void onMotion(int x, int y)
         mouse_drag = glm::vec2(x, y) - prev_mouse_coord;
     }
     if(left_mouse_down) {
-        orient = prev_orient + glm::vec3(0, mouse_drag.y * ORIENT_PITCH(orbit_speed), mouse_drag.x * ORIENT_YAW(orbit_speed));
-        camera->orbit(orient, orbit_radius);
+        euler = prev_euler + glm::vec3(0, mouse_drag.y * EULER_PITCH(orbit_speed), mouse_drag.x * EULER_YAW(orbit_speed));
+        camera->orbit(euler, orbit_radius);
     }
     if(right_mouse_down) {
         if(camera->get_projection_mode() == vt::Camera::PROJECTION_MODE_PERSPECTIVE) {
             orbit_radius = prev_orbit_radius + mouse_drag.y * dolly_speed;
-            camera->orbit(orient, orbit_radius);
+            camera->orbit(euler, orbit_radius);
         } else if (camera->get_projection_mode() == vt::Camera::PROJECTION_MODE_ORTHO) {
             zoom = prev_zoom + mouse_drag.y * ortho_dolly_speed;
             camera->set_zoom(&zoom);

@@ -60,7 +60,7 @@ vt::Texture *texture_skybox = NULL;
 
 bool left_mouse_down = false, right_mouse_down = false;
 glm::vec2 prev_mouse_coord, mouse_drag;
-glm::vec3 prev_orient, orient, orbit_speed = glm::vec3(0, -0.5, -0.5);
+glm::vec3 prev_euler, euler, orbit_speed = glm::vec3(0, -0.5, -0.5);
 float prev_orbit_radius = 0, orbit_radius = 8, dolly_speed = 0.1, light_distance = 4;
 bool show_bbox = false;
 bool show_fps = false;
@@ -184,7 +184,7 @@ void onTick()
         std::stringstream ss;
         ss << std::setprecision(2) << std::fixed << fps << " FPS, "
             << "Mouse: {" << mouse_drag.x << ", " << mouse_drag.y << "}, "
-            << "Yaw=" << ORIENT_YAW(orient) << ", Pitch=" << ORIENT_PITCH(orient) << ", Radius=" << orbit_radius << ", "
+            << "Yaw=" << EULER_YAW(euler) << ", Pitch=" << EULER_PITCH(euler) << ", Radius=" << orbit_radius << ", "
             << "Zoom=" << zoom;
         //ss << "Width=" << camera->get_width() << ", Width=" << camera->get_height();
         glutSetWindowTitle(ss.str().c_str());
@@ -219,7 +219,7 @@ void onTick()
     }
     if(user_input) {
         std::stringstream ss;
-        ss << "Roll=" << ORIENT_YAW(dummy->get_orient()) << ", Pitch=" << ORIENT_PITCH(dummy->get_orient()) << ", Yaw=" << ORIENT_PITCH(dummy->get_orient());
+        ss << "Roll=" << EULER_YAW(dummy->get_euler()) << ", Pitch=" << EULER_PITCH(dummy->get_euler()) << ", Yaw=" << EULER_PITCH(dummy->get_euler());
         std::cout << "\r" << std::setw(80) << std::left << ss.str() << std::flush;
         user_input = false;
     }
@@ -332,7 +332,7 @@ void onSpecial(int key, int x, int y)
             light3->set_enabled(!light3->is_enabled());
             break;
         case GLUT_KEY_HOME:
-            dummy->set_orient(glm::vec3(0));
+            dummy->set_euler(glm::vec3(0));
             dummy->get_transform(true); // TODO: why is this necessary?
             user_input = true;
             break;
@@ -388,7 +388,7 @@ void onMouse(int button, int state, int x, int y)
         prev_mouse_coord.y = y;
         if(button == GLUT_LEFT_BUTTON) {
             left_mouse_down = true;
-            prev_orient = orient;
+            prev_euler = euler;
         }
         if(button == GLUT_RIGHT_BUTTON) {
             right_mouse_down = true;
@@ -410,13 +410,13 @@ void onMotion(int x, int y)
         mouse_drag = glm::vec2(x, y) - prev_mouse_coord;
     }
     if(left_mouse_down) {
-        orient = prev_orient + glm::vec3(0, mouse_drag.y * ORIENT_PITCH(orbit_speed), mouse_drag.x * ORIENT_YAW(orbit_speed));
-        camera->orbit(orient, orbit_radius);
+        euler = prev_euler + glm::vec3(0, mouse_drag.y * EULER_PITCH(orbit_speed), mouse_drag.x * EULER_YAW(orbit_speed));
+        camera->orbit(euler, orbit_radius);
     }
     if(right_mouse_down) {
         if(camera->get_projection_mode() == vt::Camera::PROJECTION_MODE_PERSPECTIVE) {
             orbit_radius = prev_orbit_radius + mouse_drag.y * dolly_speed;
-            camera->orbit(orient, orbit_radius);
+            camera->orbit(euler, orbit_radius);
         } else if (camera->get_projection_mode() == vt::Camera::PROJECTION_MODE_ORTHO) {
             zoom = prev_zoom + mouse_drag.y * ortho_dolly_speed;
             camera->set_zoom(&zoom);

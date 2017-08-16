@@ -12,11 +12,11 @@ namespace vt {
 
 TransformObject::TransformObject(std::string name,
                                  glm::vec3   origin,
-                                 glm::vec3   orient,
+                                 glm::vec3   euler,
                                  glm::vec3   scale)
     : NamedObject(name),
       m_origin(origin),
-      m_orient(orient),
+      m_euler(euler),
       m_scale(scale),
       m_joint_type(                     JOINT_TYPE_REVOLUTE),
       m_enable_joint_constraints(       glm::ivec3(0)),
@@ -40,9 +40,9 @@ void TransformObject::set_origin(glm::vec3 origin)
     mark_dirty_transform();
 }
 
-void TransformObject::set_orient(glm::vec3 orient)
+void TransformObject::set_euler(glm::vec3 euler)
 {
-    m_orient = orient;
+    m_euler = euler;
     apply_joint_constraints();
     mark_dirty_transform();
 }
@@ -56,7 +56,7 @@ void TransformObject::set_scale(glm::vec3 scale)
 void TransformObject::reset_transform()
 {
     m_origin = glm::vec3(0);
-    set_orient(glm::vec3(0));
+    set_euler(glm::vec3(0));
     m_scale  = glm::vec3(1);
     mark_dirty_transform();
 }
@@ -92,15 +92,15 @@ void TransformObject::apply_joint_constraints()
                 if(!m_enable_joint_constraints[i]) {
                     continue;
                 }
-                if(angle_distance(m_orient[i], m_joint_constraints_center[i]) > m_joint_constraints_max_deviation[i]) {
+                if(angle_distance(m_euler[i], m_joint_constraints_center[i]) > m_joint_constraints_max_deviation[i]) {
                     float min_value = m_joint_constraints_center[i] - m_joint_constraints_max_deviation[i];
                     float max_value = m_joint_constraints_center[i] + m_joint_constraints_max_deviation[i];
-                    float distance_to_lower_bound = angle_distance(m_orient[i], min_value);
-                    float distance_to_upper_bound = angle_distance(m_orient[i], max_value);
+                    float distance_to_lower_bound = angle_distance(m_euler[i], min_value);
+                    float distance_to_upper_bound = angle_distance(m_euler[i], max_value);
                     if(distance_to_lower_bound < distance_to_upper_bound) {
-                        m_orient[i] = min_value;
+                        m_euler[i] = min_value;
                     } else {
-                        m_orient[i] = max_value;
+                        m_euler[i] = max_value;
                     }
                 }
             }
@@ -212,7 +212,7 @@ void TransformObject::unlink_children()
 
 void TransformObject::point_at_local(glm::vec3 local_target, glm::vec3* up_direction)
 {
-    set_orient(offset_to_orient(local_target, up_direction));
+    set_euler(offset_to_euler(local_target, up_direction));
 }
 
 void TransformObject::point_at(glm::vec3 target, glm::vec3* up_direction)
@@ -294,9 +294,9 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
             glm::mat4 local_arc_rotate_transform = GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot_dir);
     #if 1
             // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
-            glm::mat4 new_current_segment_orient_transform = local_arc_rotate_transform * current_segment->get_local_orient_transform();
-            glm::vec3 new_current_segment_heading          = glm::vec3(new_current_segment_orient_transform * glm::vec4(VEC_FORWARD, 1));
-            glm::vec3 new_current_segment_up_direction     = glm::vec3(new_current_segment_orient_transform * glm::vec4(VEC_UP, 1));
+            glm::mat4 new_current_segment_euler_transform = local_arc_rotate_transform * current_segment->get_local_euler_transform();
+            glm::vec3 new_current_segment_heading         = glm::vec3(new_current_segment_euler_transform * glm::vec4(VEC_FORWARD, 1));
+            glm::vec3 new_current_segment_up_direction    = glm::vec3(new_current_segment_euler_transform * glm::vec4(VEC_UP, 1));
             current_segment->point_at_local(new_current_segment_heading, &new_current_segment_up_direction);
 
             // update guide wires
@@ -317,18 +317,18 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
         #endif
     #else
             // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
-            current_segment->point_at_local(glm::vec3(local_arc_rotate_transform * glm::vec4(orient_to_offset(current_segment->get_orient()), 1)));
+            current_segment->point_at_local(glm::vec3(local_arc_rotate_transform * glm::vec4(euler_to_offset(current_segment->get_euler()), 1)));
     #endif
             sum_angle += angle_delta;
 #else
             // attempt #1 -- do rotations in Euler coordinates (poor man's ik)
-            glm::vec3 local_target_orient           = offset_to_orient(current_segment->from_origin_in_parent_system(tmp_target));
-            glm::vec3 local_end_effector_tip_orient = offset_to_orient(current_segment->from_origin_in_parent_system(end_effector_tip));
-            current_segment->set_orient(orient_modulo(current_segment->get_orient() + orient_modulo(local_target_orient - local_end_effector_tip_orient)));
+            glm::vec3 local_target_euler           = offset_to_euler(current_segment->from_origin_in_parent_system(tmp_target));
+            glm::vec3 local_end_effector_tip_euler = offset_to_euler(current_segment->from_origin_in_parent_system(end_effector_tip));
+            current_segment->set_euler(euler_modulo(current_segment->get_euler() + euler_modulo(local_target_euler - local_end_effector_tip_euler)));
             sum_angle += accept_avg_angle_distance; // to avoid convergence
 #endif
 #ifdef DEBUG
-            std::cout << "NAME: " << current_segment->get_name() << ", ORIENT: " << glm::to_string(current_segment->get_orient()) << std::endl;
+            std::cout << "NAME: " << current_segment->get_name() << ", EULER: " << glm::to_string(current_segment->get_euler()) << std::endl;
 #endif
             segment_count++;
         }
@@ -356,13 +356,13 @@ void TransformObject::update_boid(glm::vec3 target,
     glm::mat4 local_arc_rotate_transform = GLM_ROTATE(glm::mat4(1), -angle_delta * ((glm::distance(target, m_origin) < avoid_radius) ? -1 : 1), local_arc_pivot_dir);
 #if 1
     // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
-    glm::mat4 new_current_segment_orient_transform = local_arc_rotate_transform * get_local_orient_transform();
-    glm::vec3 new_current_segment_heading          = glm::vec3(new_current_segment_orient_transform * glm::vec4(VEC_FORWARD, 1));
-    glm::vec3 new_current_segment_up_direction     = glm::vec3(new_current_segment_orient_transform * glm::vec4(VEC_UP, 1));
+    glm::mat4 new_current_segment_euler_transform = local_arc_rotate_transform * get_local_euler_transform();
+    glm::vec3 new_current_segment_heading         = glm::vec3(new_current_segment_euler_transform * glm::vec4(VEC_FORWARD, 1));
+    glm::vec3 new_current_segment_up_direction    = glm::vec3(new_current_segment_euler_transform * glm::vec4(VEC_UP, 1));
     point_at_local(new_current_segment_heading, &new_current_segment_up_direction);
 #else
     // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
-    point_at_local(glm::vec3(local_arc_rotate_transform * glm::vec4(orient_to_offset(get_orient()), 1)));
+    point_at_local(glm::vec3(local_arc_rotate_transform * glm::vec4(euler_to_offset(get_euler()), 1)));
 #endif
     set_origin(in_abs_system(VEC_FORWARD * forward_speed));
 }
@@ -392,9 +392,9 @@ const glm::mat4 &TransformObject::get_normal_transform()
     return m_normal_transform;
 }
 
-glm::mat4 TransformObject::get_local_orient_transform() const
+glm::mat4 TransformObject::get_local_euler_transform() const
 {
-    return GLM_EULER_ANGLE(ORIENT_YAW(m_orient), ORIENT_PITCH(m_orient), ORIENT_ROLL(m_orient));
+    return GLM_EULER_ANGLE(EULER_YAW(m_euler), EULER_PITCH(m_euler), EULER_ROLL(m_euler));
 }
 
 void TransformObject::update_transform_hier()
