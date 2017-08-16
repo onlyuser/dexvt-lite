@@ -49,15 +49,20 @@ glm::vec3 offset_to_euler(glm::vec3  offset,
 
     // yaw
     if(static_cast<float>(fabs(offset.x)) < EPSILON && static_cast<float>(fabs(offset.z)) < EPSILON) {
+        // vertical
         EULER_PITCH(euler) = 90;
         if(up_direction) {
-            glm::vec3 flattened_offset = -glm::vec3(up_direction->x, 0, up_direction->z);
+            glm::vec3 flattened_offset = glm::vec3(up_direction->x, 0, up_direction->z);
+            if((offset.y > 0) == (up_direction->y > 0)) {
+                flattened_offset = -flattened_offset;
+            }
             EULER_YAW(euler) = glm::degrees(glm::angle(glm::normalize(flattened_offset), VEC_FORWARD));
             if(flattened_offset.x < 0) {
                 EULER_YAW(euler) = -fabs(EULER_YAW(euler));
             }
         }
     } else {
+        // non-vertical
         glm::vec3 flattened_offset = glm::normalize(glm::vec3(offset.x, 0, offset.z));
         EULER_PITCH(euler) = glm::degrees(glm::angle(flattened_offset, glm::normalize(offset))),
         EULER_YAW(euler)   = glm::degrees(glm::angle(flattened_offset, VEC_FORWARD));

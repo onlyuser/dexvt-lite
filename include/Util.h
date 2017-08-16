@@ -49,8 +49,6 @@
 
 namespace vt {
 
-class Mesh;
-
 void print_bitmap_string(void* font, const char* s);
 glm::vec3 euler_to_offset(glm::vec3  euler,
                           glm::vec3* up_direction); // out
