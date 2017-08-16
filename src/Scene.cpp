@@ -5,7 +5,7 @@
 #include <Light.h>
 #include <Mesh.h>
 #include <Material.h>
-#include <OctTree.h>
+#include <Octree.h>
 #include <Texture.h>
 #include <Util.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -465,7 +465,7 @@ void Scene::render(bool                clear_canvas,
     }
 }
 
-void Scene::render_oct_tree(OctTree* node, glm::mat4 camera_transform) const
+void Scene::render_oct_tree(Octree* node, glm::mat4 camera_transform) const
 {
     const float normal_surface_distance = 0.05;
     const float bbox_line_width         = 1;
@@ -517,7 +517,7 @@ void Scene::render_oct_tree(OctTree* node, glm::mat4 camera_transform) const
     glDisable(GL_DEPTH_TEST);
 
     for(int i = 0; i < 8; i++) {
-        OctTree* child_node = node->get_node(i);
+        Octree* child_node = node->get_node(i);
         if(!child_node) {
             continue;
         }

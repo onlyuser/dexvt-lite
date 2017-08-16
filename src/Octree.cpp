@@ -1,13 +1,13 @@
-#include <OctTree.h>
+#include <Octree.h>
 #include "memory.h"
 
 namespace vt {
 
-OctTree::OctTree(glm::vec3 origin,
+Octree::Octree(glm::vec3 origin,
                  glm::vec3 dim,
                  int       max_depth,
                  int       depth,
-                 OctTree*  parent)
+                 Octree*  parent)
     : m_origin(origin),
       m_dim(dim),
       m_center(origin + dim * 0.5f),
@@ -26,7 +26,7 @@ OctTree::OctTree(glm::vec3 origin,
                 glm::vec3 node_origin = origin + glm::vec3(x_index * node_dim.x,
                                                            y_index * node_dim.y,
                                                            z_index * node_dim.z);
-                m_nodes[x_index * 4 + y_index * 2 + z_index] = new OctTree(node_origin,
+                m_nodes[x_index * 4 + y_index * 2 + z_index] = new Octree(node_origin,
                                                                            node_dim,
                                                                            max_depth,
                                                                            depth + 1,
@@ -36,14 +36,14 @@ OctTree::OctTree(glm::vec3 origin,
     }
 }
 
-OctTree::~OctTree()
+Octree::~Octree()
 {
     for(int i = 0; i < 8; i++) {
         delete m_nodes[i];
     }
 }
 
-bool OctTree::encloses(glm::vec3 pos) const
+bool Octree::encloses(glm::vec3 pos) const
 {
     glm::vec3 min = m_origin;
     glm::vec3 max = m_origin + m_dim;
@@ -52,7 +52,7 @@ bool OctTree::encloses(glm::vec3 pos) const
            pos.z >= min.z && pos.z < max.z;
 }
 
-const OctTree* OctTree::downtrace_leaf_enclosing(glm::vec3 pos) const
+const Octree* Octree::downtrace_leaf_enclosing(glm::vec3 pos) const
 {
     if(m_depth + 1 == m_max_depth) {
         return this;
@@ -63,12 +63,12 @@ const OctTree* OctTree::downtrace_leaf_enclosing(glm::vec3 pos) const
     return m_nodes[x_index * 4 + y_index * 2 + z_index]->downtrace_leaf_enclosing(pos);
 }
 
-OctTree* OctTree::uptrace_parent_enclosing(glm::vec3 pos) const
+Octree* Octree::uptrace_parent_enclosing(glm::vec3 pos) const
 {
     return NULL;
 }
 
-bool OctTree::add_object(long id, glm::vec3* pos)
+bool Octree::add_object(long id, glm::vec3* pos)
 {
     std::map<long, glm::vec3*>::iterator p = m_objects.find(id);
     if(p != m_objects.end()) {
@@ -78,12 +78,12 @@ bool OctTree::add_object(long id, glm::vec3* pos)
     return true;
 }
 
-int OctTree::find_k_nearest(int k, glm::vec3 pos, std::vector<long>* k_nearest) const
+int Octree::find_k_nearest(int k, glm::vec3 pos, std::vector<long>* k_nearest) const
 {
     return 0;
 }
 
-void OctTree::OctTree::update()
+void Octree::Octree::update()
 {
 }
 

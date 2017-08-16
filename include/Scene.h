@@ -14,7 +14,7 @@ class Light;
 class Material;
 class Mesh;
 class Texture;
-class OctTree;
+class Octree;
 
 struct DebugObjectContext
 {
@@ -57,11 +57,11 @@ public:
         return m_camera;
     }
 
-    void set_oct_tree(OctTree* oct_tree)
+    void set_oct_tree(Octree* oct_tree)
     {
         m_oct_tree = oct_tree;
     }
-    OctTree* get_oct_tree() const
+    Octree* get_oct_tree() const
     {
         return m_oct_tree;
     }
@@ -138,7 +138,7 @@ public:
                 bool                render_overlay    = false,
                 bool                render_skybox     = true,
                 use_material_type_t use_material_type = use_material_type_t::USE_MESH_MATERIAL);
-    void render_oct_tree(OctTree* oct_tree, glm::mat4 camera_transform) const;
+    void render_oct_tree(Octree* oct_tree, glm::mat4 camera_transform) const;
     void render_lines_and_text(bool  draw_guide_wires,
                                bool  draw_paths,
                                bool  draw_axis,
@@ -151,7 +151,7 @@ public:
 
 private:
     Camera*     m_camera;
-    OctTree*    m_oct_tree;
+    Octree*    m_oct_tree;
     Mesh*       m_skybox;
     Mesh*       m_overlay;
     lights_t    m_lights;
