@@ -210,23 +210,35 @@ void TransformObject::unlink_children()
     }
 }
 
-void TransformObject::point_at_local(glm::vec3 local_target, glm::vec3* up_direction)
+void TransformObject::point_at_local(glm::vec3 local_target, glm::vec3* local_up_direction)
 {
-    set_euler(offset_to_euler(local_target, up_direction));
+    set_euler(offset_to_euler(local_target, local_up_direction));
 }
 
 void TransformObject::point_at(glm::vec3 target, glm::vec3* up_direction)
 {
-    point_at_local(from_origin_in_parent_system(target), up_direction);
+    assert(false);
+    //point_at_local(from_origin_in_parent_system(target), up_direction);
+}
+
+void TransformObject::rotate_local(glm::mat4 local_rotate_transform)
+{
+    glm::vec3 local_heading      = glm::vec3(local_rotate_transform * glm::vec4(VEC_FORWARD, 1));
+    glm::vec3 local_up_direction = glm::vec3(local_rotate_transform * glm::vec4(VEC_UP, 1));
+    point_at_local(local_heading, &local_up_direction);
+}
+
+void TransformObject::rotate(glm::mat4 rotate_transform)
+{
+    glm::vec3 abs_origin         = in_abs_system();
+    glm::vec3 local_heading      = from_origin_in_parent_system(abs_origin + glm::vec3(rotate_transform * glm::vec4(get_abs_heading(), 1)));
+    glm::vec3 local_up_direction = from_origin_in_parent_system(abs_origin + glm::vec3(rotate_transform * glm::vec4(get_abs_up_direction(), 1)));
+    point_at_local(local_heading, &local_up_direction);
 }
 
 void TransformObject::rotate(float angle_delta, glm::vec3 pivot)
 {
-    glm::mat4 rotate_transform       = GLM_ROTATE(glm::mat4(1), angle_delta, pivot);
-    glm::vec3 abs_origin             = in_abs_system();
-    glm::vec3 local_new_heading      = from_origin_in_parent_system(abs_origin + glm::vec3(rotate_transform * glm::vec4(get_abs_heading(), 1)));
-    glm::vec3 local_new_up_direction = from_origin_in_parent_system(abs_origin + glm::vec3(rotate_transform * glm::vec4(get_abs_up_direction(), 1)));
-    point_at_local(local_new_heading, &local_new_up_direction);
+    rotate(GLM_ROTATE(glm::mat4(1), angle_delta, pivot));
 }
 
 // http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/
@@ -294,10 +306,7 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
             glm::mat4 local_arc_rotate_transform = GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot_dir);
     #if 1
             // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
-            glm::mat4 new_current_segment_euler_transform = local_arc_rotate_transform * current_segment->get_local_euler_transform();
-            glm::vec3 new_current_segment_heading         = glm::vec3(new_current_segment_euler_transform * glm::vec4(VEC_FORWARD, 1));
-            glm::vec3 new_current_segment_up_direction    = glm::vec3(new_current_segment_euler_transform * glm::vec4(VEC_UP, 1));
-            current_segment->point_at_local(new_current_segment_heading, &new_current_segment_up_direction);
+            current_segment->rotate_local(local_arc_rotate_transform * current_segment->get_local_euler_transform());
 
             // update guide wires
             local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(tmp_target));
@@ -356,10 +365,7 @@ void TransformObject::update_boid(glm::vec3 target,
     glm::mat4 local_arc_rotate_transform = GLM_ROTATE(glm::mat4(1), -angle_delta * ((glm::distance(target, m_origin) < avoid_radius) ? -1 : 1), local_arc_pivot_dir);
 #if 1
     // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
-    glm::mat4 new_current_segment_euler_transform = local_arc_rotate_transform * get_local_euler_transform();
-    glm::vec3 new_current_segment_heading         = glm::vec3(new_current_segment_euler_transform * glm::vec4(VEC_FORWARD, 1));
-    glm::vec3 new_current_segment_up_direction    = glm::vec3(new_current_segment_euler_transform * glm::vec4(VEC_UP, 1));
-    point_at_local(new_current_segment_heading, &new_current_segment_up_direction);
+    rotate_local(local_arc_rotate_transform * get_local_euler_transform());
 #else
     // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
     point_at_local(glm::vec3(local_arc_rotate_transform * glm::vec4(euler_to_offset(get_euler()), 1)));

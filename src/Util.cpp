@@ -53,7 +53,7 @@ glm::vec3 offset_to_euler(glm::vec3  offset,
         EULER_PITCH(euler) = 90;
         if(up_direction) {
             glm::vec3 flattened_offset = glm::vec3(up_direction->x, 0, up_direction->z);
-            if((offset.y > 0) == (up_direction->y > 0)) {
+            if(SIGN(offset.y) == SIGN(up_direction->y)) {
                 flattened_offset = -flattened_offset;
             }
             EULER_YAW(euler) = glm::degrees(glm::angle(glm::normalize(flattened_offset), VEC_FORWARD));
