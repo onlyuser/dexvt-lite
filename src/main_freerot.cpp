@@ -219,7 +219,7 @@ void onTick()
     }
     if(user_input) {
         std::stringstream ss;
-        ss << "Roll=" << EULER_YAW(dummy->get_euler()) << ", Pitch=" << EULER_PITCH(dummy->get_euler()) << ", Yaw=" << EULER_PITCH(dummy->get_euler());
+        ss << "Roll=" << EULER_ROLL(dummy->get_euler()) << ", Pitch=" << EULER_PITCH(dummy->get_euler()) << ", Yaw=" << EULER_YAW(dummy->get_euler());
         std::cout << "\r" << std::setw(80) << std::left << ss.str() << std::flush;
         user_input = false;
     }
