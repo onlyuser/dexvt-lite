@@ -241,10 +241,10 @@ void TransformObject::rotate(float angle_delta, glm::vec3 pivot)
     rotate(GLM_ROTATE_TRANSFORM(glm::mat4(1), angle_delta, pivot));
 }
 
-void TransformObject::arcball(glm::vec3* local_arc_pivot_dir, float* angle_delta, glm::vec3 target, glm::vec3 reference_point)
+void TransformObject::arcball(glm::vec3* local_arc_pivot_dir, float* angle_delta, glm::vec3 abs_target, glm::vec3 abs_reference_point)
 {
-    glm::vec3 local_target_dir          = glm::normalize(from_origin_in_parent_system(target));
-    glm::vec3 local_reference_point_dir = glm::normalize(from_origin_in_parent_system(reference_point));
+    glm::vec3 local_target_dir          = glm::normalize(from_origin_in_parent_system(abs_target));
+    glm::vec3 local_reference_point_dir = glm::normalize(from_origin_in_parent_system(abs_reference_point));
     glm::vec3 local_arc_delta_dir       = glm::normalize(local_target_dir - local_reference_point_dir);
     glm::vec3 local_arc_midpoint_dir    = glm::normalize((local_target_dir + local_reference_point_dir) * 0.5f);
     if(local_arc_pivot_dir) {
@@ -285,6 +285,7 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
                 continue;
             }
 
+            // if exclusive pivot, project arcball input onto plane of free rotation
             if(current_segment->m_exclusive_pivot != -1) {
                 glm::vec3 plane_origin = current_segment->in_abs_system();
                 glm::vec3 plane_normal;
@@ -317,7 +318,7 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
             glm::mat4 local_arc_rotate_transform = GLM_ROTATE_TRANSFORM(glm::mat4(1), -angle_delta, local_arc_pivot_dir);
     #if 1
             // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
-            current_segment->set_local_rotation(local_arc_rotate_transform * current_segment->get_local_euler_transform());
+            current_segment->set_local_rotation(local_arc_rotate_transform * current_segment->get_local_normal_transform());
 
             // update guide wires (for debug only)
             glm::vec3 local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(tmp_target));
@@ -370,10 +371,11 @@ void TransformObject::update_boid(glm::vec3 target,
 {
     glm::vec3 local_arc_pivot_dir;
     arcball(&local_arc_pivot_dir, NULL, target, in_abs_system(VEC_FORWARD));
-    glm::mat4 local_arc_rotate_transform = GLM_ROTATE_TRANSFORM(glm::mat4(1), -angle_delta * ((glm::distance(target, m_origin) < avoid_radius) ? -1 : 1), local_arc_pivot_dir);
+    int fight_or_flee = (glm::distance(target, m_origin) < avoid_radius) ? -1 : 1;
+    glm::mat4 local_arc_rotate_transform = GLM_ROTATE_TRANSFORM(glm::mat4(1), -angle_delta * fight_or_flee, local_arc_pivot_dir);
 #if 1
     // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
-    set_local_rotation(local_arc_rotate_transform * get_local_euler_transform());
+    set_local_rotation(local_arc_rotate_transform * get_local_normal_transform());
 #else
     // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
     point_at_local(glm::vec3(local_arc_rotate_transform * glm::vec4(euler_to_offset(get_euler()), 1)));
@@ -406,7 +408,7 @@ const glm::mat4 &TransformObject::get_normal_transform()
     return m_normal_transform;
 }
 
-glm::mat4 TransformObject::get_local_euler_transform() const
+glm::mat4 TransformObject::get_local_normal_transform() const
 {
     return GLM_EULER_TRANSFORM(EULER_YAW(m_euler), EULER_PITCH(m_euler), EULER_ROLL(m_euler));
 }
