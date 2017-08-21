@@ -292,23 +292,19 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
                 switch(current_segment->m_exclusive_pivot) {
                     case 0:
                         // allow ONLY roll -- project onto XY plane
-                        plane_normal     = current_segment->get_abs_heading();
-                        tmp_target       = nearest_point_on_plane_from_point(plane_origin, plane_normal, tmp_target);
-                        end_effector_tip = nearest_point_on_plane_from_point(plane_origin, plane_normal, end_effector_tip);
+                        plane_normal = current_segment->get_abs_heading();
                         break;
                     case 1:
                         // allow ONLY pitch -- project onto YZ plane
-                        plane_normal     = current_segment->get_abs_left_direction();
-                        tmp_target       = nearest_point_on_plane_from_point(plane_origin, plane_normal, tmp_target);
-                        end_effector_tip = nearest_point_on_plane_from_point(plane_origin, plane_normal, end_effector_tip);
+                        plane_normal = current_segment->get_abs_left_direction();
                         break;
                     case 2:
                         // allow ONLY yaw -- project onto XZ plane
-                        plane_normal     = current_segment->get_abs_up_direction();
-                        tmp_target       = nearest_point_on_plane_from_point(plane_origin, plane_normal, tmp_target);
-                        end_effector_tip = nearest_point_on_plane_from_point(plane_origin, plane_normal, end_effector_tip);
+                        plane_normal = current_segment->get_abs_up_direction();
                         break;
                 }
+                tmp_target       = nearest_point_on_plane_from_point(plane_origin, plane_normal, tmp_target);
+                end_effector_tip = nearest_point_on_plane_from_point(plane_origin, plane_normal, end_effector_tip);
             }
 
 #if 1
