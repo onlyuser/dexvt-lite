@@ -29,11 +29,11 @@ glm::vec3 euler_to_offset(glm::vec3  euler,
                           glm::vec3* up_direction) // out
 {
     if(up_direction) {
-        glm::mat4 euler_transform = GLM_EULER_ANGLE(EULER_YAW(euler), EULER_PITCH(euler), EULER_ROLL(euler));
+        glm::mat4 euler_transform = GLM_EULER_TRANSFORM(EULER_YAW(euler), EULER_PITCH(euler), EULER_ROLL(euler));
         *up_direction = glm::vec3(euler_transform * glm::vec4(VEC_UP, 1));
         return glm::vec3(euler_transform * glm::vec4(VEC_FORWARD, 1));
     }
-    glm::mat4 euler_transform_sans_roll = GLM_EULER_ANGLE_SANS_ROLL(EULER_YAW(euler), EULER_PITCH(euler));
+    glm::mat4 euler_transform_sans_roll = GLM_EULER_TRANSFORM_SANS_ROLL(EULER_YAW(euler), EULER_PITCH(euler));
     return glm::vec3(euler_transform_sans_roll * glm::vec4(VEC_FORWARD, 1));
 }
 
@@ -78,7 +78,7 @@ glm::vec3 offset_to_euler(glm::vec3  offset,
 
     // roll
     if(up_direction) {
-        glm::mat4 euler_transform_sans_roll = GLM_EULER_ANGLE_SANS_ROLL(EULER_YAW(euler), EULER_PITCH(euler));
+        glm::mat4 euler_transform_sans_roll = GLM_EULER_TRANSFORM_SANS_ROLL(EULER_YAW(euler), EULER_PITCH(euler));
         glm::vec3 local_up_direction_roll_component = glm::vec3(glm::inverse(euler_transform_sans_roll) *
                                                       glm::vec4(*up_direction, 1));
         EULER_ROLL(euler) = glm::degrees(glm::angle(glm::normalize(local_up_direction_roll_component), VEC_UP));
@@ -138,13 +138,13 @@ float angle_distance(float angle1, float angle2)
     return angle_diff;
 }
 
-glm::vec3 nearest_point_on_plane(glm::vec3 plane_origin, glm::vec3 plane_normal, glm::vec3 from_point)
+glm::vec3 nearest_point_on_plane_from_point(glm::vec3 plane_origin, glm::vec3 plane_normal, glm::vec3 point)
 {
-    return from_point - plane_normal * (glm::dot(from_point, plane_normal) - glm::dot(plane_origin, plane_normal));
+    return point - plane_normal * (glm::dot(point, plane_normal) - glm::dot(plane_origin, plane_normal));
 }
 
 // https://en.wikipedia.org/wiki/Bernstein_polynomial
-glm::vec3 bezier_interpolate(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4, float alpha)
+glm::vec3 bezier_interpolate_point(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4, float alpha)
 {
     float w1 = pow(1 - alpha, 3);
     float w2 = 3 * alpha * pow(1 - alpha, 2);

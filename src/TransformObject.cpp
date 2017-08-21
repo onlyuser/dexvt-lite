@@ -221,7 +221,7 @@ void TransformObject::point_at(glm::vec3 target, glm::vec3* up_direction)
     //point_at_local(from_origin_in_parent_system(target), up_direction);
 }
 
-void TransformObject::rotate_local(glm::mat4 local_rotate_transform)
+void TransformObject::set_local_rotation(glm::mat4 local_rotate_transform)
 {
     glm::vec3 local_heading      = glm::vec3(local_rotate_transform * glm::vec4(VEC_FORWARD, 1));
     glm::vec3 local_up_direction = glm::vec3(local_rotate_transform * glm::vec4(VEC_UP, 1));
@@ -238,7 +238,21 @@ void TransformObject::rotate(glm::mat4 rotate_transform)
 
 void TransformObject::rotate(float angle_delta, glm::vec3 pivot)
 {
-    rotate(GLM_ROTATE(glm::mat4(1), angle_delta, pivot));
+    rotate(GLM_ROTATE_TRANSFORM(glm::mat4(1), angle_delta, pivot));
+}
+
+void TransformObject::arcball(glm::vec3* local_arc_pivot_dir, float* angle_delta, glm::vec3 target, glm::vec3 reference_point)
+{
+    glm::vec3 local_target_dir          = glm::normalize(from_origin_in_parent_system(target));
+    glm::vec3 local_reference_point_dir = glm::normalize(from_origin_in_parent_system(reference_point));
+    glm::vec3 local_arc_delta_dir       = glm::normalize(local_target_dir - local_reference_point_dir);
+    glm::vec3 local_arc_midpoint_dir    = glm::normalize((local_target_dir + local_reference_point_dir) * 0.5f);
+    if(local_arc_pivot_dir) {
+        *local_arc_pivot_dir = glm::cross(local_arc_delta_dir, local_arc_midpoint_dir);
+    }
+    if(angle_delta) {
+        *angle_delta = glm::degrees(glm::angle(local_target_dir, local_reference_point_dir));
+    }
 }
 
 // http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/
@@ -278,42 +292,39 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
                     case 0:
                         // allow ONLY roll -- project onto XY plane
                         plane_normal     = current_segment->get_abs_heading();
-                        tmp_target       = nearest_point_on_plane(plane_origin, plane_normal, tmp_target);
-                        end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, end_effector_tip);
+                        tmp_target       = nearest_point_on_plane_from_point(plane_origin, plane_normal, tmp_target);
+                        end_effector_tip = nearest_point_on_plane_from_point(plane_origin, plane_normal, end_effector_tip);
                         break;
                     case 1:
                         // allow ONLY pitch -- project onto YZ plane
                         plane_normal     = current_segment->get_abs_left_direction();
-                        tmp_target       = nearest_point_on_plane(plane_origin, plane_normal, tmp_target);
-                        end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, end_effector_tip);
+                        tmp_target       = nearest_point_on_plane_from_point(plane_origin, plane_normal, tmp_target);
+                        end_effector_tip = nearest_point_on_plane_from_point(plane_origin, plane_normal, end_effector_tip);
                         break;
                     case 2:
                         // allow ONLY yaw -- project onto XZ plane
                         plane_normal     = current_segment->get_abs_up_direction();
-                        tmp_target       = nearest_point_on_plane(plane_origin, plane_normal, tmp_target);
-                        end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, end_effector_tip);
+                        tmp_target       = nearest_point_on_plane_from_point(plane_origin, plane_normal, tmp_target);
+                        end_effector_tip = nearest_point_on_plane_from_point(plane_origin, plane_normal, end_effector_tip);
                         break;
                 }
             }
 
 #if 1
+            glm::vec3 local_arc_pivot_dir;
+            float angle_delta = 0;
+            current_segment->arcball(&local_arc_pivot_dir, &angle_delta, tmp_target, end_effector_tip);
+            glm::mat4 local_arc_rotate_transform = GLM_ROTATE_TRANSFORM(glm::mat4(1), -angle_delta, local_arc_pivot_dir);
+    #if 1
+            // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
+            current_segment->set_local_rotation(local_arc_rotate_transform * current_segment->get_local_euler_transform());
+
+            // update guide wires (for debug only)
             glm::vec3 local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(tmp_target));
             glm::vec3 local_end_effector_tip_dir = glm::normalize(current_segment->from_origin_in_parent_system(end_effector_tip));
             glm::vec3 local_arc_delta_dir        = glm::normalize(local_target_dir - local_end_effector_tip_dir);
             glm::vec3 local_arc_midpoint_dir     = glm::normalize((local_target_dir + local_end_effector_tip_dir) * 0.5f);
-            glm::vec3 local_arc_pivot_dir        = glm::cross(local_arc_delta_dir, local_arc_midpoint_dir);
-            float     angle_delta                = glm::degrees(glm::angle(local_target_dir, local_end_effector_tip_dir));
-            glm::mat4 local_arc_rotate_transform = GLM_ROTATE(glm::mat4(1), -angle_delta, local_arc_pivot_dir);
-    #if 1
-            // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
-            current_segment->rotate_local(local_arc_rotate_transform * current_segment->get_local_euler_transform());
-
-            // update guide wires
-            local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(tmp_target));
-            local_end_effector_tip_dir = glm::normalize(current_segment->from_origin_in_parent_system(end_effector_tip));
-            local_arc_delta_dir        = glm::normalize(local_target_dir - local_end_effector_tip_dir);
-            local_arc_midpoint_dir     = glm::normalize((local_target_dir + local_end_effector_tip_dir) * 0.5f);
-            local_arc_pivot_dir        = glm::cross(local_arc_delta_dir, local_arc_midpoint_dir);
+            local_arc_pivot_dir                  = glm::cross(local_arc_delta_dir, local_arc_midpoint_dir);
             current_segment->m_debug_target_dir           = local_target_dir;
             current_segment->m_debug_end_effector_tip_dir = local_end_effector_tip_dir;
             current_segment->m_debug_local_pivot          = local_arc_pivot_dir;
@@ -357,15 +368,12 @@ void TransformObject::update_boid(glm::vec3 target,
                                   float     angle_delta,
                                   float     avoid_radius)
 {
-    glm::vec3 local_target_dir           = glm::normalize(from_origin_in_parent_system(target));
-    glm::vec3 local_heading              = glm::normalize(from_origin_in_parent_system(in_abs_system(VEC_FORWARD)));
-    glm::vec3 local_arc_delta_dir        = glm::normalize(local_target_dir - local_heading);
-    glm::vec3 local_arc_midpoint_dir     = glm::normalize((local_target_dir + local_heading) * 0.5f);
-    glm::vec3 local_arc_pivot_dir        = glm::cross(local_arc_delta_dir, local_arc_midpoint_dir);
-    glm::mat4 local_arc_rotate_transform = GLM_ROTATE(glm::mat4(1), -angle_delta * ((glm::distance(target, m_origin) < avoid_radius) ? -1 : 1), local_arc_pivot_dir);
+    glm::vec3 local_arc_pivot_dir;
+    arcball(&local_arc_pivot_dir, NULL, target, in_abs_system(VEC_FORWARD));
+    glm::mat4 local_arc_rotate_transform = GLM_ROTATE_TRANSFORM(glm::mat4(1), -angle_delta * ((glm::distance(target, m_origin) < avoid_radius) ? -1 : 1), local_arc_pivot_dir);
 #if 1
     // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
-    rotate_local(local_arc_rotate_transform * get_local_euler_transform());
+    set_local_rotation(local_arc_rotate_transform * get_local_euler_transform());
 #else
     // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
     point_at_local(glm::vec3(local_arc_rotate_transform * glm::vec4(euler_to_offset(get_euler()), 1)));
@@ -400,7 +408,7 @@ const glm::mat4 &TransformObject::get_normal_transform()
 
 glm::mat4 TransformObject::get_local_euler_transform() const
 {
-    return GLM_EULER_ANGLE(EULER_YAW(m_euler), EULER_PITCH(m_euler), EULER_ROLL(m_euler));
+    return GLM_EULER_TRANSFORM(EULER_YAW(m_euler), EULER_PITCH(m_euler), EULER_ROLL(m_euler));
 }
 
 void TransformObject::update_transform_hier()

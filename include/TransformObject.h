@@ -67,9 +67,10 @@ public:
     // advanced features
     void point_at_local(glm::vec3 local_target, glm::vec3* local_up_direction = NULL);
     void point_at(glm::vec3 target, glm::vec3* up_direction = NULL);
-    void rotate_local(glm::mat4 local_rotate_transform);
+    void set_local_rotation(glm::mat4 local_rotate_transform);
     void rotate(glm::mat4 rotate_transform);
     void rotate(float angle_delta, glm::vec3 pivot);
+    void arcball(glm::vec3* local_arc_pivot_dir, float* angle_delta, glm::vec3 target, glm::vec3 reference_point);
     bool solve_ik_ccd(TransformObject* root,
                       glm::vec3        local_end_effector_tip,
                       glm::vec3        target,

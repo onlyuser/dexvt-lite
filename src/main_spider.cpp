@@ -62,7 +62,7 @@
 #define IK_SEGMENT_WIDTH               0.05
 #define LEG_INNER_RADIUS               0.25
 #define LEG_OUTER_RADIUS               1
-#define LERP_PARABOLIC_DOWN_ARC(alpha) (-pow((alpha) * 2 - 1, 2) + 1)
+#define LERP_POINT_PARABOLIC_DOWN_ARC(alpha) (-pow((alpha) * 2 - 1, 2) + 1)
 #define MAX_LEG_CORRECTION_SPREAD      (PI * 0.25)
 #define TERRAIN_COLS                   100
 #define TERRAIN_HEIGHT                 1
@@ -619,8 +619,8 @@ void onTick()
     }
     for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
         std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
-        glm::vec3 interp_point = LERP((*r)->m_from_point, (*r)->m_to_point, (*r)->m_alpha);
-        float leg_lift_height = LERP_PARABOLIC_DOWN_ARC((*r)->m_alpha) * IK_LEG_MAX_LIFT_HEIGHT; // parabolic leg-lift path
+        glm::vec3 interp_point = LERP_POINT((*r)->m_from_point, (*r)->m_to_point, (*r)->m_alpha);
+        float leg_lift_height = LERP_POINT_PARABOLIC_DOWN_ARC((*r)->m_alpha) * IK_LEG_MAX_LIFT_HEIGHT; // parabolic leg-lift path
         ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
                                                       glm::vec3(0, 0, IK_SEGMENT_LENGTH),
                                                       interp_point + glm::vec3(0, leg_lift_height, 0),

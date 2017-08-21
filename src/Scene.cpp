@@ -33,8 +33,8 @@
         glVertex3fv(&p1.x); \
         glVertex3fv(&p2.x);
 #define draw_broken_edge(p1, p2, m1, m2) \
-        m1 = LERP(p1, p2, BROKEN_EDGE_ALPHA); \
-        m2 = LERP(p1, p2, 1 - BROKEN_EDGE_ALPHA); \
+        m1 = LERP_POINT(p1, p2, BROKEN_EDGE_ALPHA); \
+        m2 = LERP_POINT(p1, p2, 1 - BROKEN_EDGE_ALPHA); \
         glVertex3fv(&p1.x); \
         glVertex3fv(&m1.x); \
         glVertex3fv(&m2.x); \
