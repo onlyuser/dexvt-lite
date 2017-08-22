@@ -30,11 +30,11 @@
 #if GLM_VERSION >= 96
     // glm::rotate changed from degrees to radians in GLM 0.9.6
     // https://glm.g-truc.net/0.9.6/updates.html
-    #define GLM_ROTATE_TRANSFORM(m, a, v)       glm::rotate((m), glm::radians(a), (v))
+    #define GLM_ROTATION_TRANSFORM(m, a, v)     glm::rotate((m), glm::radians(a), (v))
     #define GLM_EULER_TRANSFORM(y, p, r)        glm::eulerAngleYXZ(glm::radians(y), glm::radians(p), glm::radians(r))
     #define GLM_EULER_TRANSFORM_SANS_ROLL(y, p) glm::eulerAngleYX(glm::radians(y), glm::radians(p))
 #else
-    #define GLM_ROTATE_TRANSFORM(m, a, v)       glm::rotate((m), (a), (v))
+    #define GLM_ROTATION_TRANSFORM(m, a, v)     glm::rotate((m), (a), (v))
     #define GLM_EULER_TRANSFORM(y, p, r)        glm::eulerAngleYXZ((y), (p), (r))
     #define GLM_EULER_TRANSFORM_SANS_ROLL(y, p) glm::eulerAngleYX((y), (p))
 #endif
@@ -59,7 +59,7 @@ glm::vec3 offset_to_euler(glm::vec3 offset);
 glm::vec3 euler_modulo(glm::vec3 euler);
 float angle_modulo(float angle);
 float angle_distance(float angle1, float angle2);
-glm::vec3 nearest_point_on_plane_from_point(glm::vec3 plane_origin, glm::vec3 plane_normal, glm::vec3 point);
+glm::vec3 nearest_point_on_plane_to_point(glm::vec3 plane_origin, glm::vec3 plane_normal, glm::vec3 point);
 glm::vec3 bezier_interpolate_point(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float alpha);
 bool read_file(std::string filename, std::string &s);
 bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups, size_t* start_pos);

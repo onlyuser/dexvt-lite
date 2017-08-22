@@ -67,8 +67,8 @@ public:
     // advanced features
     void point_at_local(glm::vec3 local_target, glm::vec3* local_up_direction = NULL);
     void point_at(glm::vec3 target, glm::vec3* up_direction = NULL);
-    void set_local_rotation(glm::mat4 local_rotate_transform);
-    void rotate(glm::mat4 rotate_transform);
+    void set_local_rotation_transform(glm::mat4 local_rotation_transform);
+    void rotate(glm::mat4 rotation_transform);
     void rotate(float angle_delta, glm::vec3 pivot);
     void arcball(glm::vec3* local_arc_pivot_dir, float* angle_delta, glm::vec3 abs_target, glm::vec3 abs_reference_point);
     bool solve_ik_ccd(TransformObject* root,
@@ -86,7 +86,7 @@ public:
     // basic features
     const glm::mat4 &get_transform(bool trace_down = true);
     const glm::mat4 &get_normal_transform();
-    glm::mat4 get_local_normal_transform() const;
+    glm::mat4 get_local_rotation_transform() const;
 
 protected:
     // basic features

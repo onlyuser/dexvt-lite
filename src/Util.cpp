@@ -138,7 +138,7 @@ float angle_distance(float angle1, float angle2)
     return angle_diff;
 }
 
-glm::vec3 nearest_point_on_plane_from_point(glm::vec3 plane_origin, glm::vec3 plane_normal, glm::vec3 point)
+glm::vec3 nearest_point_on_plane_to_point(glm::vec3 plane_origin, glm::vec3 plane_normal, glm::vec3 point)
 {
     return point - plane_normal * (glm::dot(point, plane_normal) - glm::dot(plane_origin, plane_normal));
 }
