@@ -103,8 +103,8 @@ bool TransformObject::realigned_point_at_local_args(glm::vec3* _local_heading, g
             {
                 // allow ONLY roll -- project onto XY plane
                 plane_normal                                     = m_parent->get_abs_heading();                                                               // Z
-                glm::vec3 joint_flattened_abs_left_axis_endpoint = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_left_axis_endpoint); // X
-                glm::vec3 joint_flattened_abs_up_axis_endpoint   = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_up_axis_endpoint);   // Y
+                glm::vec3 joint_flattened_abs_left_axis_endpoint = nearest_point_on_plane(plane_origin, plane_normal, joint_abs_left_axis_endpoint); // X
+                glm::vec3 joint_flattened_abs_up_axis_endpoint   = nearest_point_on_plane(plane_origin, plane_normal, joint_abs_up_axis_endpoint);   // Y
                 glm::vec3 local_left_dir                         = from_origin_in_parent_system(joint_flattened_abs_left_axis_endpoint); // X
                           local_up_dir                           = from_origin_in_parent_system(joint_flattened_abs_up_axis_endpoint);   // Y
                           local_heading                          = glm::normalize(glm::cross(local_left_dir, local_up_dir));             // Z
@@ -114,8 +114,8 @@ bool TransformObject::realigned_point_at_local_args(glm::vec3* _local_heading, g
             {
                 // allow ONLY pitch -- project onto YZ plane
                 plane_normal                                   = m_parent->get_abs_left_direction();                                                           // X
-                glm::vec3 joint_flattened_abs_up_axis_endpoint = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_up_axis_endpoint);      // Y
-                glm::vec3 joint_flattened_abs_heading_endpoint = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_heading_axis_endpoint); // Z
+                glm::vec3 joint_flattened_abs_up_axis_endpoint = nearest_point_on_plane(plane_origin, plane_normal, joint_abs_up_axis_endpoint);      // Y
+                glm::vec3 joint_flattened_abs_heading_endpoint = nearest_point_on_plane(plane_origin, plane_normal, joint_abs_heading_axis_endpoint); // Z
                           local_up_dir                         = from_origin_in_parent_system(joint_flattened_abs_up_axis_endpoint); // Y
                           local_heading                        = from_origin_in_parent_system(joint_flattened_abs_heading_endpoint); // Z
             }
@@ -124,8 +124,8 @@ bool TransformObject::realigned_point_at_local_args(glm::vec3* _local_heading, g
             {
                 // allow ONLY yaw -- project onto XZ plane
                 plane_normal                                     = m_parent->get_abs_up_direction();                                                             // Y
-                glm::vec3 joint_flattened_abs_heading_endpoint   = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_heading_axis_endpoint); // Z
-                glm::vec3 joint_flattened_abs_left_axis_endpoint = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_left_axis_endpoint);    // X
+                glm::vec3 joint_flattened_abs_heading_endpoint   = nearest_point_on_plane(plane_origin, plane_normal, joint_abs_heading_axis_endpoint); // Z
+                glm::vec3 joint_flattened_abs_left_axis_endpoint = nearest_point_on_plane(plane_origin, plane_normal, joint_abs_left_axis_endpoint);    // X
                           local_heading                          = from_origin_in_parent_system(joint_flattened_abs_heading_endpoint);   // Z
                 glm::vec3 local_left_dir                         = from_origin_in_parent_system(joint_flattened_abs_left_axis_endpoint); // X
                           local_up_dir                           = glm::normalize(glm::cross(local_heading, local_left_dir));            // Y
@@ -385,8 +385,8 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
                         plane_normal = current_segment->get_abs_up_direction();
                         break;
                 }
-                tmp_target       = nearest_point_on_plane_to_point(plane_origin, plane_normal, tmp_target);
-                end_effector_tip = nearest_point_on_plane_to_point(plane_origin, plane_normal, end_effector_tip);
+                tmp_target       = nearest_point_on_plane(plane_origin, plane_normal, tmp_target);
+                end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, end_effector_tip);
             }
 
 #if 1

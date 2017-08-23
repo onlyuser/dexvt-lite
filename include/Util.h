@@ -11,8 +11,8 @@
 
 #define EPSILON 0.0001
 
-#define SIGN(x)                   (!(x) ? 0 : (((x) > 0) ? 1 : -1))
-#define LERP_POINT(p1, p2, alpha) ((p1) + ((p2) - (p1)) * (alpha))
+#define SIGN(x)             (!(x) ? 0 : (((x) > 0) ? 1 : -1))
+#define LERP(p1, p2, alpha) ((p1) + ((p2) - (p1)) * (alpha))
 
 #define MAKEWORD(a, b) ((uint16_t)(((uint8_t)(a))  | (((uint16_t)((uint8_t)(b))) << 8)))
 #define MAKELONG(a, b) ((uint32_t)(((uint16_t)(a)) | (((uint32_t)((uint16_t)(b))) << 16)))
@@ -59,8 +59,8 @@ glm::vec3 offset_to_euler(glm::vec3 offset);
 glm::vec3 euler_modulo(glm::vec3 euler);
 float angle_modulo(float angle);
 float angle_distance(float angle1, float angle2);
-glm::vec3 nearest_point_on_plane_to_point(glm::vec3 plane_origin, glm::vec3 plane_normal, glm::vec3 point);
-glm::vec3 bezier_interpolate_point(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float alpha);
+glm::vec3 nearest_point_on_plane(glm::vec3 plane_origin, glm::vec3 plane_normal, glm::vec3 point);
+glm::vec3 bezier_interpolate(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float alpha);
 bool read_file(std::string filename, std::string &s);
 bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups, size_t* start_pos);
 bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups);

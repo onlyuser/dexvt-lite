@@ -122,12 +122,12 @@ bool MotionTrack::interpolate_frame_value(int frame_number, glm::vec3* value, bo
         glm::vec3 p2 = (*p).second->get_control_point2();
         glm::vec3 p3 = (*q).second->get_control_point1();
         glm::vec3 p4 = (*q).second->get_value();
-        *value = bezier_interpolate_point(p1, p2, p3, p4, alpha);
+        *value = bezier_interpolate(p1, p2, p3, p4, alpha);
     } else {
         // linear interpolation
         glm::vec3 start_frame_value = (*p).second->get_value();
         glm::vec3 end_frame_value   = (*q).second->get_value();
-        *value = LERP_POINT(start_frame_value, end_frame_value, alpha);
+        *value = LERP(start_frame_value, end_frame_value, alpha);
     }
     return true;
 }
