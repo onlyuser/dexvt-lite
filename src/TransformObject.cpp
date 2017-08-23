@@ -87,7 +87,7 @@ void TransformObject::set_enable_joint_constraints(glm::ivec3 enable_joint_const
 // if exclusive pivot, project absolute axis endpoints onto parent's plane of free rotation
 bool TransformObject::realigned_point_at_local_args(glm::vec3* _local_heading, glm::vec3* _local_up_dir)
 {
-    if(!m_parent || m_exclusive_pivot == -1) {
+    if(!m_parent || m_exclusive_pivot == -1) { // only applies to non-root exclusive pivot
         return false;
     }
     glm::vec3 plane_origin = m_parent->in_abs_system();
@@ -144,7 +144,7 @@ bool TransformObject::realigned_point_at_local_args(glm::vec3* _local_heading, g
 bool TransformObject::apply_exclusive_pivot_constraints()
 {
     static bool disable_recursion = false;
-    if(!m_parent || m_exclusive_pivot == -1) {
+    if(!m_parent || m_exclusive_pivot == -1) { // only applies to non-root exclusive pivot
         return false;
     }
     if(disable_recursion) {
@@ -165,7 +165,7 @@ void TransformObject::apply_joint_constraints()
 {
     switch(m_joint_type) {
         case JOINT_TYPE_REVOLUTE:
-            if(!apply_exclusive_pivot_constraints()) {
+            if(!apply_exclusive_pivot_constraints()) { // special-handling of exclusive pivot
                 for(int i = 0; i < 3; i++) {
                     if(!m_enable_joint_constraints[i]) {
                         continue;
@@ -367,7 +367,7 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
                 continue;
             }
 
-            // if exclusive pivot, project arcball input onto plane of free rotation
+            // if exclusive pivot, project arcball args onto plane of free rotation
             if(current_segment->m_exclusive_pivot != -1) {
                 glm::vec3 plane_origin = current_segment->in_abs_system();
                 glm::vec3 plane_normal;
