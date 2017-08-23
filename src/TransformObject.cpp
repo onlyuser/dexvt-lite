@@ -84,64 +84,88 @@ void TransformObject::set_enable_joint_constraints(glm::ivec3 enable_joint_const
     }
 }
 
-void TransformObject::apply_joint_constraints()
+// if exclusive pivot, project absolute axis endpoints onto parent's plane of free rotation
+bool TransformObject::realigned_point_at_local_args(glm::vec3* _local_heading, glm::vec3* _local_up_dir)
+{
+    if(!m_parent || m_exclusive_pivot == -1) {
+        return false;
+    }
+    glm::vec3 plane_origin = m_parent->in_abs_system();
+    glm::vec3 plane_normal;
+    glm::vec3 joint_origin                    = in_abs_system();
+    glm::vec3 joint_abs_left_axis_endpoint    = joint_origin + get_abs_left_direction(); // X
+    glm::vec3 joint_abs_up_axis_endpoint      = joint_origin + get_abs_up_direction();   // Y
+    glm::vec3 joint_abs_heading_axis_endpoint = joint_origin + get_abs_heading();        // Z
+    glm::vec3 local_heading;
+    glm::vec3 local_up_dir;
+    switch(m_exclusive_pivot) {
+        case 0:
+            {
+                // allow ONLY roll -- project onto XY plane
+                plane_normal                                     = m_parent->get_abs_heading();                                                               // Z
+                glm::vec3 joint_flattened_abs_left_axis_endpoint = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_left_axis_endpoint); // X
+                glm::vec3 joint_flattened_abs_up_axis_endpoint   = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_up_axis_endpoint);   // Y
+                glm::vec3 local_left_dir                         = from_origin_in_parent_system(joint_flattened_abs_left_axis_endpoint); // X
+                          local_up_dir                           = from_origin_in_parent_system(joint_flattened_abs_up_axis_endpoint);   // Y
+                          local_heading                          = glm::normalize(glm::cross(local_left_dir, local_up_dir));             // Z
+            }
+            break;
+        case 1:
+            {
+                // allow ONLY pitch -- project onto YZ plane
+                plane_normal                                   = m_parent->get_abs_left_direction();                                                           // X
+                glm::vec3 joint_flattened_abs_up_axis_endpoint = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_up_axis_endpoint);      // Y
+                glm::vec3 joint_flattened_abs_heading_endpoint = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_heading_axis_endpoint); // Z
+                          local_up_dir                         = from_origin_in_parent_system(joint_flattened_abs_up_axis_endpoint); // Y
+                          local_heading                        = from_origin_in_parent_system(joint_flattened_abs_heading_endpoint); // Z
+            }
+            break;
+        case 2:
+            {
+                // allow ONLY yaw -- project onto XZ plane
+                plane_normal                                     = m_parent->get_abs_up_direction();                                                             // Y
+                glm::vec3 joint_flattened_abs_heading_endpoint   = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_heading_axis_endpoint); // Z
+                glm::vec3 joint_flattened_abs_left_axis_endpoint = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_left_axis_endpoint);    // X
+                          local_heading                          = from_origin_in_parent_system(joint_flattened_abs_heading_endpoint);   // Z
+                glm::vec3 local_left_dir                         = from_origin_in_parent_system(joint_flattened_abs_left_axis_endpoint); // X
+                          local_up_dir                           = glm::normalize(glm::cross(local_heading, local_left_dir));            // Y
+            }
+            break;
+    }
+    if(_local_heading) {
+        *_local_heading = local_heading;
+    }
+    if(_local_up_dir) {
+        *_local_up_dir = local_up_dir;
+    }
+    return true;
+}
+
+bool TransformObject::apply_exclusive_pivot_constraints()
 {
     static bool disable_recursion = false;
+    if(!m_parent || m_exclusive_pivot == -1) {
+        return false;
+    }
+    if(disable_recursion) {
+        return false;
+    }
+    glm::vec3 local_heading;
+    glm::vec3 local_up_dir;
+    if(!realigned_point_at_local_args(&local_heading, &local_up_dir)) {
+        return false;
+    }
+    disable_recursion = true; // to avoid infinite recursion
+    point_at_local(local_heading, &local_up_dir);
+    disable_recursion = false;
+    return true;
+}
+
+void TransformObject::apply_joint_constraints()
+{
     switch(m_joint_type) {
         case JOINT_TYPE_REVOLUTE:
-            // if exclusive pivot, project absolute directions onto parent's plane of free rotation
-            if(m_parent) {
-                if(disable_recursion) {
-                    return;
-                }
-                if(m_exclusive_pivot != -1) {
-                    glm::vec3 plane_origin = m_parent->in_abs_system();
-                    glm::vec3 plane_normal;
-                    glm::vec3 joint_origin                    = in_abs_system();
-                    glm::vec3 joint_abs_left_axis_endpoint    = joint_origin + get_abs_left_direction(); // X
-                    glm::vec3 joint_abs_up_axis_endpoint      = joint_origin + get_abs_up_direction();   // Y
-                    glm::vec3 joint_abs_heading_axis_endpoint = joint_origin + get_abs_heading();        // Z
-                    glm::vec3 local_heading;
-                    glm::vec3 local_up_dir;
-                    switch(m_exclusive_pivot) {
-                        case 0:
-                            {
-                                // allow ONLY roll -- project onto XY plane
-                                plane_normal                 = m_parent->get_abs_heading();                                                               // Z
-                                glm::vec3 flattened_left_dir = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_left_axis_endpoint); // X
-                                glm::vec3 flattened_up_dir   = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_up_axis_endpoint);   // Y
-                                glm::vec3 local_left_dir     = from_origin_in_parent_system(flattened_left_dir);
-                                local_up_dir                 = from_origin_in_parent_system(flattened_up_dir);
-                                local_heading                = glm::normalize(glm::cross(local_left_dir, local_up_dir));
-                            }
-                            break;
-                        case 1:
-                            {
-                                // allow ONLY pitch -- project onto YZ plane
-                                plane_normal                 = m_parent->get_abs_left_direction();                                                           // X
-                                glm::vec3 flattened_up_dir   = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_up_axis_endpoint);      // Y
-                                glm::vec3 flattened_heading  = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_heading_axis_endpoint); // Z
-                                local_up_dir                 = from_origin_in_parent_system(flattened_up_dir);
-                                local_heading                = from_origin_in_parent_system(flattened_heading);
-                            }
-                            break;
-                        case 2:
-                            {
-                                // allow ONLY yaw -- project onto XZ plane
-                                plane_normal                 = m_parent->get_abs_up_direction();                                                             // Y
-                                glm::vec3 flattened_heading  = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_heading_axis_endpoint); // Z
-                                glm::vec3 flattened_left_dir = nearest_point_on_plane_to_point(plane_origin, plane_normal, joint_abs_left_axis_endpoint);    // X
-                                local_heading                = from_origin_in_parent_system(flattened_heading);
-                                glm::vec3 local_left_dir     = from_origin_in_parent_system(flattened_left_dir);
-                                local_up_dir                 = -glm::normalize(glm::cross(local_left_dir, local_heading));
-                            }
-                            break;
-                    }
-                    disable_recursion = true; // to avoid infinite recursion
-                    point_at_local(local_heading, &local_up_dir);
-                    disable_recursion = false;
-                }
-            } else {
+            if(!apply_exclusive_pivot_constraints()) {
                 for(int i = 0; i < 3; i++) {
                     if(!m_enable_joint_constraints[i]) {
                         continue;
@@ -296,7 +320,10 @@ void TransformObject::rotate(float angle_delta, glm::vec3 pivot)
     rotate(GLM_ROTATION_TRANSFORM(glm::mat4(1), angle_delta, pivot));
 }
 
-void TransformObject::arcball(glm::vec3* local_arc_pivot_dir, float* angle_delta, glm::vec3 abs_target, glm::vec3 abs_reference_point)
+void TransformObject::arcball(glm::vec3* local_arc_pivot_dir,
+                              float*     angle_delta,
+                              glm::vec3  abs_target,
+                              glm::vec3  abs_reference_point)
 {
     glm::vec3 local_target_dir          = glm::normalize(from_origin_in_parent_system(abs_target));
     glm::vec3 local_reference_point_dir = glm::normalize(from_origin_in_parent_system(abs_reference_point));

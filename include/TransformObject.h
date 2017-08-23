@@ -48,6 +48,8 @@ public:
     void set_joint_constraints_max_deviation(glm::vec3 joint_constraints_max_deviation) { m_joint_constraints_max_deviation = joint_constraints_max_deviation; }
     void set_eclusive_pivot(int exclusive_pivot)                                        { m_exclusive_pivot = exclusive_pivot; }
     int get_exclusive_pivot() const                                                     { return m_exclusive_pivot; }
+    bool realigned_point_at_local_args(glm::vec3* _local_heading, glm::vec3* _local_up_dir);
+    bool apply_exclusive_pivot_constraints();
     void apply_joint_constraints();
 
     // coordinate system conversions
@@ -70,7 +72,10 @@ public:
     void set_local_rotation_transform(glm::mat4 local_rotation_transform);
     void rotate(glm::mat4 rotation_transform);
     void rotate(float angle_delta, glm::vec3 pivot);
-    void arcball(glm::vec3* local_arc_pivot_dir, float* angle_delta, glm::vec3 abs_target, glm::vec3 abs_reference_point);
+    void arcball(glm::vec3* local_arc_pivot_dir,
+                 float*     angle_delta,
+                 glm::vec3  abs_target,
+                 glm::vec3  abs_reference_point);
     bool solve_ik_ccd(TransformObject* root,
                       glm::vec3        local_end_effector_tip,
                       glm::vec3        target,
