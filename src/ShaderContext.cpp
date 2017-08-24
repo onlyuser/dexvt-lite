@@ -16,13 +16,12 @@
 
 namespace vt {
 
-ShaderContext::ShaderContext(
-        Material* material,
-        Buffer*   vbo_vert_coords,
-        Buffer*   vbo_vert_normal,
-        Buffer*   vbo_vert_tangent,
-        Buffer*   vbo_tex_coords,
-        Buffer*   ibo_tri_indices)
+ShaderContext::ShaderContext(Material* material,
+                             Buffer*   vbo_vert_coords,
+                             Buffer*   vbo_vert_normal,
+                             Buffer*   vbo_vert_tangent,
+                             Buffer*   vbo_tex_coords,
+                             Buffer*   ibo_tri_indices)
     : m_material(material),
       m_vbo_vert_coords(vbo_vert_coords),
       m_vbo_vert_normal(vbo_vert_normal),

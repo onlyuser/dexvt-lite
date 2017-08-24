@@ -18,13 +18,12 @@ class ShaderContext
 public:
     typedef std::vector<Texture*> textures_t;
 
-    ShaderContext(
-            Material* material,
-            Buffer*   vbo_vert_coords,
-            Buffer*   vbo_vert_normal,
-            Buffer*   vbo_vert_tangent,
-            Buffer*   vbo_tex_coords,
-            Buffer*   ibo_tri_indices);
+    ShaderContext(Material* material,
+                  Buffer*   vbo_vert_coords,
+                  Buffer*   vbo_vert_normal,
+                  Buffer*   vbo_vert_tangent,
+                  Buffer*   vbo_tex_coords,
+                  Buffer*   ibo_tri_indices);
     ~ShaderContext();
     Material* get_material() const
     {
