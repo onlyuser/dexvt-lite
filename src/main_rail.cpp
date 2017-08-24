@@ -48,7 +48,7 @@
 #define IK_BASE_HEIGHT               0.5
 #define IK_BASE_LENGTH               0.5
 #define IK_BASE_WIDTH                0.5
-#define IK_ITERS                     50
+#define IK_ITERS                     1
 #define IK_RAIL_HEIGHT               0.25
 #define IK_RAIL_LENGTH               5
 #define IK_RAIL_WIDTH                0.125

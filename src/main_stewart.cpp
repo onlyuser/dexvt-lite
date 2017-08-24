@@ -50,7 +50,7 @@
 #define BODY_HEIGHT                  0.125
 #define BODY_SPEED                   0.05f
 #define IK_FOOTING_RADIUS            1
-#define IK_ITERS                     50
+#define IK_ITERS                     1
 #define IK_LEG_COUNT                 6
 #define IK_LEG_RADIUS                1
 #define IK_SEGMENT_COUNT             2

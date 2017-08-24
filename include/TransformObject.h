@@ -47,7 +47,7 @@ public:
 
     // coordinate system operations
     void point_at_local(glm::vec3 local_target, glm::vec3* local_up_direction = NULL);
-    void set_local_rotation_transform(glm::mat4 local_rotation_transform);
+    void set_local_rotation_transform(glm::mat4 rotation_transform);
     void rotate(glm::mat4 rotation_transform);
     void rotate(float angle_delta, glm::vec3 pivot);
 
@@ -68,8 +68,8 @@ public:
     void set_joint_constraints_max_deviation(glm::vec3 joint_constraints_max_deviation) { m_joint_constraints_max_deviation = joint_constraints_max_deviation; }
     void set_eclusive_pivot(int exclusive_pivot)                                        { m_exclusive_pivot = exclusive_pivot; }
     int get_exclusive_pivot() const                                                     { return m_exclusive_pivot; }
+    void apply_exclusive_pivot_constraints();
     void apply_joint_constraints();
-    bool apply_exclusive_pivot_constraints();
 
     // advanced features
     void arcball(glm::vec3* local_arc_pivot_dir,
@@ -117,8 +117,6 @@ protected:
         m_is_dirty_transform        = true;
         m_is_dirty_normal_transform = true;
     }
-
-    // caching (to be implemented by derived class)
     virtual void update_transform() = 0;
 
 private:
@@ -126,7 +124,7 @@ private:
     bool m_is_dirty_transform;
     bool m_is_dirty_normal_transform;
 
-    // optional advanced features (to be implemented by derived class, if needed)
+    // optional advanced features
     virtual void flatten(glm::mat4* basis = NULL) {}
     virtual void set_axis(glm::vec3 axis) {}
 

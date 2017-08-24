@@ -44,7 +44,7 @@
 
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
-#define IK_ITERS                     50
+#define IK_ITERS                     5
 #define IK_SEGMENT_COUNT             5
 #define IK_SEGMENT_HEIGHT            0.25
 #define IK_SEGMENT_LENGTH            1

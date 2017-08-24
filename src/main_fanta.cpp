@@ -47,7 +47,10 @@
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define BODY_ELEVATION               (0.6 + 0.1)
 #define IK_ARM_DISTANCE              3
-#define IK_ITERS                     10
+#define IK_BASE_HEIGHT               0.5
+#define IK_BASE_LENGTH               0.5
+#define IK_BASE_WIDTH                0.5
+#define IK_ITERS                     1
 #define IK_SEGMENT_COUNT             4
 #define IK_SEGMENT_HEIGHT            0.125
 #define IK_SEGMENT_LENGTH            1.5
@@ -94,6 +97,10 @@ int texture_id = 0;
 float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
 
 int angle_delta = 1;
+
+vt::Mesh* ik_base = NULL;
+vt::Mesh* ik_base2 = NULL;
+vt::Mesh* ik_base3 = NULL;
 
 std::vector<vt::Mesh*> ik_meshes;
 std::vector<vt::Mesh*> ik_meshes2;
@@ -268,6 +275,39 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
+    ik_base = vt::PrimitiveFactory::create_box("base");
+    scene->add_mesh(ik_base);
+    ik_base->center_axis();
+    ik_base->set_scale(glm::vec3(IK_BASE_WIDTH, IK_BASE_HEIGHT, IK_BASE_LENGTH));
+    ik_base->flatten();
+    ik_base->center_axis();
+    ik_base->set_origin(glm::vec3(IK_ARM_DISTANCE, 0, 0));
+    ik_base->set_euler(glm::vec3(0, -90, 0));
+    ik_base->set_material(phong_material);
+    ik_base->set_ambient_color(glm::vec3(0));
+
+    ik_base2 = vt::PrimitiveFactory::create_box("base2");
+    scene->add_mesh(ik_base2);
+    ik_base2->center_axis();
+    ik_base2->set_scale(glm::vec3(IK_BASE_WIDTH, IK_BASE_HEIGHT, IK_BASE_LENGTH));
+    ik_base2->flatten();
+    ik_base2->center_axis();
+    ik_base2->set_origin(glm::vec3(-IK_ARM_DISTANCE, 0, 0));
+    ik_base2->set_euler(glm::vec3(0, -90, 0));
+    ik_base2->set_material(phong_material);
+    ik_base2->set_ambient_color(glm::vec3(0));
+
+    ik_base3 = vt::PrimitiveFactory::create_box("base3");
+    scene->add_mesh(ik_base3);
+    ik_base3->center_axis();
+    ik_base3->set_scale(glm::vec3(IK_BASE_WIDTH, IK_BASE_HEIGHT, IK_BASE_LENGTH));
+    ik_base3->flatten();
+    ik_base3->center_axis();
+    ik_base3->set_origin(glm::vec3(0, 0, -IK_ARM_DISTANCE));
+    ik_base3->set_euler(glm::vec3(0, -90, 0));
+    ik_base3->set_material(phong_material);
+    ik_base3->set_ambient_color(glm::vec3(0));
+
     create_linked_segments(scene,
                            &ik_meshes,
                            IK_SEGMENT_COUNT,
@@ -276,15 +316,19 @@ int init_resources()
                                      IK_SEGMENT_HEIGHT,
                                      IK_SEGMENT_LENGTH));
     if(ik_meshes.size()) {
-        ik_meshes[0]->set_origin(glm::vec3(IK_ARM_DISTANCE, 0, 0));
+        ik_meshes[0]->link_parent(ik_base);
     }
     int leg_segment_index = 0;
     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         if(!leg_segment_index) {
-            (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
-            (*p)->set_joint_constraints_center(glm::vec3(0, -90, 0));
+            (*p)->set_enable_joint_constraints(glm::ivec3(0, 1, 1));
+            (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+        } else {
+            (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 1));
+            (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
             (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
         }
         leg_segment_index++;
@@ -298,15 +342,19 @@ int init_resources()
                                      IK_SEGMENT_HEIGHT,
                                      IK_SEGMENT_LENGTH));
     if(ik_meshes2.size()) {
-        ik_meshes2[0]->set_origin(glm::vec3(-IK_ARM_DISTANCE, 0, 0));
+        ik_meshes2[0]->link_parent(ik_base2);
     }
     int leg_segment_index2 = 0;
     for(std::vector<vt::Mesh*>::iterator p = ik_meshes2.begin(); p != ik_meshes2.end(); p++) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         if(!leg_segment_index2) {
-            (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
-            (*p)->set_joint_constraints_center(glm::vec3(0, -90, 0));
+            (*p)->set_enable_joint_constraints(glm::ivec3(0, 1, 1));
+            (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+        } else {
+            (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 1));
+            (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
             (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
         }
         leg_segment_index2++;
@@ -320,15 +368,19 @@ int init_resources()
                                      IK_SEGMENT_HEIGHT,
                                      IK_SEGMENT_LENGTH));
     if(ik_meshes3.size()) {
-        ik_meshes3[0]->set_origin(glm::vec3(0, 0, -IK_ARM_DISTANCE));
+        ik_meshes3[0]->link_parent(ik_base3);
     }
     int leg_segment_index3 = 0;
     for(std::vector<vt::Mesh*>::iterator p = ik_meshes3.begin(); p != ik_meshes3.end(); p++) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         if(!leg_segment_index3) {
-            (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
-            (*p)->set_joint_constraints_center(glm::vec3(0, -90, 0));
+            (*p)->set_enable_joint_constraints(glm::ivec3(0, 1, 1));
+            (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+        } else {
+            (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 1));
+            (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
             (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
         }
         leg_segment_index3++;
@@ -574,6 +626,9 @@ void onKeyboard(unsigned char key, int x, int y)
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
+                ik_base->set_ambient_color(glm::vec3(0, 1, 0));
+                ik_base2->set_ambient_color(glm::vec3(0, 1, 0));
+                ik_base3->set_ambient_color(glm::vec3(0, 1, 0));
                 for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                     (*p)->set_ambient_color(glm::vec3(0, 1, 0));
                 }
@@ -597,6 +652,9 @@ void onKeyboard(unsigned char key, int x, int y)
                 }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
+                ik_base->set_ambient_color(glm::vec3(0));
+                ik_base2->set_ambient_color(glm::vec3(0));
+                ik_base3->set_ambient_color(glm::vec3(0));
                 for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                     (*p)->set_ambient_color(glm::vec3(0));
                 }

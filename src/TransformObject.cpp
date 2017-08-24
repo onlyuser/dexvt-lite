@@ -61,7 +61,7 @@ void TransformObject::reset_transform()
 {
     m_origin = glm::vec3(0);
     set_euler(glm::vec3(0));
-    m_scale  = glm::vec3(1);
+    m_scale = glm::vec3(1);
     mark_dirty_transform();
 }
 
@@ -111,10 +111,10 @@ void TransformObject::point_at_local(glm::vec3 local_target, glm::vec3* local_up
     set_euler(offset_to_euler(local_target, local_up_direction));
 }
 
-void TransformObject::set_local_rotation_transform(glm::mat4 local_rotation_transform)
+void TransformObject::set_local_rotation_transform(glm::mat4 rotation_transform)
 {
-    glm::vec3 local_heading      = glm::vec3(local_rotation_transform * glm::vec4(VEC_FORWARD, 1));
-    glm::vec3 local_up_direction = glm::vec3(local_rotation_transform * glm::vec4(VEC_UP, 1));
+    glm::vec3 local_heading      = glm::vec3(rotation_transform * glm::vec4(VEC_FORWARD, 1));
+    glm::vec3 local_up_direction = glm::vec3(rotation_transform * glm::vec4(VEC_UP, 1));
     point_at_local(local_heading, &local_up_direction);
 }
 
@@ -213,55 +213,11 @@ void TransformObject::set_enable_joint_constraints(glm::ivec3 enable_joint_const
     }
 }
 
-void TransformObject::apply_joint_constraints()
-{
-    switch(m_joint_type) {
-        case JOINT_TYPE_REVOLUTE:
-            if(!apply_exclusive_pivot_constraints()) { // special-handling of exclusive pivot
-                for(int i = 0; i < 3; i++) {
-                    if(!m_enable_joint_constraints[i]) {
-                        continue;
-                    }
-                    if(angle_distance(m_euler[i], m_joint_constraints_center[i]) > m_joint_constraints_max_deviation[i]) {
-                        float min_value = m_joint_constraints_center[i] - m_joint_constraints_max_deviation[i];
-                        float max_value = m_joint_constraints_center[i] + m_joint_constraints_max_deviation[i];
-                        float distance_to_lower_bound = angle_distance(m_euler[i], min_value);
-                        float distance_to_upper_bound = angle_distance(m_euler[i], max_value);
-                        if(distance_to_lower_bound < distance_to_upper_bound) {
-                            m_euler[i] = min_value;
-                        } else {
-                            m_euler[i] = max_value;
-                        }
-                    }
-                }
-            }
-            break;
-        case JOINT_TYPE_PRISMATIC:
-            for(int i = 0; i < 3; i++) {
-                if(!m_enable_joint_constraints[i]) {
-                    continue;
-                }
-                if(fabs(m_origin[i] - m_joint_constraints_center[i]) > m_joint_constraints_max_deviation[i]) {
-                    float min_value = m_joint_constraints_center[i] - m_joint_constraints_max_deviation[i];
-                    float max_value = m_joint_constraints_center[i] + m_joint_constraints_max_deviation[i];
-                    float distance_to_lower_bound = fabs(m_origin[i] - min_value);
-                    float distance_to_upper_bound = fabs(m_origin[i] - max_value);
-                    if(distance_to_lower_bound < distance_to_upper_bound) {
-                        m_origin[i] = min_value;
-                    } else {
-                        m_origin[i] = max_value;
-                    }
-                }
-            }
-            break;
-    }
-}
-
-bool TransformObject::apply_exclusive_pivot_constraints()
+void TransformObject::apply_exclusive_pivot_constraints()
 {
     static bool disable_recursion = false;
     if(!m_parent || m_exclusive_pivot == -1 || disable_recursion) { // only applies to non-root exclusive pivot
-        return false;
+        return;
     }
     glm::vec3 local_heading;
     glm::vec3 local_up_dir;
@@ -309,7 +265,52 @@ bool TransformObject::apply_exclusive_pivot_constraints()
     disable_recursion = true; // to avoid infinite recursion
     point_at_local(local_heading, &local_up_dir);
     disable_recursion = false;
-    return true;
+}
+
+void TransformObject::apply_joint_constraints()
+{
+    switch(m_joint_type) {
+        case JOINT_TYPE_REVOLUTE:
+            if(m_parent && m_exclusive_pivot != -1) { // special-handling of exclusive pivot
+                apply_exclusive_pivot_constraints();
+            } else {
+                for(int i = 0; i < 3; i++) {
+                    if(!m_enable_joint_constraints[i]) {
+                        continue;
+                    }
+                    if(angle_distance(m_euler[i], m_joint_constraints_center[i]) > m_joint_constraints_max_deviation[i]) {
+                        float min_value = m_joint_constraints_center[i] - m_joint_constraints_max_deviation[i];
+                        float max_value = m_joint_constraints_center[i] + m_joint_constraints_max_deviation[i];
+                        float distance_to_lower_bound = angle_distance(m_euler[i], min_value);
+                        float distance_to_upper_bound = angle_distance(m_euler[i], max_value);
+                        if(distance_to_lower_bound < distance_to_upper_bound) {
+                            m_euler[i] = min_value;
+                        } else {
+                            m_euler[i] = max_value;
+                        }
+                    }
+                }
+            }
+            break;
+        case JOINT_TYPE_PRISMATIC:
+            for(int i = 0; i < 3; i++) {
+                if(!m_enable_joint_constraints[i]) {
+                    continue;
+                }
+                if(fabs(m_origin[i] - m_joint_constraints_center[i]) > m_joint_constraints_max_deviation[i]) {
+                    float min_value = m_joint_constraints_center[i] - m_joint_constraints_max_deviation[i];
+                    float max_value = m_joint_constraints_center[i] + m_joint_constraints_max_deviation[i];
+                    float distance_to_lower_bound = fabs(m_origin[i] - min_value);
+                    float distance_to_upper_bound = fabs(m_origin[i] - max_value);
+                    if(distance_to_lower_bound < distance_to_upper_bound) {
+                        m_origin[i] = min_value;
+                    } else {
+                        m_origin[i] = max_value;
+                    }
+                }
+            }
+            break;
+    }
 }
 
 //==================

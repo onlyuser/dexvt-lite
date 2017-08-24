@@ -45,7 +45,7 @@
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define TARGET_SPEED                 0.025f
-#define IK_ITERS                     50
+#define IK_ITERS                     1
 #define IK_SEGMENT_COUNT             3
 #define IK_SEGMENT_HEIGHT            0.25
 #define IK_SEGMENT_LENGTH            1
