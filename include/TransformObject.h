@@ -16,7 +16,7 @@ public:
         JOINT_TYPE_PRISMATIC
     };
 
-    // for guide wires
+    // guide wires (for debug)
     glm::vec3 m_debug_target_dir;
     glm::vec3 m_debug_end_effector_tip_dir;
     glm::vec3 m_debug_local_pivot;
@@ -37,6 +37,26 @@ public:
     void set_scale(glm::vec3 scale);
     void reset_transform();
 
+    // coordinate system conversions
+    glm::vec3 in_abs_system(glm::vec3 local_point = glm::vec3(0));
+    glm::vec3 in_parent_system(glm::vec3 abs_point) const;
+    glm::vec3 from_origin_in_parent_system(glm::vec3 abs_point) const;
+    glm::vec3 get_abs_left_direction();
+    glm::vec3 get_abs_up_direction();
+    glm::vec3 get_abs_heading();
+
+    // coordinate system operations
+    void point_at_local(glm::vec3 local_target, glm::vec3* local_up_direction = NULL);
+    void set_local_rotation_transform(glm::mat4 local_rotation_transform);
+    void rotate(glm::mat4 rotation_transform);
+    void rotate(float angle_delta, glm::vec3 pivot);
+
+    // hierarchy related
+    void link_parent(TransformObject* new_parent, bool keep_transform = false);
+    TransformObject* get_parent() const        { return m_parent; }
+    std::set<TransformObject*> &get_children() { return m_children; }
+    void unlink_children();
+
     // joint constraints
     joint_type_t get_joint_type() const                                                 { return m_joint_type; }
     void set_joint_type(joint_type_t joint_type)                                        { m_joint_type = joint_type; }
@@ -48,30 +68,10 @@ public:
     void set_joint_constraints_max_deviation(glm::vec3 joint_constraints_max_deviation) { m_joint_constraints_max_deviation = joint_constraints_max_deviation; }
     void set_eclusive_pivot(int exclusive_pivot)                                        { m_exclusive_pivot = exclusive_pivot; }
     int get_exclusive_pivot() const                                                     { return m_exclusive_pivot; }
-    bool realigned_point_at_local_args(glm::vec3* _local_heading, glm::vec3* _local_up_dir);
-    bool apply_exclusive_pivot_constraints();
     void apply_joint_constraints();
-
-    // coordinate system conversions
-    glm::vec3 in_abs_system(glm::vec3 local_point = glm::vec3(0));
-    glm::vec3 in_parent_system(glm::vec3 abs_point) const;
-    glm::vec3 from_origin_in_parent_system(glm::vec3 abs_point) const;
-    glm::vec3 get_abs_left_direction();
-    glm::vec3 get_abs_up_direction();
-    glm::vec3 get_abs_heading();
-
-    // hierarchy related
-    void link_parent(TransformObject* new_parent, bool keep_transform = false);
-    TransformObject* get_parent() const        { return m_parent; }
-    std::set<TransformObject*> &get_children() { return m_children; }
-    void unlink_children();
+    bool apply_exclusive_pivot_constraints();
 
     // advanced features
-    void point_at_local(glm::vec3 local_target, glm::vec3* local_up_direction = NULL);
-    void point_at(glm::vec3 target, glm::vec3* up_direction = NULL);
-    void set_local_rotation_transform(glm::mat4 local_rotation_transform);
-    void rotate(glm::mat4 rotation_transform);
-    void rotate(float angle_delta, glm::vec3 pivot);
     void arcball(glm::vec3* local_arc_pivot_dir,
                  float*     angle_delta,
                  glm::vec3  abs_target,
@@ -88,7 +88,7 @@ public:
                      float     angle_delta,
                      float     avoid_radius);
 
-    // basic features
+    // core functionality
     const glm::mat4 &get_transform(bool trace_down = true);
     const glm::mat4 &get_normal_transform();
     glm::mat4 get_local_rotation_transform() const;
@@ -126,7 +126,7 @@ private:
     bool m_is_dirty_transform;
     bool m_is_dirty_normal_transform;
 
-    // advanced features (to be implemented by derived class)
+    // optional advanced features (to be implemented by derived class, if needed)
     virtual void flatten(glm::mat4* basis = NULL) {}
     virtual void set_axis(glm::vec3 axis) {}
 
