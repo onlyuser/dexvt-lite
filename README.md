@@ -152,6 +152,8 @@ References
     <dd>https://github.com/g-truc/glm/issues/12</dd>
     <dt>"Kinematics (Advanced Methods in Computer Graphics) Part 4"</dt>
     <dd>http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/</dd>
+    <dt>"alfanick's inverse-kinematics repo (ccd.cpp)"</dt>
+    <dd>https://github.com/alfanick/inverse-kinematics/blob/master/ccd.cpp</dd>
 </dl>
 
 Keywords
