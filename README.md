@@ -8,19 +8,9 @@ Copyright (C) 2011-2014 Jerry Chen <mailto:onlyuser@gmail.com>
 About
 -----
 
-dexvt-lite is a [3D Inverse Kinematics (Cyclic Coordinate Descent)](https://github.com/onlyuser/dexvt-lite/blob/master/src/TransformObject.cpp#L338) tech demonstrator.
+dexvt-lite is a [3D Inverse Kinematics (Cyclic Coordinate Descent)](http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/) tech demonstrator.
 It also features environment-mapped reflection/refraction/double refraction (with Fresnel effect, chromatic dispersion, and Beer's law), screen space ambient occlusion, bump mapping, Phong shading, Bloom filter, 3ds mesh import, and platonic primitives generation.
 Platonic primitives supported include sphere, cube, cylinder, cone, grid, tetrahedron, and round brilliant diamond.
-
-Algorithm
----------
-
-Basically, it's CCD with only [LEGAL rotation objectives](https://github.com/onlyuser/dexvt-lite/blob/master/src/TransformObject.cpp#L366) attempted per joint.
-There's no rotate, regret, and reset. Every step along the way is deterministic and final. No heuristic funny business.
-
-* alfanick's [implementation](https://github.com/alfanick/inverse-kinematics/blob/master/ccd.cpp) nails the basic algorithm in clear succinct code.
-* I disagree with [this reply](https://stackoverflow.com/questions/21373012/best-inverse-kinematics-algorithm-with-constraints-on-joint-angles) on stackoverflow. Rather than allowing more than one axis to rotate per joint and later rejecting partial solutions (where one axis rotation violates constraints), the solver should never allow more than one axis to rotate per joint in the first place. Adhering to this principle greatly simplifies the solution.
-* This implementation doesn't use quaternions, but there's nothing really preventing it.
 
 Screenshots
 -----------
@@ -38,6 +28,15 @@ Screenshots
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_path_3dprinter_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_path_3dprinter.png)
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_path_fanta_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_path_fanta.png)
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_path_fanta_wireframe_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_path_fanta_wireframe.png)
+
+Algorithm
+---------
+
+Basically, it's CCD with only [LEGAL rotation objectives](https://github.com/onlyuser/dexvt-lite/blob/master/src/TransformObject.cpp#L366) attempted per joint.
+
+Some comments:
+* For the CCD part, alfanick's [implementation](https://github.com/alfanick/inverse-kinematics/blob/master/ccd.cpp) nails the basic algorithm.
+* For the IK constraints part, I disagree with [this reply](https://stackoverflow.com/questions/21373012/best-inverse-kinematics-algorithm-with-constraints-on-joint-angles) on stackoverflow. Rather than allowing ball joints (multiple axes of rotation per joint) with constraints, the solver should really limit itself to hinge joints (one axis of rotation per joint). So instead of rotating axis by axis for all axes and later rejecting partial solutions (where one axis' rotation violates constraints), the solver shouldn't even attempt illegal rotations at all.
 
 Requirements
 ------------
