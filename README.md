@@ -8,7 +8,7 @@ Copyright (C) 2011-2014 Jerry Chen <mailto:onlyuser@gmail.com>
 About
 -----
 
-dexvt-lite is a [3D Inverse Kinematics (Cyclic Coordinate Descent)](http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/) tech demonstrator.
+dexvt-lite is a 3D Inverse Kinematics ([Cyclic Coordinate Descent](http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/)) tech demonstrator.
 It also features environment-mapped reflection/refraction/double refraction (with Fresnel effect, chromatic dispersion, and Beer's law), screen space ambient occlusion, bump mapping, Phong shading, Bloom filter, 3ds mesh import, and platonic primitives generation.
 Platonic primitives supported include sphere, cube, cylinder, cone, grid, tetrahedron, and round brilliant diamond.
 
@@ -39,6 +39,7 @@ Some comments:
     * what-when-how gives a [nice introduction](http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/) to the steps involved.
     * alfanick's [implementation](https://github.com/alfanick/inverse-kinematics/blob/master/ccd.cpp) nails the basic shape of the algorithm.
 * For the IK constraints part, I disagree with [this reply](https://stackoverflow.com/questions/21373012/best-inverse-kinematics-algorithm-with-constraints-on-joint-angles) on stackoverflow. Rather than allowing ball joints (multiple axes of rotation per joint) with constraints, the solver should limit itself to hinge joints (one axis of rotation per joint) with constraints. So instead of rotating axis by axis for all axes and later rejecting partial solutions (where one axis' rotation violates constraints), the solver shouldn't attempt illegal rotations to begin with. I propose a solution that only attempts [legal rotation objectives](https://github.com/onlyuser/dexvt-lite/blob/master/src/TransformObject.cpp#L366) and enforces constraints [in cartesian space](https://github.com/onlyuser/dexvt-lite/blob/master/src/TransformObject.cpp#L216) (as opposed to euler space, which is suceptible to gimbal issues when a euler coordinate crosses the zenith).
+* This implementation doesn't use quaternions, but I don't see why not.
 
 Requirements
 ------------
