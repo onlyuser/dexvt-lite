@@ -293,13 +293,13 @@ void Mesh::update_normals_and_tangents()
     }
 }
 
-// NOTE: strangely required by pure virtual (already defined in base class!)
+// NOTE: required by base class pure virtual despite being defined in another base class
 void Mesh::get_min_max(glm::vec3* min, glm::vec3* max) const
 {
     BBoxObject::get_min_max(min, max);
 }
 
-// NOTE: strangely required by pure virtual (already defined in base class!)
+// NOTE: required by base class pure virtual despite being defined in another base class
 glm::vec3 Mesh::in_abs_system(glm::vec3 local_point)
 {
     return TransformObject::in_abs_system(local_point);

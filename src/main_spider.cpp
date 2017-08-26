@@ -52,7 +52,7 @@
 #define BOX_LENGTH                     0.5
 #define BOX_SPEED                      0.05f
 #define BOX_WIDTH                      0.25
-#define IK_ITERS                       1 // trade accuracy for speed
+#define IK_ITERS                       1
 #define IK_LEG_COUNT                   8
 #define IK_LEG_MAX_LIFT_HEIGHT         (BOX_ELEVATION * 0.5)
 #define IK_LEG_RADIUS                  (BOX_LENGTH * 0.5)
