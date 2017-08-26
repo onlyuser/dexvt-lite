@@ -8,9 +8,18 @@ Copyright (C) 2011-2014 Jerry Chen <mailto:onlyuser@gmail.com>
 About
 -----
 
-dexvt-lite is a [3D Inverse Kinematics (Cyclic Coordinate Descent)](https://github.com/onlyuser/dexvt-lite/blob/master/src/TransformObject.cpp#L338) tech demo.
-In addition to Inverse Kinematics, it also features environment-mapped reflection/refraction/double refraction (with Fresnel effect, chromatic dispersion, and Beer's law), screen space ambient occlusion, bump mapping, Phong shading, Bloom filter, 3ds mesh import, and platonic primitives generation.
+dexvt-lite is a [3D Inverse Kinematics (Cyclic Coordinate Descent)](https://github.com/onlyuser/dexvt-lite/blob/master/src/TransformObject.cpp#L338) tech demonstrator.
+It also features environment-mapped reflection/refraction/double refraction (with Fresnel effect, chromatic dispersion, and Beer's law), screen space ambient occlusion, bump mapping, Phong shading, Bloom filter, 3ds mesh import, and platonic primitives generation.
 Platonic primitives supported include sphere, cube, cylinder, cone, grid, tetrahedron, and round brilliant diamond.
+
+Algorithm
+---------
+
+Basically, it's CCD with only LEGAL rotation objectives attempted per joint.
+There's no rotate, regret, and reset. Every step is deterministic and final. No heuristic funny business.
+
+Comment #1: [alfanick's inverse-kinematics repo](https://github.com/alfanick/inverse-kinematics/blob/master/ccd.cpp) nails the basic algorithm in clear succinct code.
+Comment #2: I disagree with [this reply](https://stackoverflow.com/questions/21373012/best-inverse-kinematics-algorithm-with-constraints-on-joint-angles) on stackoverflow. Rather than allowing more than one axis to rotate per joint and later rejecting partial solutions (where one axis rotation violates constraints), the solver should never had allowed more than one axis to rotate per joint in the first place. I find adhering to this principle greatly simplifies the solution.
 
 Screenshots
 -----------
