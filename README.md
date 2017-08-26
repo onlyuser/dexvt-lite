@@ -16,10 +16,11 @@ Algorithm
 ---------
 
 Basically, it's CCD with only LEGAL rotation objectives attempted per joint.
-There's no rotate, regret, and reset. Every step is deterministic and final. No heuristic funny business.
+There's no rotate, regret, and reset. Every step along the way is deterministic and final. No heuristic funny business.
 
-Comment #1: [alfanick's inverse-kinematics repo](https://github.com/alfanick/inverse-kinematics/blob/master/ccd.cpp) nails the basic algorithm in clear succinct code.
-Comment #2: I disagree with [this reply](https://stackoverflow.com/questions/21373012/best-inverse-kinematics-algorithm-with-constraints-on-joint-angles) on stackoverflow. Rather than allowing more than one axis to rotate per joint and later rejecting partial solutions (where one axis rotation violates constraints), the solver should never had allowed more than one axis to rotate per joint in the first place. I find adhering to this principle greatly simplifies the solution.
+* [alfanick's inverse-kinematics repo](https://github.com/alfanick/inverse-kinematics/blob/master/ccd.cpp) nails the basic algorithm in clear succinct code.
+* I disagree with [this reply](https://stackoverflow.com/questions/21373012/best-inverse-kinematics-algorithm-with-constraints-on-joint-angles) on stackoverflow. Rather than allowing more than one axis to rotate per joint and later rejecting partial solutions (where one axis rotation violates constraints), the solver should never had allowed more than one axis to rotate per joint in the first place. I find adhering to this principle greatly simplifies the solution.
+* This implementation doesn't use quaternions, but there's nothing really preventing it.
 
 Screenshots
 -----------
