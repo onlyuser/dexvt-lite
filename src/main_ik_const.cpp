@@ -221,15 +221,15 @@ int init_resources()
         if(leg_segment_index == 0) {
             (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 0));
             (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 90));
         } else if(leg_segment_index == 1) {
             (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 0));
             (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 45));
         } else if(leg_segment_index == 2) {
             (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 1));
             (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 30, 0));
         }
         leg_segment_index++;
     }

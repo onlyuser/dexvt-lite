@@ -69,7 +69,8 @@ public:
     void set_hinge_type(int hinge_type)                                                 { m_hinge_type = hinge_type; }
     int get_hinge_type() const                                                          { return m_hinge_type; }
     bool is_hinge() const                                                               { return m_hinge_type != -1; }
-    void apply_hinge_constraints_in_cartesian_space();
+    void apply_hinge_constraints_in_cartesian_space_perpendicular_to_plane_of_free_rotation();
+    void apply_hinge_constraints_in_cartesian_space_within_plane_of_free_rotation();
     void apply_joint_constraints();
 
     // advanced features
