@@ -213,7 +213,7 @@ void TransformObject::set_enable_joint_constraints(glm::ivec3 enable_joint_const
     }
 }
 
-void TransformObject::legalize_hinge_rotation()
+void TransformObject::apply_hinge_constraints_in_cartesian_space()
 {
     static bool disable_recursion = false;
     if(!m_parent || m_hinge_type == -1 || disable_recursion) { // special-handling of hinge
@@ -273,7 +273,7 @@ void TransformObject::apply_joint_constraints()
         case JOINT_TYPE_REVOLUTE:
             if(m_parent && m_hinge_type != -1) { // special-handling of hinge
                 // if hinge, project absolute axis endpoints onto parent's plane of free rotation
-                legalize_hinge_rotation();
+                apply_hinge_constraints_in_cartesian_space();
             } else {
                 for(int i = 0; i < 3; i++) {
                     if(!m_enable_joint_constraints[i]) {
@@ -335,7 +335,7 @@ void TransformObject::arcball(glm::vec3* local_arc_pivot_dir,
     }
 }
 
-void TransformObject::legalize_hinge_rotation_objective(glm::vec3* target, glm::vec3* end_effector_tip)
+void TransformObject::project_to_plane_of_free_rotation(glm::vec3* target, glm::vec3* end_effector_tip)
 {
     // if hinge, project arcball input onto plane of free rotation
     if(m_hinge_type != -1) {
@@ -393,7 +393,7 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
                 continue;
             }
             // if hinge, project arcball input onto plane of free rotation
-            current_segment->legalize_hinge_rotation_objective(&_target, &end_effector_tip);
+            current_segment->project_to_plane_of_free_rotation(&_target, &end_effector_tip);
 #if 1
             glm::vec3 local_arc_pivot_dir;
             float angle_delta = 0;
