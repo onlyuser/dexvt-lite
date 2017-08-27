@@ -66,9 +66,9 @@ public:
     void set_joint_constraints_center(glm::vec3 joint_constraints_center)               { m_joint_constraints_center = joint_constraints_center; }
     const glm::vec3 &get_joint_constraints_max_deviation() const                        { return m_joint_constraints_max_deviation; }
     void set_joint_constraints_max_deviation(glm::vec3 joint_constraints_max_deviation) { m_joint_constraints_max_deviation = joint_constraints_max_deviation; }
-    void set_eclusive_pivot(int exclusive_pivot)                                        { m_exclusive_pivot = exclusive_pivot; }
-    int get_exclusive_pivot() const                                                     { return m_exclusive_pivot; }
-    void apply_exclusive_pivot_constraints();
+    void set_eclusive_pivot(int exclusive_pivot)                                        { m_hinge_type = exclusive_pivot; }
+    int get_exclusive_pivot() const                                                     { return m_hinge_type; }
+    void legalize_hinge_rotation();
     void apply_joint_constraints();
 
     // advanced features
@@ -76,6 +76,7 @@ public:
                  float*     angle_delta,
                  glm::vec3  abs_target,
                  glm::vec3  abs_reference_point);
+    void legalize_hinge_rotation_objective(glm::vec3* target, glm::vec3* end_effector_tip);
     bool solve_ik_ccd(TransformObject* root,
                       glm::vec3        local_end_effector_tip,
                       glm::vec3        target,
@@ -106,7 +107,7 @@ protected:
     glm::ivec3   m_enable_joint_constraints;
     glm::vec3    m_joint_constraints_center;
     glm::vec3    m_joint_constraints_max_deviation;
-    int          m_exclusive_pivot;
+    int          m_hinge_type;
 
     // hierarchy related
     TransformObject*           m_parent;

@@ -22,7 +22,7 @@ TransformObject::TransformObject(std::string name,
       m_enable_joint_constraints(       glm::ivec3(0)),
       m_joint_constraints_center(       glm::vec3(0)),
       m_joint_constraints_max_deviation(glm::vec3(0)),
-      m_exclusive_pivot(-1),
+      m_hinge_type(-1),
       m_parent(NULL),
       m_is_dirty_transform(true),
       m_is_dirty_normal_transform(true)
@@ -197,26 +197,26 @@ void TransformObject::set_enable_joint_constraints(glm::ivec3 enable_joint_const
         m_enable_joint_constraints[1] &&
         m_enable_joint_constraints[2])
     {
-        m_exclusive_pivot = 0;
+        m_hinge_type = 0;
     } else if( m_enable_joint_constraints[0] &&
               !m_enable_joint_constraints[1] &&
                m_enable_joint_constraints[2])
     {
-        m_exclusive_pivot = 1;
+        m_hinge_type = 1;
     } else if( m_enable_joint_constraints[0] &&
                m_enable_joint_constraints[1] &&
               !m_enable_joint_constraints[2])
     {
-        m_exclusive_pivot = 2;
+        m_hinge_type = 2;
     } else {
-        m_exclusive_pivot = -1;
+        m_hinge_type = -1;
     }
 }
 
-void TransformObject::apply_exclusive_pivot_constraints()
+void TransformObject::legalize_hinge_rotation()
 {
     static bool disable_recursion = false;
-    if(!m_parent || m_exclusive_pivot == -1 || disable_recursion) { // only applies to non-root exclusive pivot
+    if(!m_parent || m_hinge_type == -1 || disable_recursion) { // special-handling of hinge
         return;
     }
     glm::vec3 local_heading;
@@ -227,8 +227,8 @@ void TransformObject::apply_exclusive_pivot_constraints()
     glm::vec3 joint_abs_left_axis_endpoint    = joint_origin + get_abs_left_direction(); // X
     glm::vec3 joint_abs_up_axis_endpoint      = joint_origin + get_abs_up_direction();   // Y
     glm::vec3 joint_abs_heading_axis_endpoint = joint_origin + get_abs_heading();        // Z
-    // if exclusive pivot, project absolute axis endpoints onto parent's plane of free rotation
-    switch(m_exclusive_pivot) {
+    // if hinge, project absolute axis endpoints onto parent's plane of free rotation
+    switch(m_hinge_type) {
         case 0:
             {
                 // allow ONLY roll -- project onto XY plane
@@ -271,8 +271,9 @@ void TransformObject::apply_joint_constraints()
 {
     switch(m_joint_type) {
         case JOINT_TYPE_REVOLUTE:
-            if(m_parent && m_exclusive_pivot != -1) { // special-handling of exclusive pivot
-                apply_exclusive_pivot_constraints();
+            if(m_parent && m_hinge_type != -1) { // special-handling of hinge
+                // if hinge, project absolute axis endpoints onto parent's plane of free rotation
+                legalize_hinge_rotation();
             } else {
                 for(int i = 0; i < 3; i++) {
                     if(!m_enable_joint_constraints[i]) {
@@ -334,6 +335,35 @@ void TransformObject::arcball(glm::vec3* local_arc_pivot_dir,
     }
 }
 
+void TransformObject::legalize_hinge_rotation_objective(glm::vec3* target, glm::vec3* end_effector_tip)
+{
+    // if hinge, project arcball input onto plane of free rotation
+    if(m_hinge_type != -1) {
+        glm::vec3 plane_origin = in_abs_system();
+        glm::vec3 plane_normal;
+        switch(m_hinge_type) {
+            case 0:
+                // allow ONLY roll -- project onto XY plane
+                plane_normal = get_abs_heading();
+                break;
+            case 1:
+                // allow ONLY pitch -- project onto YZ plane
+                plane_normal = get_abs_left_direction();
+                break;
+            case 2:
+                // allow ONLY yaw -- project onto XZ plane
+                plane_normal = get_abs_up_direction();
+                break;
+        }
+        if(target) {
+            *target = nearest_point_on_plane(plane_origin, plane_normal, *target);
+        }
+        if(end_effector_tip) {
+            *end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, *end_effector_tip);
+        }
+    }
+}
+
 // http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/
 bool TransformObject::solve_ik_ccd(TransformObject* root,
                                    glm::vec3        local_end_effector_tip,
@@ -351,48 +381,29 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
         for(TransformObject* current_segment = this; current_segment && current_segment != root->get_parent(); current_segment = current_segment->get_parent()) {
             glm::vec3 end_effector_tip = in_abs_system(local_end_effector_tip);
             find_solution = (glm::distance(end_effector_tip, target) < accept_end_effector_distance);
-            glm::vec3 tmp_target;
+            glm::vec3 _target;
             if(end_effector_dir && current_segment == this) {
-                tmp_target = in_abs_system() + *end_effector_dir;
+                _target = in_abs_system() + *end_effector_dir;
             } else {
-                tmp_target = target;
+                _target = target;
             }
             if(current_segment->get_joint_type() == JOINT_TYPE_PRISMATIC) {
-                current_segment->set_origin(current_segment->get_origin() + (current_segment->from_origin_in_parent_system(tmp_target) -
+                current_segment->set_origin(current_segment->get_origin() + (current_segment->from_origin_in_parent_system(_target) -
                                                                              current_segment->from_origin_in_parent_system(end_effector_tip)));
                 continue;
             }
-            // if exclusive pivot, project arcball input onto plane of free rotation
-            if(current_segment->m_exclusive_pivot != -1) {
-                glm::vec3 plane_origin = current_segment->in_abs_system();
-                glm::vec3 plane_normal;
-                switch(current_segment->m_exclusive_pivot) {
-                    case 0:
-                        // allow ONLY roll -- project onto XY plane
-                        plane_normal = current_segment->get_abs_heading();
-                        break;
-                    case 1:
-                        // allow ONLY pitch -- project onto YZ plane
-                        plane_normal = current_segment->get_abs_left_direction();
-                        break;
-                    case 2:
-                        // allow ONLY yaw -- project onto XZ plane
-                        plane_normal = current_segment->get_abs_up_direction();
-                        break;
-                }
-                tmp_target       = nearest_point_on_plane(plane_origin, plane_normal, tmp_target);
-                end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, end_effector_tip);
-            }
+            // if hinge, project arcball input onto plane of free rotation
+            current_segment->legalize_hinge_rotation_objective(&_target, &end_effector_tip);
 #if 1
             glm::vec3 local_arc_pivot_dir;
             float angle_delta = 0;
-            current_segment->arcball(&local_arc_pivot_dir, &angle_delta, tmp_target, end_effector_tip);
+            current_segment->arcball(&local_arc_pivot_dir, &angle_delta, _target, end_effector_tip);
             glm::mat4 local_arc_rotation_transform = GLM_ROTATION_TRANSFORM(glm::mat4(1), -angle_delta, local_arc_pivot_dir);
     #if 1
             // attempt #3 -- same as attempt #2, but make use of roll component (suitable for ropes/snakes/boids)
             current_segment->set_local_rotation_transform(local_arc_rotation_transform * current_segment->get_local_rotation_transform());
             // update guide wires (for debug)
-            glm::vec3 debug_local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(tmp_target));
+            glm::vec3 debug_local_target_dir           = glm::normalize(current_segment->from_origin_in_parent_system(_target));
             glm::vec3 debug_local_end_effector_tip_dir = glm::normalize(current_segment->from_origin_in_parent_system(end_effector_tip));
             glm::vec3 debug_local_arc_delta_dir        = glm::normalize(debug_local_target_dir - debug_local_end_effector_tip_dir);
             glm::vec3 debug_local_arc_midpoint_dir     = glm::normalize((debug_local_target_dir + debug_local_end_effector_tip_dir) * 0.5f);
@@ -400,7 +411,7 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
             current_segment->m_debug_target_dir           = debug_local_target_dir;
             current_segment->m_debug_end_effector_tip_dir = debug_local_end_effector_tip_dir;
             current_segment->m_debug_local_pivot          = debug_local_arc_pivot_dir;
-            current_segment->m_debug_local_target         = current_segment->from_origin_in_parent_system(tmp_target);
+            current_segment->m_debug_local_target         = current_segment->from_origin_in_parent_system(_target);
         #ifdef DEBUG
             //std::cout << "TARGET: " << glm::to_string(local_target_dir) << ", END_EFF: " << glm::to_string(local_end_effector_tip_dir) << ", ANGLE: " << angle_delta << std::endl;
             //std::cout << "BEFORE: " << glm::to_string(new_current_segment_transform * glm::vec4(VEC_FORWARD, 1))
@@ -414,7 +425,7 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
             sum_angle += angle_delta;
 #else
             // attempt #1 -- do rotations in Euler coordinates (poor man's ik)
-            glm::vec3 local_target_euler           = offset_to_euler(current_segment->from_origin_in_parent_system(tmp_target));
+            glm::vec3 local_target_euler           = offset_to_euler(current_segment->from_origin_in_parent_system(_target));
             glm::vec3 local_end_effector_tip_euler = offset_to_euler(current_segment->from_origin_in_parent_system(end_effector_tip));
             current_segment->set_euler(euler_modulo(current_segment->get_euler() + euler_modulo(local_target_euler - local_end_effector_tip_euler)));
             sum_angle += accept_avg_angle_distance; // to avoid convergence
