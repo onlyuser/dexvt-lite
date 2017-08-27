@@ -216,7 +216,7 @@ void TransformObject::set_enable_joint_constraints(glm::ivec3 enable_joint_const
 void TransformObject::apply_hinge_constraints_in_cartesian_space()
 {
     static bool disable_recursion = false;
-    if(!m_parent || m_hinge_type == -1 || disable_recursion) { // special-handling of hinge
+    if(!is_hinge() || !m_parent || disable_recursion) { // special-handling of hinge with parent
         return;
     }
     glm::vec3 local_heading;
@@ -271,7 +271,7 @@ void TransformObject::apply_joint_constraints()
 {
     switch(m_joint_type) {
         case JOINT_TYPE_REVOLUTE:
-            if(m_parent && m_hinge_type != -1) { // special-handling of hinge
+            if(is_hinge() && m_parent) { // special-handling of hinge with parent
                 // if hinge, project absolute axis endpoints onto parent's plane of free rotation
                 apply_hinge_constraints_in_cartesian_space();
             } else {
