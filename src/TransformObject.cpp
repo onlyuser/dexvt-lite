@@ -353,17 +353,11 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_within_plane_of
 
 void TransformObject::apply_joint_constraints()
 {
-    static bool disable_recursion = false;
     switch(m_joint_type) {
         case JOINT_TYPE_REVOLUTE:
             if(is_hinge()) {
-                if(disable_recursion) {
-                    apply_hinge_constraints_in_cartesian_space_within_plane_of_free_rotation();
-                } else {
-                    disable_recursion = true;
-                    apply_hinge_constraints_in_cartesian_space_perpendicular_to_plane_of_free_rotation();
-                    disable_recursion = false;
-                }
+                apply_hinge_constraints_in_cartesian_space_perpendicular_to_plane_of_free_rotation();
+                apply_hinge_constraints_in_cartesian_space_within_plane_of_free_rotation();
             } else {
                 for(int i = 0; i < 3; i++) {
                     if(!m_enable_joint_constraints[i]) {
