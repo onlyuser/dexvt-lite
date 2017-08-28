@@ -222,7 +222,6 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_t
     glm::vec3 local_heading;
     glm::vec3 local_up_dir;
     glm::vec3 parent_plane_origin = m_parent ? m_parent->in_abs_system() : glm::vec3(0);
-    glm::vec3 parent_plane_normal;
     if(!m_parent) {
         mark_dirty_transform(); // strangely necessary, otherwise absolute axis endpoints aren't calculated
     }
@@ -234,7 +233,7 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_t
         case 0:
             {
                 // allow ONLY roll -- project onto XY plane
-                parent_plane_normal                              = m_parent ? m_parent->get_abs_heading() : VEC_FORWARD;                                           // Z
+                glm::vec3 parent_plane_normal                    = m_parent ? m_parent->get_abs_heading() : VEC_FORWARD;                                           // Z
                 glm::vec3 joint_flattened_abs_left_axis_endpoint = nearest_point_on_plane(parent_plane_origin, parent_plane_normal, joint_abs_left_axis_endpoint); // X
                 glm::vec3 joint_flattened_abs_up_axis_endpoint   = nearest_point_on_plane(parent_plane_origin, parent_plane_normal, joint_abs_up_axis_endpoint);   // Y
                 glm::vec3 local_left_dir                         = from_origin_in_parent_system(joint_flattened_abs_left_axis_endpoint); // X
@@ -245,7 +244,7 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_t
         case 1:
             {
                 // allow ONLY pitch -- project onto YZ plane
-                parent_plane_normal                            = m_parent ? m_parent->get_abs_left_direction() : VEC_LEFT;                                          // X
+                glm::vec3 parent_plane_normal                  = m_parent ? m_parent->get_abs_left_direction() : VEC_LEFT;                                          // X
                 glm::vec3 joint_flattened_abs_up_axis_endpoint = nearest_point_on_plane(parent_plane_origin, parent_plane_normal, joint_abs_up_axis_endpoint);      // Y
                 glm::vec3 joint_flattened_abs_heading_endpoint = nearest_point_on_plane(parent_plane_origin, parent_plane_normal, joint_abs_heading_axis_endpoint); // Z
                           local_up_dir                         = from_origin_in_parent_system(joint_flattened_abs_up_axis_endpoint); // Y
@@ -255,7 +254,7 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_t
         case 2:
             {
                 // allow ONLY yaw -- project onto XZ plane
-                parent_plane_normal                              = m_parent ? m_parent->get_abs_up_direction() : VEC_UP;                                              // Y
+                glm::vec3 parent_plane_normal                    = m_parent ? m_parent->get_abs_up_direction() : VEC_UP;                                              // Y
                 glm::vec3 joint_flattened_abs_heading_endpoint   = nearest_point_on_plane(parent_plane_origin, parent_plane_normal, joint_abs_heading_axis_endpoint); // Z
                 glm::vec3 joint_flattened_abs_left_axis_endpoint = nearest_point_on_plane(parent_plane_origin, parent_plane_normal, joint_abs_left_axis_endpoint);    // X
                           local_heading                          = from_origin_in_parent_system(joint_flattened_abs_heading_endpoint);   // Z
