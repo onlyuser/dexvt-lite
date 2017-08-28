@@ -269,6 +269,7 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_t
 
 void TransformObject::apply_hinge_constraints_in_cartesian_space_within_plane_of_free_rotation()
 {
+    return;
     if(!is_hinge()) { // special-handling of hinge
         return;
     }
