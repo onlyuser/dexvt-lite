@@ -273,7 +273,7 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_within_plane_of
     if(!is_hinge()) { // special-handling of hinge
         return;
     }
-    glm::vec3 parent_abs_origin = m_parent ? m_parent->in_abs_system() : -VEC_FORWARD; // intentionally behind origin
+    glm::vec3 parent_abs_origin = m_parent ? m_parent->in_abs_system() : -get_abs_heading(); // intentionally behind origin
     glm::mat4 parent_transform  = m_parent ? m_parent->get_transform() : glm::mat4(1);
     glm::vec3 abs_heading = get_abs_heading();
     switch(m_hinge_type) {
