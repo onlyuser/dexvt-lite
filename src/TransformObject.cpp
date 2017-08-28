@@ -216,10 +216,10 @@ void TransformObject::set_enable_joint_constraints(glm::ivec3 enable_joint_const
 void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_to_plane_of_free_rotation()
 {
     static bool disable_recursion = false;
-    if(!is_hinge() || disable_recursion) { // special-handling of hinge with parent
+    if(!is_hinge() || disable_recursion) { // special-handling of hinge
         return;
     }
-    mark_dirty_transform(); // strangely necessary, otherwise abs basis isn't calculated
+    mark_dirty_transform(); // strangely necessary, otherwise absolute axis endpoints aren't calculated
     glm::vec3 local_heading;
     glm::vec3 local_up_dir;
     glm::vec3 parent_plane_origin = m_parent ? m_parent->in_abs_system() : glm::vec3(0);
@@ -228,7 +228,6 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_t
     glm::vec3 joint_abs_left_axis_endpoint    = joint_origin + get_abs_left_direction(); // X
     glm::vec3 joint_abs_up_axis_endpoint      = joint_origin + get_abs_up_direction();   // Y
     glm::vec3 joint_abs_heading_axis_endpoint = joint_origin + get_abs_heading();        // Z
-    // if hinge, project absolute axis endpoints onto parent's plane of free rotation
     switch(m_hinge_type) {
         case 0:
             {
@@ -276,7 +275,6 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_within_plane_of
     glm::vec3 parent_abs_origin = m_parent ? m_parent->in_abs_system() : -VEC_FORWARD; // intentionally behind origin
     glm::mat4 parent_transform  = m_parent ? m_parent->get_transform() : glm::mat4(1);
     glm::vec3 abs_heading = get_abs_heading();
-    // if hinge, do something magical
     switch(m_hinge_type) {
         case 0:
             {
@@ -428,7 +426,6 @@ void TransformObject::arcball(glm::vec3* local_arc_pivot_dir,
 
 void TransformObject::project_to_plane_of_free_rotation(glm::vec3* target, glm::vec3* end_effector_tip)
 {
-    // if hinge, project arcball input onto plane of free rotation
     if(m_hinge_type != -1) {
         glm::vec3 plane_origin = in_abs_system();
         glm::vec3 plane_normal;
