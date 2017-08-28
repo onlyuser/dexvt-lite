@@ -69,8 +69,16 @@ public:
     void set_hinge_type(int hinge_type)                                                 { m_hinge_type = hinge_type; }
     int get_hinge_type() const                                                          { return m_hinge_type; }
     bool is_hinge() const                                                               { return m_hinge_type != -1; }
-    void apply_hinge_constraints_in_cartesian_space_perpendicular_to_plane_of_free_rotation();
-    void apply_hinge_constraints_in_cartesian_space_within_plane_of_free_rotation();
+    void set_enable_constraints_within_plane_of_free_rotation(bool enable_constraints_within_plane_of_free_rotation)
+    {
+        m_enable_constraints_within_plane_of_free_rotation = enable_constraints_within_plane_of_free_rotation;
+    }
+    bool get_enable_constraints_within_plane_of_free_rotation() const
+    {
+        return m_enable_constraints_within_plane_of_free_rotation;
+    }
+    void apply_hinge_constraints_perpendicular_to_plane_of_free_rotation();
+    void apply_hinge_constraints_within_plane_of_free_rotation();
     void apply_joint_constraints();
 
     // advanced features
@@ -110,6 +118,7 @@ protected:
     glm::vec3    m_joint_constraints_center;
     glm::vec3    m_joint_constraints_max_deviation;
     int          m_hinge_type;
+    bool         m_enable_constraints_within_plane_of_free_rotation;
 
     // hierarchy related
     TransformObject*           m_parent;

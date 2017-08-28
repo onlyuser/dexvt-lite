@@ -23,6 +23,7 @@ TransformObject::TransformObject(std::string name,
       m_joint_constraints_center(       glm::vec3(0)),
       m_joint_constraints_max_deviation(glm::vec3(0)),
       m_hinge_type(-1),
+      m_enable_constraints_within_plane_of_free_rotation(false),
       m_parent(NULL),
       m_is_dirty_transform(true),
       m_is_dirty_normal_transform(true)
@@ -213,7 +214,7 @@ void TransformObject::set_enable_joint_constraints(glm::ivec3 enable_joint_const
     }
 }
 
-void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_to_plane_of_free_rotation()
+void TransformObject::apply_hinge_constraints_perpendicular_to_plane_of_free_rotation()
 {
     static bool disable_recursion = false;
     if(!is_hinge() || disable_recursion) {
@@ -268,9 +269,8 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_t
     disable_recursion = false;
 }
 
-void TransformObject::apply_hinge_constraints_in_cartesian_space_within_plane_of_free_rotation()
+void TransformObject::apply_hinge_constraints_within_plane_of_free_rotation()
 {
-    return;
     if(!is_hinge()) {
         return;
     }
@@ -344,8 +344,10 @@ void TransformObject::apply_joint_constraints()
     switch(m_joint_type) {
         case JOINT_TYPE_REVOLUTE:
             if(is_hinge()) {
-                apply_hinge_constraints_in_cartesian_space_perpendicular_to_plane_of_free_rotation();
-                apply_hinge_constraints_in_cartesian_space_within_plane_of_free_rotation();
+                apply_hinge_constraints_perpendicular_to_plane_of_free_rotation();
+                if(m_enable_constraints_within_plane_of_free_rotation) {
+                    apply_hinge_constraints_within_plane_of_free_rotation();
+                }
             } else {
                 for(int i = 0; i < 3; i++) {
                     if(!m_enable_joint_constraints[i]) {
