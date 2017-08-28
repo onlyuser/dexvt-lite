@@ -216,14 +216,16 @@ void TransformObject::set_enable_joint_constraints(glm::ivec3 enable_joint_const
 void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_to_plane_of_free_rotation()
 {
     static bool disable_recursion = false;
-    if(!is_hinge() || disable_recursion) { // special-handling of hinge
+    if(!is_hinge() || disable_recursion) {
         return;
     }
-    mark_dirty_transform(); // strangely necessary, otherwise absolute axis endpoints aren't calculated
     glm::vec3 local_heading;
     glm::vec3 local_up_dir;
     glm::vec3 parent_plane_origin = m_parent ? m_parent->in_abs_system() : glm::vec3(0);
     glm::vec3 parent_plane_normal;
+    if(!m_parent) {
+        mark_dirty_transform(); // strangely necessary, otherwise absolute axis endpoints aren't calculated
+    }
     glm::vec3 joint_origin                    = in_abs_system();
     glm::vec3 joint_abs_left_axis_endpoint    = joint_origin + get_abs_left_direction(); // X
     glm::vec3 joint_abs_up_axis_endpoint      = joint_origin + get_abs_up_direction();   // Y
@@ -262,18 +264,17 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_t
             }
             break;
     }
-    disable_recursion = true; // to avoid infinite recursion
+    disable_recursion = true;
     point_at_local(local_heading, &local_up_dir);
     disable_recursion = false;
 }
 
 void TransformObject::apply_hinge_constraints_in_cartesian_space_within_plane_of_free_rotation()
 {
-    return;
-    if(!is_hinge()) { // special-handling of hinge
+    if(!is_hinge()) {
         return;
     }
-    glm::vec3 parent_abs_origin = m_parent ? m_parent->in_abs_system() : -get_abs_heading(); // intentionally behind origin
+    glm::vec3 parent_abs_origin = m_parent ? m_parent->in_abs_system() : glm::vec3(0);
     glm::mat4 parent_transform  = m_parent ? m_parent->get_transform() : glm::mat4(1);
     glm::vec3 abs_heading = get_abs_heading();
     switch(m_hinge_type) {
@@ -354,11 +355,11 @@ void TransformObject::apply_joint_constraints()
     static bool disable_recursion = false;
     switch(m_joint_type) {
         case JOINT_TYPE_REVOLUTE:
-            if(is_hinge()) { // special-handling of hinge
+            if(is_hinge()) {
                 if(disable_recursion) {
                     apply_hinge_constraints_in_cartesian_space_within_plane_of_free_rotation();
                 } else {
-                    disable_recursion = true; // to avoid infinite recursion
+                    disable_recursion = true;
                     apply_hinge_constraints_in_cartesian_space_perpendicular_to_plane_of_free_rotation();
                     disable_recursion = false;
                 }

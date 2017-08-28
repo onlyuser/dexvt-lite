@@ -220,16 +220,16 @@ int init_resources()
         (*p)->set_ambient_color(glm::vec3(0));
         if(leg_segment_index == 0) {
             (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 0));
-            (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 30));
+            (*p)->set_joint_constraints_center(glm::vec3(0, 0, 180));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 60));
         } else if(leg_segment_index == 1) {
             (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 0));
             (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 30));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 60));
         } else if(leg_segment_index == 2) {
             (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 1));
             (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 30, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 60, 0));
         }
         leg_segment_index++;
     }
