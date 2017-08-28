@@ -32,14 +32,14 @@ Screenshots
 3D Inverse Kinematics Algorithm
 -------------------------------
 
-Basically, it's CCD with only [LEGAL rotation](https://github.com/onlyuser/dexvt-lite/blob/master/src/TransformObject.cpp#L366) attempted per joint.
+Basically, it's CCD with only [LEGAL rotations](https://github.com/onlyuser/dexvt-lite/blob/master/src/TransformObject.cpp#L366) attempted per joint.
 
 Some comments:
 * For the CCD part:
     * what-when-how gives a [nice introduction](http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/) to the steps involved.
     * alfanick's [implementation](https://github.com/alfanick/inverse-kinematics/blob/master/ccd.cpp) nails the basic shape of the algorithm.
 * For the IK constraints part:
-    * I make a distinction between legal rotations and illegal rotations. Legal rotations are where the rotation necessary to make the end effector reach the target doesn't violate joint constraints. Illegal rotations are where such rotations do violate joint constraints. Illegal rotations require corrective measures to force the rotation back into the plane of free rotation, so as to not violate constraints.
+    * I make a distinction between legal rotations and illegal rotations. Legal rotations are where the rotation necessary to make the end effector reach the target doesn't violate joint constraints. Illegal rotations require corrective measures to force the rotation back into the plane of free rotation, so as to not violate constraints.
     * I disagree with [this reply](https://stackoverflow.com/questions/21373012/best-inverse-kinematics-algorithm-with-constraints-on-joint-angles) on stackoverflow. Rather than allowing ball joints with constraints, the solver should limit itself to hinge joints with constraints. So instead of rotating axis by axis and later rejecting solutions where one axis' rotation violates constraints, the solver shouldn't attempt illegal rotations at all. I propose a solution that only attempts [legal rotation](https://github.com/onlyuser/dexvt-lite/blob/master/src/TransformObject.cpp#L366) and enforces constraints [in cartesian space](https://github.com/onlyuser/dexvt-lite/blob/master/src/TransformObject.cpp#L216) (as opposed to euler space, which is suceptible to gimbal issues when a euler coordinate crosses the zenith).
 * This implementation doesn't use quaternions, but I don't see why not.
 

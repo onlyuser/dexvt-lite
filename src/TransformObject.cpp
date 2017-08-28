@@ -76,10 +76,10 @@ glm::vec3 TransformObject::in_abs_system(glm::vec3 local_point)
 
 glm::vec3 TransformObject::in_parent_system(glm::vec3 abs_point) const
 {
-    if(m_parent) {
-        return glm::vec3(glm::inverse(m_parent->get_transform()) * glm::vec4(abs_point, 1));
+    if(!m_parent) {
+        return abs_point;
     }
-    return abs_point;
+    return glm::vec3(glm::inverse(m_parent->get_transform()) * glm::vec4(abs_point, 1));
 }
 
 glm::vec3 TransformObject::from_origin_in_parent_system(glm::vec3 abs_point) const
@@ -216,12 +216,13 @@ void TransformObject::set_enable_joint_constraints(glm::ivec3 enable_joint_const
 void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_to_plane_of_free_rotation()
 {
     static bool disable_recursion = false;
-    if(!is_hinge() || !m_parent || disable_recursion) { // special-handling of hinge with parent
+    if(!is_hinge() || disable_recursion) { // special-handling of hinge with parent
         return;
     }
+    mark_dirty_transform(); // strangely necessary, otherwise abs basis isn't calculated
     glm::vec3 local_heading;
     glm::vec3 local_up_dir;
-    glm::vec3 parent_plane_origin = m_parent->in_abs_system();
+    glm::vec3 parent_plane_origin = m_parent ? m_parent->in_abs_system() : glm::vec3(0);
     glm::vec3 parent_plane_normal;
     glm::vec3 joint_origin                    = in_abs_system();
     glm::vec3 joint_abs_left_axis_endpoint    = joint_origin + get_abs_left_direction(); // X
@@ -232,7 +233,7 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_t
         case 0:
             {
                 // allow ONLY roll -- project onto XY plane
-                parent_plane_normal                              = m_parent->get_abs_heading();                                                                    // Z
+                parent_plane_normal                              = m_parent ? m_parent->get_abs_heading() : VEC_FORWARD;                                           // Z
                 glm::vec3 joint_flattened_abs_left_axis_endpoint = nearest_point_on_plane(parent_plane_origin, parent_plane_normal, joint_abs_left_axis_endpoint); // X
                 glm::vec3 joint_flattened_abs_up_axis_endpoint   = nearest_point_on_plane(parent_plane_origin, parent_plane_normal, joint_abs_up_axis_endpoint);   // Y
                 glm::vec3 local_left_dir                         = from_origin_in_parent_system(joint_flattened_abs_left_axis_endpoint); // X
@@ -243,7 +244,7 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_t
         case 1:
             {
                 // allow ONLY pitch -- project onto YZ plane
-                parent_plane_normal                            = m_parent->get_abs_left_direction();                                                                // X
+                parent_plane_normal                            = m_parent ? m_parent->get_abs_left_direction() : VEC_LEFT;                                          // X
                 glm::vec3 joint_flattened_abs_up_axis_endpoint = nearest_point_on_plane(parent_plane_origin, parent_plane_normal, joint_abs_up_axis_endpoint);      // Y
                 glm::vec3 joint_flattened_abs_heading_endpoint = nearest_point_on_plane(parent_plane_origin, parent_plane_normal, joint_abs_heading_axis_endpoint); // Z
                           local_up_dir                         = from_origin_in_parent_system(joint_flattened_abs_up_axis_endpoint); // Y
@@ -253,7 +254,7 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_t
         case 2:
             {
                 // allow ONLY yaw -- project onto XZ plane
-                parent_plane_normal                              = m_parent->get_abs_up_direction();                                                                  // Y
+                parent_plane_normal                              = m_parent ? m_parent->get_abs_up_direction() : VEC_UP;                                              // Y
                 glm::vec3 joint_flattened_abs_heading_endpoint   = nearest_point_on_plane(parent_plane_origin, parent_plane_normal, joint_abs_heading_axis_endpoint); // Z
                 glm::vec3 joint_flattened_abs_left_axis_endpoint = nearest_point_on_plane(parent_plane_origin, parent_plane_normal, joint_abs_left_axis_endpoint);    // X
                           local_heading                          = from_origin_in_parent_system(joint_flattened_abs_heading_endpoint);   // Z
@@ -269,20 +270,19 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_perpendicular_t
 
 void TransformObject::apply_hinge_constraints_in_cartesian_space_within_plane_of_free_rotation()
 {
-    return;
-    if(!is_hinge() || !m_parent) { // special-handling of hinge with parent
+    if(!is_hinge()) { // special-handling of hinge
         return;
     }
+    glm::vec3 parent_abs_origin = m_parent ? m_parent->in_abs_system() : -VEC_FORWARD; // intentionally behind origin
+    glm::mat4 parent_transform  = m_parent ? m_parent->get_transform() : glm::mat4(1);
+    glm::vec3 abs_heading = get_abs_heading();
     // if hinge, do something magical
     switch(m_hinge_type) {
         case 0:
             {
-                // allow ONLY roll -- apply constraint on XY plane
+                // allow ONLY roll -- apply constraint within XY plane
                 glm::vec3 center_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_joint_constraints_center), EULER_PITCH(m_euler), EULER_YAW(m_euler)));
-                glm::vec3 parent_abs_origin = m_parent->in_abs_system();
-                glm::mat4 parent_transform  = m_parent->get_transform();
                 glm::vec3 center_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(center_local_offset, 1)) - parent_abs_origin);
-                glm::vec3 abs_heading = get_abs_heading();
                 if(glm::degrees(glm::angle(abs_heading, center_dir)) > EULER_ROLL(m_joint_constraints_max_deviation)) {
                     float min_value = EULER_ROLL(m_joint_constraints_center) - EULER_ROLL(m_joint_constraints_max_deviation);
                     float max_value = EULER_ROLL(m_joint_constraints_center) + EULER_ROLL(m_joint_constraints_max_deviation);
@@ -303,12 +303,9 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_within_plane_of
             break;
         case 1:
             {
-                // allow ONLY pitch -- apply constraint on YZ plane
+                // allow ONLY pitch -- apply constraint within YZ plane
                 glm::vec3 center_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_euler), EULER_PITCH(m_joint_constraints_center), EULER_YAW(m_euler)));
-                glm::vec3 parent_abs_origin = m_parent->in_abs_system();
-                glm::mat4 parent_transform  = m_parent->get_transform();
                 glm::vec3 center_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(center_local_offset, 1)) - parent_abs_origin);
-                glm::vec3 abs_heading = get_abs_heading();
                 if(glm::degrees(glm::angle(abs_heading, center_dir)) > EULER_PITCH(m_joint_constraints_max_deviation)) {
                     float min_value = EULER_PITCH(m_joint_constraints_center) - EULER_PITCH(m_joint_constraints_max_deviation);
                     float max_value = EULER_PITCH(m_joint_constraints_center) + EULER_PITCH(m_joint_constraints_max_deviation);
@@ -329,12 +326,9 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_within_plane_of
             break;
         case 2:
             {
-                // allow ONLY yaw -- apply constraint on XZ plane
+                // allow ONLY yaw -- apply constraint within XZ plane
                 glm::vec3 center_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_euler), EULER_PITCH(m_euler), EULER_YAW(m_joint_constraints_center)));
-                glm::vec3 parent_abs_origin = m_parent->in_abs_system();
-                glm::mat4 parent_transform  = m_parent->get_transform();
                 glm::vec3 center_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(center_local_offset, 1)) - parent_abs_origin);
-                glm::vec3 abs_heading = get_abs_heading();
                 if(glm::degrees(glm::angle(abs_heading, center_dir)) > EULER_YAW(m_joint_constraints_max_deviation)) {
                     float min_value = EULER_YAW(m_joint_constraints_center) - EULER_YAW(m_joint_constraints_max_deviation);
                     float max_value = EULER_YAW(m_joint_constraints_center) + EULER_YAW(m_joint_constraints_max_deviation);
@@ -361,13 +355,11 @@ void TransformObject::apply_joint_constraints()
     static bool disable_recursion = false;
     switch(m_joint_type) {
         case JOINT_TYPE_REVOLUTE:
-            if(is_hinge() && m_parent) { // special-handling of hinge with parent
+            if(is_hinge()) { // special-handling of hinge
                 if(disable_recursion) {
-                    // if hinge, do something magical
                     apply_hinge_constraints_in_cartesian_space_within_plane_of_free_rotation();
                 } else {
                     disable_recursion = true; // to avoid infinite recursion
-                    // if hinge, project absolute axis endpoints onto parent's plane of free rotation
                     apply_hinge_constraints_in_cartesian_space_perpendicular_to_plane_of_free_rotation();
                     disable_recursion = false;
                 }
@@ -491,7 +483,6 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
                                                                              current_segment->from_origin_in_parent_system(end_effector_tip)));
                 continue;
             }
-            // if hinge, project arcball input onto plane of free rotation
             current_segment->project_to_plane_of_free_rotation(&_target, &end_effector_tip);
 #if 1
             glm::vec3 local_arc_pivot_dir;
