@@ -291,13 +291,7 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_within_plane_of
                     glm::vec3 max_local_offset = euler_to_offset(glm::vec3(max_value, EULER_PITCH(m_euler), EULER_YAW(m_euler)));
                     glm::vec3 min_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(min_local_offset, 1)) - parent_abs_origin);
                     glm::vec3 max_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(max_local_offset, 1)) - parent_abs_origin);
-                    float distance_to_lower_bound = glm::distance(abs_heading, min_dir);
-                    float distance_to_upper_bound = glm::distance(abs_heading, max_dir);
-                    if(distance_to_lower_bound < distance_to_upper_bound) {
-                        EULER_ROLL(m_euler) = min_value;
-                    } else {
-                        EULER_ROLL(m_euler) = max_value;
-                    }
+                    EULER_ROLL(m_euler) = (glm::distance(abs_heading, min_dir) < glm::distance(abs_heading, max_dir)) ? min_value : max_value;
                     mark_dirty_transform();
                 }
             }
@@ -314,13 +308,7 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_within_plane_of
                     glm::vec3 max_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_euler), max_value, EULER_YAW(m_euler)));
                     glm::vec3 min_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(min_local_offset, 1)) - parent_abs_origin);
                     glm::vec3 max_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(max_local_offset, 1)) - parent_abs_origin);
-                    float distance_to_lower_bound = glm::distance(abs_heading, min_dir);
-                    float distance_to_upper_bound = glm::distance(abs_heading, max_dir);
-                    if(distance_to_lower_bound < distance_to_upper_bound) {
-                        EULER_PITCH(m_euler) = min_value;
-                    } else {
-                        EULER_PITCH(m_euler) = max_value;
-                    }
+                    EULER_PITCH(m_euler) = (glm::distance(abs_heading, min_dir) < glm::distance(abs_heading, max_dir)) ? min_value : max_value;
                     mark_dirty_transform();
                 }
             }
@@ -337,13 +325,7 @@ void TransformObject::apply_hinge_constraints_in_cartesian_space_within_plane_of
                     glm::vec3 max_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_euler), EULER_PITCH(m_euler), max_value));
                     glm::vec3 min_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(min_local_offset, 1)) - parent_abs_origin);
                     glm::vec3 max_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(max_local_offset, 1)) - parent_abs_origin);
-                    float distance_to_lower_bound = glm::distance(abs_heading, min_dir);
-                    float distance_to_upper_bound = glm::distance(abs_heading, max_dir);
-                    if(distance_to_lower_bound < distance_to_upper_bound) {
-                        EULER_YAW(m_euler) = min_value;
-                    } else {
-                        EULER_YAW(m_euler) = max_value;
-                    }
+                    EULER_YAW(m_euler) = (glm::distance(abs_heading, min_dir) < glm::distance(abs_heading, max_dir)) ? min_value : max_value;
                     mark_dirty_transform();
                 }
             }
@@ -366,13 +348,7 @@ void TransformObject::apply_joint_constraints()
                     if(angle_distance(m_euler[i], m_joint_constraints_center[i]) > m_joint_constraints_max_deviation[i]) {
                         float min_value = m_joint_constraints_center[i] - m_joint_constraints_max_deviation[i];
                         float max_value = m_joint_constraints_center[i] + m_joint_constraints_max_deviation[i];
-                        float distance_to_lower_bound = angle_distance(m_euler[i], min_value);
-                        float distance_to_upper_bound = angle_distance(m_euler[i], max_value);
-                        if(distance_to_lower_bound < distance_to_upper_bound) {
-                            m_euler[i] = min_value;
-                        } else {
-                            m_euler[i] = max_value;
-                        }
+                        m_euler[i] = (angle_distance(m_euler[i], min_value) < angle_distance(m_euler[i], max_value)) ? min_value : max_value;
                         mark_dirty_transform();
                     }
                 }
@@ -386,13 +362,7 @@ void TransformObject::apply_joint_constraints()
                 if(fabs(m_origin[i] - m_joint_constraints_center[i]) > m_joint_constraints_max_deviation[i]) {
                     float min_value = m_joint_constraints_center[i] - m_joint_constraints_max_deviation[i];
                     float max_value = m_joint_constraints_center[i] + m_joint_constraints_max_deviation[i];
-                    float distance_to_lower_bound = fabs(m_origin[i] - min_value);
-                    float distance_to_upper_bound = fabs(m_origin[i] - max_value);
-                    if(distance_to_lower_bound < distance_to_upper_bound) {
-                        m_origin[i] = min_value;
-                    } else {
-                        m_origin[i] = max_value;
-                    }
+                    m_origin[i] = (fabs(m_origin[i] - min_value) < fabs(m_origin[i] - max_value)) ? min_value : max_value;
                     mark_dirty_transform();
                 }
             }
