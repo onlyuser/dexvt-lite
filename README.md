@@ -3,7 +3,7 @@
 3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints and without Quaternions
 ==========================================================================================
 
-Copyright (C) 2011-2014 Jerry Chen <mailto:onlyuser@gmail.com>
+Copyright (C) 2011-2017 <mailto:onlyuser@gmail.com>
 
 About
 -----
