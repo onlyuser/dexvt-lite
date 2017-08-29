@@ -191,29 +191,6 @@ void TransformObject::unlink_children()
 // joint constraints
 //==================
 
-void TransformObject::set_enable_joint_constraints(glm::ivec3 enable_joint_constraints)
-{
-    m_enable_joint_constraints = enable_joint_constraints;
-    if(!m_enable_joint_constraints[0] &&
-        m_enable_joint_constraints[1] &&
-        m_enable_joint_constraints[2])
-    {
-        m_hinge_type = 0;
-    } else if( m_enable_joint_constraints[0] &&
-              !m_enable_joint_constraints[1] &&
-               m_enable_joint_constraints[2])
-    {
-        m_hinge_type = 1;
-    } else if( m_enable_joint_constraints[0] &&
-               m_enable_joint_constraints[1] &&
-              !m_enable_joint_constraints[2])
-    {
-        m_hinge_type = 2;
-    } else {
-        m_hinge_type = -1;
-    }
-}
-
 void TransformObject::apply_hinge_constraints_perpendicular_to_plane_of_free_rotation()
 {
     static bool disable_recursion = false;
@@ -345,9 +322,7 @@ void TransformObject::apply_joint_constraints()
         case JOINT_TYPE_REVOLUTE:
             if(is_hinge()) {
                 apply_hinge_constraints_perpendicular_to_plane_of_free_rotation();
-                if(m_enable_constraints_within_plane_of_free_rotation) {
-                    apply_hinge_constraints_within_plane_of_free_rotation();
-                }
+                apply_hinge_constraints_within_plane_of_free_rotation();
             } else {
                 for(int i = 0; i < 3; i++) {
                     if(!m_enable_joint_constraints[i]) {

@@ -30,10 +30,10 @@ public:
 
     // basic features
     const glm::vec3 &get_origin() const { return m_origin; }
+    const glm::vec3 &get_euler() const  { return m_euler; }
+    const glm::vec3 &get_scale() const  { return m_scale; }
     void set_origin(glm::vec3 origin);
-    const glm::vec3 &get_euler() const { return m_euler; }
     void set_euler(glm::vec3 euler);
-    const glm::vec3 &get_scale() const { return m_scale; }
     void set_scale(glm::vec3 scale);
     void reset_transform();
 
@@ -58,25 +58,17 @@ public:
     void unlink_children();
 
     // joint constraints
-    joint_type_t get_joint_type() const                                                 { return m_joint_type; }
-    void set_joint_type(joint_type_t joint_type)                                        { m_joint_type = joint_type; }
-    const glm::ivec3 &get_enable_joint_constraints() const                              { return m_enable_joint_constraints; }
-    void set_enable_joint_constraints(glm::ivec3 enable_joint_constraints);
-    const glm::vec3 &get_joint_constraints_center() const                               { return m_joint_constraints_center; }
-    void set_joint_constraints_center(glm::vec3 joint_constraints_center)               { m_joint_constraints_center = joint_constraints_center; }
-    const glm::vec3 &get_joint_constraints_max_deviation() const                        { return m_joint_constraints_max_deviation; }
+    joint_type_t get_joint_type() const                          { return m_joint_type; }
+    const glm::ivec3 &get_enable_joint_constraints() const       { return m_enable_joint_constraints; }
+    const glm::vec3 &get_joint_constraints_center() const        { return m_joint_constraints_center; }
+    const glm::vec3 &get_joint_constraints_max_deviation() const { return m_joint_constraints_max_deviation; }
+    int get_hinge_type() const                                   { return m_hinge_type; }
+    void set_joint_type(joint_type_t joint_type)                                        { m_joint_type                      = joint_type; }
+    void set_enable_joint_constraints(glm::ivec3 enable_joint_constraints)              { m_enable_joint_constraints        = enable_joint_constraints; }
+    void set_joint_constraints_center(glm::vec3 joint_constraints_center)               { m_joint_constraints_center        = joint_constraints_center; }
     void set_joint_constraints_max_deviation(glm::vec3 joint_constraints_max_deviation) { m_joint_constraints_max_deviation = joint_constraints_max_deviation; }
-    void set_hinge_type(int hinge_type)                                                 { m_hinge_type = hinge_type; }
-    int get_hinge_type() const                                                          { return m_hinge_type; }
+    void set_hinge_type(int hinge_type)                                                 { m_hinge_type                      = hinge_type; }
     bool is_hinge() const                                                               { return m_hinge_type != -1; }
-    void set_enable_constraints_within_plane_of_free_rotation(bool enable_constraints_within_plane_of_free_rotation)
-    {
-        m_enable_constraints_within_plane_of_free_rotation = enable_constraints_within_plane_of_free_rotation;
-    }
-    bool get_enable_constraints_within_plane_of_free_rotation() const
-    {
-        return m_enable_constraints_within_plane_of_free_rotation;
-    }
     void apply_hinge_constraints_perpendicular_to_plane_of_free_rotation();
     void apply_hinge_constraints_within_plane_of_free_rotation();
     void apply_joint_constraints();
