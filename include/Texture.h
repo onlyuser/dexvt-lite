@@ -23,8 +23,8 @@ public:
     typedef enum { RGB, DEPTH, STENCIL } type_t;
 
     Texture(std::string          name       = "",
-            glm::ivec2           dim        = glm::vec2(DEFAULT_TEXTURE_WIDTH,
-                                                        DEFAULT_TEXTURE_HEIGHT),
+            glm::ivec2           dim        = glm::ivec2(DEFAULT_TEXTURE_WIDTH,
+                                                         DEFAULT_TEXTURE_HEIGHT),
             const unsigned char* pixel_data = NULL,
             type_t               type       = Texture::RGB,
             bool                 smooth     = true,
