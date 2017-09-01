@@ -39,13 +39,13 @@
     #define GLM_EULER_TRANSFORM_SANS_ROLL(y, p) glm::eulerAngleYX((y), (p))
 #endif
 
-#define EULER_ROLL_INDEX  0
-#define EULER_PITCH_INDEX 1
-#define EULER_YAW_INDEX   2
+#define EULER_INDEX_ROLL  0
+#define EULER_INDEX_PITCH 1
+#define EULER_INDEX_YAW   2
 
-#define EULER_ROLL(v)  v[EULER_ROLL_INDEX]
-#define EULER_PITCH(v) v[EULER_PITCH_INDEX]
-#define EULER_YAW(v)   v[EULER_YAW_INDEX]
+#define EULER_ROLL(v)  v[EULER_INDEX_ROLL]
+#define EULER_PITCH(v) v[EULER_INDEX_PITCH]
+#define EULER_YAW(v)   v[EULER_INDEX_YAW]
 
 #define VEC_LEFT    glm::vec3(1, 0, 0)
 #define VEC_UP      glm::vec3(0, 1, 0)
