@@ -1,7 +1,7 @@
 [![Build Status](https://secure.travis-ci.org/onlyuser/dexvt-lite.png)](http://travis-ci.org/onlyuser/dexvt-lite)
 
-3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints and without Quaternions
-==========================================================================================
+3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints
+==================================================================
 
 Copyright (C) 2011-2017 <mailto:onlyuser@gmail.com>
 

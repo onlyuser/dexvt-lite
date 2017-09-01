@@ -208,7 +208,7 @@ void TransformObject::apply_hinge_constraints_perpendicular_to_plane_of_free_rot
     glm::vec3 joint_abs_up_axis_endpoint      = joint_origin + get_abs_up_direction();   // Y
     glm::vec3 joint_abs_heading_axis_endpoint = joint_origin + get_abs_heading();        // Z
     switch(m_hinge_type) {
-        case 0:
+        case EULER_ROLL_INDEX:
             {
                 // allow ONLY roll -- project onto XY plane
                 glm::vec3 parent_plane_normal                    = m_parent ? m_parent->get_abs_heading() : VEC_FORWARD;                                           // Z
@@ -219,7 +219,7 @@ void TransformObject::apply_hinge_constraints_perpendicular_to_plane_of_free_rot
                           local_heading                          = glm::normalize(glm::cross(local_left_dir, local_up_dir));             // Z
             }
             break;
-        case 1:
+        case EULER_PITCH_INDEX:
             {
                 // allow ONLY pitch -- project onto YZ plane
                 glm::vec3 parent_plane_normal                  = m_parent ? m_parent->get_abs_left_direction() : VEC_LEFT;                                          // X
@@ -229,7 +229,7 @@ void TransformObject::apply_hinge_constraints_perpendicular_to_plane_of_free_rot
                           local_heading                        = from_origin_in_parent_system(joint_flattened_abs_heading_endpoint); // Z
             }
             break;
-        case 2:
+        case EULER_YAW_INDEX:
             {
                 // allow ONLY yaw -- project onto XZ plane
                 glm::vec3 parent_plane_normal                    = m_parent ? m_parent->get_abs_up_direction() : VEC_UP;                                              // Y
@@ -262,7 +262,7 @@ void TransformObject::apply_hinge_constraints_within_plane_of_free_rotation()
     }
     glm::vec3 abs_heading = get_abs_heading();
     switch(m_hinge_type) {
-        case 0:
+        case EULER_ROLL_INDEX:
             {
                 // allow ONLY roll -- apply constraint within XY plane
                 glm::vec3 center_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_joint_constraints_center), EULER_PITCH(m_euler), EULER_YAW(m_euler)));
@@ -279,7 +279,7 @@ void TransformObject::apply_hinge_constraints_within_plane_of_free_rotation()
                 }
             }
             break;
-        case 1:
+        case EULER_PITCH_INDEX:
             {
                 // allow ONLY pitch -- apply constraint within YZ plane
                 glm::vec3 center_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_euler), EULER_PITCH(m_joint_constraints_center), EULER_YAW(m_euler)));
@@ -296,7 +296,7 @@ void TransformObject::apply_hinge_constraints_within_plane_of_free_rotation()
                 }
             }
             break;
-        case 2:
+        case EULER_YAW_INDEX:
             {
                 // allow ONLY yaw -- apply constraint within XZ plane
                 glm::vec3 center_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_euler), EULER_PITCH(m_euler), EULER_YAW(m_joint_constraints_center)));
@@ -380,15 +380,15 @@ void TransformObject::project_to_plane_of_free_rotation(glm::vec3* target, glm::
         glm::vec3 plane_origin = in_abs_system();
         glm::vec3 plane_normal;
         switch(m_hinge_type) {
-            case 0:
+            case EULER_ROLL_INDEX:
                 // allow ONLY roll -- project onto XY plane
                 plane_normal = get_abs_heading();
                 break;
-            case 1:
+            case EULER_PITCH_INDEX:
                 // allow ONLY pitch -- project onto YZ plane
                 plane_normal = get_abs_left_direction();
                 break;
-            case 2:
+            case EULER_YAW_INDEX:
                 // allow ONLY yaw -- project onto XZ plane
                 plane_normal = get_abs_up_direction();
                 break;
