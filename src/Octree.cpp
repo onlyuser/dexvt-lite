@@ -4,10 +4,10 @@
 namespace vt {
 
 Octree::Octree(glm::vec3 origin,
-                 glm::vec3 dim,
-                 int       max_depth,
-                 int       depth,
-                 Octree*  parent)
+               glm::vec3 dim,
+               int       max_depth,
+               int       depth,
+               Octree*  parent)
     : m_origin(origin),
       m_dim(dim),
       m_center(origin + dim * 0.5f),
@@ -27,10 +27,10 @@ Octree::Octree(glm::vec3 origin,
                                                            y_index * node_dim.y,
                                                            z_index * node_dim.z);
                 m_nodes[x_index * 4 + y_index * 2 + z_index] = new Octree(node_origin,
-                                                                           node_dim,
-                                                                           max_depth,
-                                                                           depth + 1,
-                                                                           this);
+                                                                          node_dim,
+                                                                          max_depth,
+                                                                          depth + 1,
+                                                                          this);
             }
         }
     }
