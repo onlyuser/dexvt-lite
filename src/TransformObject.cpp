@@ -22,7 +22,7 @@ TransformObject::TransformObject(std::string name,
       m_enable_joint_constraints(       glm::ivec3(0)),
       m_joint_constraints_center(       glm::vec3(0)),
       m_joint_constraints_max_deviation(glm::vec3(0)),
-      m_hinge_type(-1),
+      m_hinge_type(EULER_INDEX_UNDEF),
       m_enable_constraints_within_plane_of_free_rotation(false),
       m_parent(NULL),
       m_is_dirty_transform(true),
@@ -101,6 +101,16 @@ glm::vec3 TransformObject::get_abs_up_direction()
 glm::vec3 TransformObject::get_abs_heading()
 {
     return glm::vec3(get_normal_transform() * glm::vec4(VEC_FORWARD, 1));
+}
+
+glm::vec3 TransformObject::get_abs_axis_endpoint(euler_index_t euler_index)
+{
+    switch(euler_index) {
+        case EULER_INDEX_ROLL:  return get_abs_heading();
+        case EULER_INDEX_PITCH: return get_abs_left_direction();
+        case EULER_INDEX_YAW:   return get_abs_up_direction();
+        default:                return glm::vec3(0);
+    }
 }
 
 //=============================
@@ -240,6 +250,8 @@ void TransformObject::apply_hinge_constraints_perpendicular_to_plane_of_free_rot
                           local_up_dir                           = glm::normalize(glm::cross(local_heading, local_left_dir));            // Y
             }
             break;
+        default:
+            break;
     }
     disable_recursion = true;
     point_at_local(local_heading, &local_up_dir);
@@ -261,59 +273,22 @@ void TransformObject::apply_hinge_constraints_within_plane_of_free_rotation()
         parent_transform  = glm::mat4(1);
     }
     glm::vec3 abs_heading = get_abs_heading();
-    switch(m_hinge_type) {
-        case EULER_INDEX_ROLL:
-            {
-                // allow ONLY roll -- apply constraint within XY plane
-                glm::vec3 center_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_joint_constraints_center), EULER_PITCH(m_euler), EULER_YAW(m_euler)));
-                glm::vec3 center_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(center_local_offset, 1)) - parent_abs_origin);
-                if(glm::degrees(glm::angle(abs_heading, center_dir)) > EULER_ROLL(m_joint_constraints_max_deviation)) {
-                    float min_value = EULER_ROLL(m_joint_constraints_center) - EULER_ROLL(m_joint_constraints_max_deviation);
-                    float max_value = EULER_ROLL(m_joint_constraints_center) + EULER_ROLL(m_joint_constraints_max_deviation);
-                    glm::vec3 min_local_offset = euler_to_offset(glm::vec3(min_value, EULER_PITCH(m_euler), EULER_YAW(m_euler)));
-                    glm::vec3 max_local_offset = euler_to_offset(glm::vec3(max_value, EULER_PITCH(m_euler), EULER_YAW(m_euler)));
-                    glm::vec3 min_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(min_local_offset, 1)) - parent_abs_origin);
-                    glm::vec3 max_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(max_local_offset, 1)) - parent_abs_origin);
-                    EULER_ROLL(m_euler) = (glm::distance(abs_heading, min_dir) < glm::distance(abs_heading, max_dir)) ? min_value : max_value;
-                    mark_dirty_transform();
-                }
-            }
-            break;
-        case EULER_INDEX_PITCH:
-            {
-                // allow ONLY pitch -- apply constraint within YZ plane
-                glm::vec3 center_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_euler), EULER_PITCH(m_joint_constraints_center), EULER_YAW(m_euler)));
-                glm::vec3 center_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(center_local_offset, 1)) - parent_abs_origin);
-                if(glm::degrees(glm::angle(abs_heading, center_dir)) > EULER_PITCH(m_joint_constraints_max_deviation)) {
-                    float min_value = EULER_PITCH(m_joint_constraints_center) - EULER_PITCH(m_joint_constraints_max_deviation);
-                    float max_value = EULER_PITCH(m_joint_constraints_center) + EULER_PITCH(m_joint_constraints_max_deviation);
-                    glm::vec3 min_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_euler), min_value, EULER_YAW(m_euler)));
-                    glm::vec3 max_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_euler), max_value, EULER_YAW(m_euler)));
-                    glm::vec3 min_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(min_local_offset, 1)) - parent_abs_origin);
-                    glm::vec3 max_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(max_local_offset, 1)) - parent_abs_origin);
-                    EULER_PITCH(m_euler) = (glm::distance(abs_heading, min_dir) < glm::distance(abs_heading, max_dir)) ? min_value : max_value;
-                    mark_dirty_transform();
-                }
-            }
-            break;
-        case EULER_INDEX_YAW:
-            {
-                // allow ONLY yaw -- apply constraint within XZ plane
-                glm::vec3 center_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_euler), EULER_PITCH(m_euler), EULER_YAW(m_joint_constraints_center)));
-                glm::vec3 center_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(center_local_offset, 1)) - parent_abs_origin);
-                if(glm::degrees(glm::angle(abs_heading, center_dir)) > EULER_YAW(m_joint_constraints_max_deviation)) {
-                    float min_value = EULER_YAW(m_joint_constraints_center) - EULER_YAW(m_joint_constraints_max_deviation);
-                    float max_value = EULER_YAW(m_joint_constraints_center) + EULER_YAW(m_joint_constraints_max_deviation);
-                    glm::vec3 min_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_euler), EULER_PITCH(m_euler), min_value));
-                    glm::vec3 max_local_offset = euler_to_offset(glm::vec3(EULER_ROLL(m_euler), EULER_PITCH(m_euler), max_value));
-                    glm::vec3 min_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(min_local_offset, 1)) - parent_abs_origin);
-                    glm::vec3 max_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(max_local_offset, 1)) - parent_abs_origin);
-                    EULER_YAW(m_euler) = (glm::distance(abs_heading, min_dir) < glm::distance(abs_heading, max_dir)) ? min_value : max_value;
-                    mark_dirty_transform();
-                }
-            }
-            break;
+    glm::vec3 center_local_euler = m_euler;
+    center_local_euler[m_hinge_type] = m_joint_constraints_center[m_hinge_type];
+    glm::vec3 center_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(euler_to_offset(center_local_euler), 1)) - parent_abs_origin);
+    if(glm::degrees(glm::angle(abs_heading, center_dir)) <= m_joint_constraints_max_deviation[m_hinge_type]) {
+        return;
     }
+    float min_value = m_joint_constraints_center[m_hinge_type] - m_joint_constraints_max_deviation[m_hinge_type];
+    float max_value = m_joint_constraints_center[m_hinge_type] + m_joint_constraints_max_deviation[m_hinge_type];
+    glm::vec3 min_local_euler = m_euler;
+    glm::vec3 max_local_euler = m_euler;
+    min_local_euler[m_hinge_type] = min_value;
+    max_local_euler[m_hinge_type] = max_value;
+    glm::vec3 min_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(euler_to_offset(min_local_euler), 1)) - parent_abs_origin);
+    glm::vec3 max_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(euler_to_offset(max_local_euler), 1)) - parent_abs_origin);
+    m_euler[m_hinge_type] = (glm::distance(abs_heading, min_dir) < glm::distance(abs_heading, max_dir)) ? min_value : max_value;
+    mark_dirty_transform();
 }
 
 void TransformObject::apply_joint_constraints()
@@ -376,29 +351,16 @@ void TransformObject::arcball(glm::vec3* local_arc_pivot_dir,
 
 void TransformObject::project_to_plane_of_free_rotation(glm::vec3* target, glm::vec3* end_effector_tip)
 {
-    if(m_hinge_type != -1) {
-        glm::vec3 plane_origin = in_abs_system();
-        glm::vec3 plane_normal;
-        switch(m_hinge_type) {
-            case EULER_INDEX_ROLL:
-                // allow ONLY roll -- project onto XY plane
-                plane_normal = get_abs_heading();
-                break;
-            case EULER_INDEX_PITCH:
-                // allow ONLY pitch -- project onto YZ plane
-                plane_normal = get_abs_left_direction();
-                break;
-            case EULER_INDEX_YAW:
-                // allow ONLY yaw -- project onto XZ plane
-                plane_normal = get_abs_up_direction();
-                break;
-        }
-        if(target) {
-            *target = nearest_point_on_plane(plane_origin, plane_normal, *target);
-        }
-        if(end_effector_tip) {
-            *end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, *end_effector_tip);
-        }
+    if(!is_hinge()) {
+        return;
+    }
+    glm::vec3 plane_origin = in_abs_system();
+    glm::vec3 plane_normal = get_abs_axis_endpoint(m_hinge_type);
+    if(target) {
+        *target = nearest_point_on_plane(plane_origin, plane_normal, *target);
+    }
+    if(end_effector_tip) {
+        *end_effector_tip = nearest_point_on_plane(plane_origin, plane_normal, *end_effector_tip);
     }
 }
 

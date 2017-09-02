@@ -44,6 +44,7 @@ public:
     glm::vec3 get_abs_left_direction();
     glm::vec3 get_abs_up_direction();
     glm::vec3 get_abs_heading();
+    glm::vec3 get_abs_axis_endpoint(euler_index_t euler_index);
 
     // coordinate system operations
     void point_at_local(glm::vec3 local_target, glm::vec3* local_up_direction = NULL);
@@ -62,13 +63,13 @@ public:
     const glm::ivec3 &get_enable_joint_constraints() const       { return m_enable_joint_constraints; }
     const glm::vec3 &get_joint_constraints_center() const        { return m_joint_constraints_center; }
     const glm::vec3 &get_joint_constraints_max_deviation() const { return m_joint_constraints_max_deviation; }
-    int get_hinge_type() const                                   { return m_hinge_type; }
+    euler_index_t get_hinge_type() const                         { return m_hinge_type; }
     void set_joint_type(joint_type_t joint_type)                                        { m_joint_type                      = joint_type; }
     void set_enable_joint_constraints(glm::ivec3 enable_joint_constraints)              { m_enable_joint_constraints        = enable_joint_constraints; }
     void set_joint_constraints_center(glm::vec3 joint_constraints_center)               { m_joint_constraints_center        = joint_constraints_center; }
     void set_joint_constraints_max_deviation(glm::vec3 joint_constraints_max_deviation) { m_joint_constraints_max_deviation = joint_constraints_max_deviation; }
-    void set_hinge_type(int hinge_type)                                                 { m_hinge_type                      = hinge_type; }
-    bool is_hinge() const                                                               { return m_hinge_type != -1; }
+    void set_hinge_type(euler_index_t hinge_type)                                       { m_hinge_type                      = hinge_type; }
+    bool is_hinge() const                                                               { return m_hinge_type != EULER_INDEX_UNDEF; }
     void apply_hinge_constraints_perpendicular_to_plane_of_free_rotation();
     void apply_hinge_constraints_within_plane_of_free_rotation();
     void apply_joint_constraints();
@@ -105,12 +106,12 @@ protected:
     glm::mat4 m_normal_transform;
 
     // joint constraints
-    joint_type_t m_joint_type;
-    glm::ivec3   m_enable_joint_constraints;
-    glm::vec3    m_joint_constraints_center;
-    glm::vec3    m_joint_constraints_max_deviation;
-    int          m_hinge_type;
-    bool         m_enable_constraints_within_plane_of_free_rotation;
+    joint_type_t  m_joint_type;
+    glm::ivec3    m_enable_joint_constraints;
+    glm::vec3     m_joint_constraints_center;
+    glm::vec3     m_joint_constraints_max_deviation;
+    euler_index_t m_hinge_type;
+    bool          m_enable_constraints_within_plane_of_free_rotation;
 
     // hierarchy related
     TransformObject*           m_parent;
