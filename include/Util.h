@@ -39,22 +39,22 @@
     #define GLM_EULER_TRANSFORM_SANS_ROLL(y, p) glm::eulerAngleYX((y), (p))
 #endif
 
-enum euler_index_t {
-    EULER_INDEX_UNDEF = -1,
-    EULER_INDEX_ROLL,
-    EULER_INDEX_PITCH,
-    EULER_INDEX_YAW
-};
-
-#define EULER_ROLL(v)  v[EULER_INDEX_ROLL]
-#define EULER_PITCH(v) v[EULER_INDEX_PITCH]
-#define EULER_YAW(v)   v[EULER_INDEX_YAW]
+#define EULER_ROLL(v)  v[vt::EULER_INDEX_ROLL]
+#define EULER_PITCH(v) v[vt::EULER_INDEX_PITCH]
+#define EULER_YAW(v)   v[vt::EULER_INDEX_YAW]
 
 #define VEC_LEFT    glm::vec3(1, 0, 0)
 #define VEC_UP      glm::vec3(0, 1, 0)
 #define VEC_FORWARD glm::vec3(0, 0, 1)
 
 namespace vt {
+
+enum euler_index_t {
+    EULER_INDEX_UNDEF = -1,
+    EULER_INDEX_ROLL,
+    EULER_INDEX_PITCH,
+    EULER_INDEX_YAW
+};
 
 void print_bitmap_string(void* font, const char* s);
 glm::vec3 euler_to_offset(glm::vec3  euler,
