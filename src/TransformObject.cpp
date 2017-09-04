@@ -281,15 +281,21 @@ void TransformObject::apply_hinge_constraints_within_plane_of_free_rotation()
     glm::vec3 center_dir = dir_from_point_as_offset_in_other_system(center_local_euler, parent_transform, parent_abs_origin);
     if(glm::degrees(glm::angle(abs_heading, center_dir)) <= m_joint_constraints_max_deviation[m_hinge_type]) {
         if(glm::dot(get_abs_up_direction(), parent_abs_up_direction) < 0) {
-            std::cout << "AAA: " << glm::to_string(m_euler) << " " << glm::to_string(m_prev_legal_euler) << std::endl;
+            if(m_name == "ik_box_2") {
+                std::cout << "legal down: " << glm::to_string(m_euler) << " " << glm::to_string(m_prev_legal_euler) << std::endl;
+            }
             m_euler = m_prev_legal_euler;
+            return;
         }
         m_prev_legal_euler = m_euler;
         return;
     }
     if(glm::dot(get_abs_up_direction(), parent_abs_up_direction) < 0) {
-        std::cout << "BBB: " << glm::to_string(m_euler) << " " << glm::to_string(m_prev_legal_euler) << std::endl;
+        if(m_name == "ik_box_2") {
+            std::cout << "illegal down: " << glm::to_string(m_euler) << " " << glm::to_string(m_prev_legal_euler) << std::endl;
+        }
         m_euler = m_prev_legal_euler;
+        return;
     }
     float min_value = m_joint_constraints_center[m_hinge_type] - m_joint_constraints_max_deviation[m_hinge_type];
     float max_value = m_joint_constraints_center[m_hinge_type] + m_joint_constraints_max_deviation[m_hinge_type];
