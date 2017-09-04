@@ -95,6 +95,16 @@ glm::vec3 offset_to_euler(glm::vec3 offset)
     return offset_to_euler(offset, NULL);
 }
 
+glm::vec3 as_offset_in_other_system(glm::vec3 euler, glm::mat4 transform)
+{
+    return glm::vec3(transform * glm::vec4(euler_to_offset(euler), 1));
+}
+
+glm::vec3 dir_from_point_as_offset_in_other_system(glm::vec3 euler, glm::mat4 transform, glm::vec3 point)
+{
+    return glm::normalize(as_offset_in_other_system(euler, transform) - point);
+}
+
 glm::vec3 euler_modulo(glm::vec3 euler)
 {
     if(fabs(EULER_YAW(euler)) > 180) {

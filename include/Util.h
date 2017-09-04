@@ -63,6 +63,8 @@ glm::vec3 euler_to_offset(glm::vec3 euler);
 glm::vec3 offset_to_euler(glm::vec3  offset,
                           glm::vec3* up_direction); // in
 glm::vec3 offset_to_euler(glm::vec3 offset);
+glm::vec3 as_offset_in_other_system(glm::vec3 euler, glm::mat4 transform);
+glm::vec3 dir_from_point_as_offset_in_other_system(glm::vec3 euler, glm::mat4 transform, glm::vec3 point);
 glm::vec3 euler_modulo(glm::vec3 euler);
 float angle_modulo(float angle);
 float angle_distance(float angle1, float angle2);

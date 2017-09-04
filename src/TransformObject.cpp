@@ -265,19 +265,31 @@ void TransformObject::apply_hinge_constraints_within_plane_of_free_rotation()
     }
     glm::vec3 parent_abs_origin;
     glm::mat4 parent_transform;
+    glm::vec3 parent_abs_up_direction;
     if(m_parent) {
         parent_abs_origin = m_parent->in_abs_system();
         parent_transform  = m_parent->get_transform();
+        parent_abs_up_direction = m_parent->get_abs_up_direction();
     } else {
         parent_abs_origin = glm::vec3(0);
         parent_transform  = glm::mat4(1);
+        parent_abs_up_direction = VEC_UP;
     }
     glm::vec3 abs_heading = get_abs_heading();
     glm::vec3 center_local_euler = m_euler;
     center_local_euler[m_hinge_type] = m_joint_constraints_center[m_hinge_type];
-    glm::vec3 center_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(euler_to_offset(center_local_euler), 1)) - parent_abs_origin);
+    glm::vec3 center_dir = dir_from_point_as_offset_in_other_system(center_local_euler, parent_transform, parent_abs_origin);
     if(glm::degrees(glm::angle(abs_heading, center_dir)) <= m_joint_constraints_max_deviation[m_hinge_type]) {
+        if(glm::dot(get_abs_up_direction(), parent_abs_up_direction) < 0) {
+            std::cout << "AAA: " << glm::to_string(m_euler) << " " << glm::to_string(m_prev_legal_euler) << std::endl;
+            m_euler = m_prev_legal_euler;
+        }
+        m_prev_legal_euler = m_euler;
         return;
+    }
+    if(glm::dot(get_abs_up_direction(), parent_abs_up_direction) < 0) {
+        std::cout << "BBB: " << glm::to_string(m_euler) << " " << glm::to_string(m_prev_legal_euler) << std::endl;
+        m_euler = m_prev_legal_euler;
     }
     float min_value = m_joint_constraints_center[m_hinge_type] - m_joint_constraints_max_deviation[m_hinge_type];
     float max_value = m_joint_constraints_center[m_hinge_type] + m_joint_constraints_max_deviation[m_hinge_type];
@@ -285,8 +297,8 @@ void TransformObject::apply_hinge_constraints_within_plane_of_free_rotation()
     glm::vec3 max_local_euler = m_euler;
     min_local_euler[m_hinge_type] = min_value;
     max_local_euler[m_hinge_type] = max_value;
-    glm::vec3 min_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(euler_to_offset(min_local_euler), 1)) - parent_abs_origin);
-    glm::vec3 max_dir = glm::normalize(glm::vec3(parent_transform * glm::vec4(euler_to_offset(max_local_euler), 1)) - parent_abs_origin);
+    glm::vec3 min_dir = dir_from_point_as_offset_in_other_system(min_local_euler, parent_transform, parent_abs_origin);
+    glm::vec3 max_dir = dir_from_point_as_offset_in_other_system(max_local_euler, parent_transform, parent_abs_origin);
     m_euler[m_hinge_type] = (glm::distance(abs_heading, min_dir) < glm::distance(abs_heading, max_dir)) ? min_value : max_value;
     mark_dirty_transform();
 }
@@ -419,7 +431,7 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
         #endif
     #else
             // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
-            current_segment->point_at_local(glm::vec3(local_arc_rotation_transform * glm::vec4(euler_to_offset(current_segment->get_euler()), 1)));
+            current_segment->point_at_local(as_offset_in_other_system(current_segment->get_euler(), local_arc_rotation_transform));
     #endif
             sum_angle += angle_delta;
 #else
@@ -459,7 +471,7 @@ void TransformObject::update_boid(glm::vec3 target,
     set_local_rotation_transform(local_arc_rotation_transform * get_local_rotation_transform());
 #else
     // attempt #2 -- do rotations in Cartesian coordinates (suitable for robots)
-    point_at_local(glm::vec3(local_arc_rotation_transform * glm::vec4(euler_to_offset(get_euler()), 1)));
+    point_at_local(as_offset_in_other_system(get_euler(), local_arc_rotation_transform));
 #endif
     set_origin(in_abs_system(VEC_FORWARD * forward_speed));
 }

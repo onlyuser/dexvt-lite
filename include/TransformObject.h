@@ -112,6 +112,7 @@ protected:
     glm::vec3     m_joint_constraints_max_deviation;
     euler_index_t m_hinge_type;
     bool          m_enable_constraints_within_plane_of_free_rotation;
+    glm::vec3     m_prev_legal_euler;
 
     // hierarchy related
     TransformObject*           m_parent;
