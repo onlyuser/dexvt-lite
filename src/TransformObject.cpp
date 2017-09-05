@@ -312,8 +312,8 @@ void TransformObject::apply_joint_constraints()
     switch(m_joint_type) {
         case JOINT_TYPE_REVOLUTE:
             if(is_hinge()) {
-                apply_hinge_constraints_perpendicular_to_plane_of_free_rotation();
-                apply_hinge_constraints_within_plane_of_free_rotation();
+                apply_hinge_constraints_perpendicular_to_plane_of_free_rotation(); // provides stability; prevents numerical errors from accumulating
+                apply_hinge_constraints_within_plane_of_free_rotation();           // enforces joint limits
             } else {
                 for(int i = 0; i < 3; i++) {
                     if(!m_enable_joint_constraints[i]) {

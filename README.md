@@ -155,6 +155,8 @@ References
     <dd>https://github.com/alfanick/inverse-kinematics/blob/master/ccd.cpp</dd>
     <dt>"Best Inverse kinematics algorithm with constraints on joint angles"</dt>
     <dd>https://stackoverflow.com/questions/21373012/best-inverse-kinematics-algorithm-with-constraints-on-joint-angles</dd>
+    <dt>"Real-Time 3d Robotics UI (Python)"</dt>
+    <dd>https://coreykruger.wordpress.com/programming-and-scripting/462-2/</dd>
 </dl>
 
 Keywords
