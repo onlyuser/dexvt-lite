@@ -23,9 +23,9 @@ Algorithm
 ---------
 
 1. In each joint's rotation step in CCD, instead rotating on a pivot that makes the end-effector align with the target, honor each joint's individual constraints.
-2. When applying rotations on hinge joint, enforce joint constraints by limiting rotations perpendicular to the joint's plane of free rotation, aligned with the parent segment.
-3. When applying rotations on hinge joint, enforce joint constraints by limiting rotations within the joint's plane of free rotation, aligned with the parent segment.
-4. When applying rotations on non-hinge joint, enforce joint constraints by capping euler angles, one min/max per axis.
+2. When applying rotations on a hinge joint, enforce joint constraints by limiting rotations perpendicular to the joint's plane of free rotation, aligned with the parent segment.
+3. When applying rotations on a hinge joint, enforce joint constraints by limiting rotations within the joint's plane of free rotation, aligned with the parent segment.
+4. When applying rotations on a non-hinge joint, enforce joint constraints by capping euler angles, one valid range per axis.
 
 Screenshots
 -----------
