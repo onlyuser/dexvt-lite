@@ -210,7 +210,7 @@ void TransformObject::apply_hinge_constraints_perpendicular_to_plane_of_free_rot
     glm::vec3 local_up_dir;
     glm::vec3 parent_plane_origin = m_parent ? m_parent->in_abs_system() : glm::vec3(0);
     if(!m_parent) {
-        mark_dirty_transform(); // strangely necessary, otherwise absolute axis endpoints aren't calculated
+        mark_dirty_transform(); // strangely necessary, otherwise absolute axis endpoints aren't calculated for root
     }
     glm::vec3 joint_origin                    = in_abs_system();
     glm::vec3 joint_abs_left_axis_endpoint    = joint_origin + get_abs_left_direction(); // X
@@ -284,6 +284,8 @@ void TransformObject::apply_hinge_constraints_within_plane_of_free_rotation()
         m_euler[EULER_INDEX_ROLL]  = 0;
         m_euler[EULER_INDEX_PITCH] = -180 - m_euler[EULER_INDEX_PITCH];
         m_euler[EULER_INDEX_YAW]   = 0;
+        mark_dirty_transform();
+        // recalculate local vars to reflect change
         abs_heading                      = get_abs_heading();
         center_local_euler               = m_euler;
         center_local_euler[m_hinge_type] = m_joint_constraints_center[m_hinge_type];

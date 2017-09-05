@@ -227,7 +227,7 @@ int init_resources()
             (*p)->set_hinge_type(vt::EULER_INDEX_YAW);
             (*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
             (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 60));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 90));
         } else if(leg_segment_index == 2) {
             (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
             (*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
