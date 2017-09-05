@@ -12,6 +12,21 @@ dexvt-lite is a 3D Inverse Kinematics ([Cyclic Coordinate Descent](http://what-w
 It also features environment-mapped reflection/refraction/double refraction (with Fresnel effect, chromatic dispersion, and Beer's law), screen space ambient occlusion, bump mapping, Phong shading, Bloom filter, 3ds mesh import, and platonic primitives generation.
 Platonic primitives supported include sphere, cube, cylinder, cone, grid, tetrahedron, and round brilliant diamond.
 
+Features
+--------
+
+* Supports joint limits for "hinge" joints.
+* Supports end-effector orientation constraints.
+* Supports prismatic joints.
+
+Algorithm
+---------
+
+1. In each joint's rotation step in CCD, instead rotating on a pivot that makes the end-effector align with the target, honor each joint's individual constraints.
+2. When applying rotations on hinge joint, enforce joint constraints by limiting rotations perpendicular to the joint's plane of free rotation, aligned with the parent segment.
+3. When applying rotations on hinge joint, enforce joint constraints by limiting rotations within the joint's plane of free rotation, aligned with the parent segment.
+4. When applying rotations on non-hinge joint, enforce joint constraints by capping euler angles, one min/max per axis.
+
 Screenshots
 -----------
 
