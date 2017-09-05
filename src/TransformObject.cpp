@@ -23,7 +23,6 @@ TransformObject::TransformObject(std::string name,
       m_joint_constraints_center(       glm::vec3(0)),
       m_joint_constraints_max_deviation(glm::vec3(0)),
       m_hinge_type(EULER_INDEX_UNDEF),
-      m_enable_constraints_within_plane_of_free_rotation(false),
       m_parent(NULL),
       m_is_dirty_transform(true),
       m_is_dirty_normal_transform(true)
@@ -275,33 +274,25 @@ void TransformObject::apply_hinge_constraints_within_plane_of_free_rotation()
         parent_transform  = glm::mat4(1);
         parent_abs_up_direction = VEC_UP;
     }
-    glm::vec3 abs_heading      = get_abs_heading();
-    glm::vec3 abs_up_direction = get_abs_up_direction();
-    glm::vec3 center_local_euler = m_euler;
+    glm::vec3 abs_heading            = get_abs_heading();
+    glm::vec3 center_local_euler     = m_euler;
     center_local_euler[m_hinge_type] = m_joint_constraints_center[m_hinge_type];
-    glm::vec3 center_dir = dir_from_point_as_offset_in_other_system(center_local_euler, parent_transform, parent_abs_origin);
-    if(glm::degrees(glm::angle(abs_heading, center_dir)) <= m_joint_constraints_max_deviation[m_hinge_type]) {
-#if 1
-        if(glm::dot(abs_up_direction, parent_abs_up_direction) < 0) {
-            if(m_name == "ik_box_2") {
-                std::cout << "legal down: " << glm::to_string(m_euler) << " " << glm::to_string(m_prev_legal_euler) << std::endl;
-            }
-            m_euler = m_prev_legal_euler;
-            return;
-        }
-        m_prev_legal_euler = m_euler;
-#endif
+    glm::vec3 center_dir             = dir_from_point_as_offset_in_other_system(center_local_euler, parent_transform, parent_abs_origin);
+    // if pointing backwards and we haven't suppressed roll and yaw yet
+    if(glm::dot(get_abs_up_direction(), parent_abs_up_direction) < 0 && !(m_euler[EULER_INDEX_ROLL] == 0 && m_euler[EULER_INDEX_YAW] == 0)) {
+        // suppress roll and yaw and remap pitch from [-90, 90] to [-90, -270]
+        m_euler[EULER_INDEX_ROLL]  = 0;
+        m_euler[EULER_INDEX_PITCH] = -180 - m_euler[EULER_INDEX_PITCH];
+        m_euler[EULER_INDEX_YAW]   = 0;
+        abs_heading                      = get_abs_heading();
+        center_local_euler               = m_euler;
+        center_local_euler[m_hinge_type] = m_joint_constraints_center[m_hinge_type];
+        center_dir                       = dir_from_point_as_offset_in_other_system(center_local_euler, parent_transform, parent_abs_origin);
+    }
+    if(glm::degrees(glm::angle(abs_heading, center_dir)) <= m_joint_constraints_max_deviation[m_hinge_type]) { // if not violating constraints, leave it
         return;
     }
-#if 1
-    if(glm::dot(abs_up_direction, parent_abs_up_direction) < 0) {
-        if(m_name == "ik_box_2") {
-            std::cout << "illegal down: " << glm::to_string(m_euler) << " " << glm::to_string(m_prev_legal_euler) << std::endl;
-        }
-        m_euler = m_prev_legal_euler;
-        return;
-    }
-#endif
+    // if violating constraints, snap to nearest hinge boundary
     float min_value = m_joint_constraints_center[m_hinge_type] - m_joint_constraints_max_deviation[m_hinge_type];
     float max_value = m_joint_constraints_center[m_hinge_type] + m_joint_constraints_max_deviation[m_hinge_type];
     glm::vec3 min_local_euler = m_euler;
