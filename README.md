@@ -18,12 +18,13 @@ Algorithm
     1. In each joint's rotation step, instead of choosing a pivot that aligns the end-effector with the target, choose a pivot that minimizes the distance between the end-effector and the target, and is perpendicular to the joint's plane of free rotation.
     2. After rotating a "hinge" joint, first enforce joint constraints perpendicular to the joint's pivot by squeezing the post-rotation orientation of the adjacent segment to be within the joint's plane of free rotation, then enforce joint constraints within the joint's plane of free rotation by squeezing the post-rotation orientation of the adjacent segment to be within the joint's maximal deviation from neutral orientation.
     3. After rotating a "non-hinge" joint, enforce joint constraints in euler space by squeezing the post-rotation orientation of the adjacent segment to be within the joint's maximal deviation from neutral orientation, for each euler axis.
+    4. Resume normal CCD to finish.
 
 * Prismatic Joint Constraints
-    * In the prismatic joint's translation step, slide the adjacent segment by the maximal extent it can slide within the joint's range of free translation to align the end-effector with the target.
+    * In the prismatic joint's translation step, slide the adjacent segment by the maximal extent it can slide within the joint's range of free translation to align the end-effector with the target, and resume normal CCD to finish.
 
 * End-effector Orientation Constraints
-    * In each joint's rotation step, simply extend the end-effector position by the end-effector orientation offset.
+    * In each joint's rotation/translation step, simply extend the end-effector position by the end-effector orientation offset, and resume normal CCD to finish.
 
 Screenshots
 -----------
