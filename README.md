@@ -29,6 +29,7 @@ Algorithm
 Screenshots
 -----------
 
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_ik_const_thumb.gif?attredirects=0)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_ik_const.gif?attredirects=0)
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_fanta_thumb.gif?attredirects=0)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_fanta.gif?attredirects=0)
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_boids_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_boids.png)
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_freerot_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_freerot.png)
