@@ -278,7 +278,7 @@ void TransformObject::apply_hinge_constraints_within_plane_of_free_rotation()
     glm::vec3 center_local_euler     = m_euler;
     center_local_euler[m_hinge_type] = m_joint_constraints_center[m_hinge_type];
     glm::vec3 center_dir             = dir_from_point_as_offset_in_other_system(center_local_euler, parent_transform, parent_abs_origin);
-    // if pointing backwards and we haven't suppressed roll and yaw yet
+    // if pointing backwards and not yet suppressed roll and yaw
     if(glm::dot(get_abs_up_direction(), parent_abs_up_direction) < 0 && !(m_euler[EULER_INDEX_ROLL] == 0 && m_euler[EULER_INDEX_YAW] == 0)) {
         // suppress roll and yaw and remap pitch from [-90, 90] to [-90, -270]
         m_euler[EULER_INDEX_ROLL]  = 0;

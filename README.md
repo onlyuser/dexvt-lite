@@ -9,26 +9,21 @@ About
 -----
 
 dexvt-lite is a 3D Inverse Kinematics ([Cyclic Coordinate Descent](http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/)) tech demonstrator.
-It also features environment-mapped reflection/refraction/double refraction (with Fresnel effect, chromatic dispersion, and Beer's law), screen space ambient occlusion, bump mapping, Phong shading, Bloom filter, 3ds mesh import, and platonic primitives generation.
-Platonic primitives supported include sphere, cube, cylinder, cone, grid, tetrahedron, and round brilliant diamond.
-
-Features
---------
-
-* Joint limits for "hinge" joints
-* End-effector orientation constraints
-* Prismatic joints
+It features rovolute joint constraints, prismatic joint constraints, and end-effector orientation constraints.
 
 Algorithm
 ---------
 
 * Revolute Joint Constraints
     1. In each joint's rotation step, instead of choosing a pivot that aligns the end-effector with the target, choose a pivot that minimizes the distance between the end-effector and the target, and is perpendicular to the joint's plane of free rotation.
-    2. After applying rotation to a "hinge" joint, first enforce joint constraints perpendicular to the joint's pivot by squeezing post-rotation orientation of the segment to be within the joint's plane of free rotation, then enforce joint constraints within the joint's plane of free rotation by squeezing post-rotation orientation of the segment to be within the joint's maximal allowed deviation from neutral orientation.
-    3. After applying rotation to a "non-hinge" joint, enforce joint constraints in euler space by squeezing post-rotation orientation of the segment to be within the joint's maximal allowed deviation from neutral orientation per euler rotation.
+    2. After rotating a "hinge" joint, first enforce joint constraints perpendicular to the joint's pivot by squeezing the post-rotation orientation of the segment to be within the joint's plane of free rotation, then enforce joint constraints within the joint's plane of free rotation by squeezing the post-rotation orientation of the segment to be within the joint's maximal deviation from neutral orientation.
+    3. After rotating a "non-hinge" joint, enforce joint constraints in euler space by squeezing the post-rotation orientation of the segment to be within the joint's maximal deviation from neutral orientation for each euler axis.
 
 * Prismatic Joint Constraints
-    TODO
+    * In the prismatic joint's translation step, slide the prismatic joint's segment by the maximal extent it can slide within the joint's translation constraints to align the end-effector with the target.
+
+* End-effector Orientation Constraints
+    * In each joint's rotation step, simply extend the end-effector position by the end-effector orientation offset.
 
 Screenshots
 -----------
