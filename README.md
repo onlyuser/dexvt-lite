@@ -15,17 +15,20 @@ Platonic primitives supported include sphere, cube, cylinder, cone, grid, tetrah
 Features
 --------
 
-* Joint limits for "hinge" type joints.
-* End-effector orientation constraints.
-* Prismatic joints.
+* Joint limits for "hinge" joints
+* End-effector orientation constraints
+* Prismatic joints
 
 Algorithm
 ---------
 
-1. In each joint's rotation step, instead of choosing a pivot that aligns the end-effector with the target, choose a pivot that minimizes the distance between the end-effector and the target, and is perpendicular to the joint's plane of free rotation.
-2. After applying rotation to a "hinge" joint, enforce joint constraints perpendicular to the joint's pivot by squeezing post-rotation orientation of the segment to be within the joint's plane of free rotation.
-3. After applying rotation to a "hinge" joint, enforce joint constraints within the joint's plane of free rotation by squeezing post-rotation orientation of the segment to be within the joint's maximal allowed deviation from neutral orientation.
-4. After applying rotation to a "non-hinge" joint, enforce joint constraints in euler space by squeezing post-rotation orientation of the segment to be within the joint's maximal allowed deviation from neutral orientation per euler rotation.
+* Revolute Joint Constraints
+    1. In each joint's rotation step, instead of choosing a pivot that aligns the end-effector with the target, choose a pivot that minimizes the distance between the end-effector and the target, and is perpendicular to the joint's plane of free rotation.
+    2. After applying rotation to a "hinge" joint, first enforce joint constraints perpendicular to the joint's pivot by squeezing post-rotation orientation of the segment to be within the joint's plane of free rotation, then enforce joint constraints within the joint's plane of free rotation by squeezing post-rotation orientation of the segment to be within the joint's maximal allowed deviation from neutral orientation.
+    3. After applying rotation to a "non-hinge" joint, enforce joint constraints in euler space by squeezing post-rotation orientation of the segment to be within the joint's maximal allowed deviation from neutral orientation per euler rotation.
+
+* Prismatic Joint Constraints
+    TODO
 
 Screenshots
 -----------
