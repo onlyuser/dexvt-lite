@@ -15,17 +15,17 @@ Platonic primitives supported include sphere, cube, cylinder, cone, grid, tetrah
 Features
 --------
 
-* Supports joint limits for "hinge" joints.
-* Supports end-effector orientation constraints.
-* Supports prismatic joints.
+* Joint limits for "hinge" type joints.
+* End-effector orientation constraints.
+* Prismatic joints.
 
 Algorithm
 ---------
 
-1. In each joint's rotation step in CCD, instead rotating on a pivot that makes the end-effector align with the target, honor each joint's individual constraints.
-2. When applying rotations on a hinge joint, enforce joint constraints by limiting rotations perpendicular to the joint's plane of free rotation, aligned with the parent segment.
-3. When applying rotations on a hinge joint, enforce joint constraints by limiting rotations within the joint's plane of free rotation, aligned with the parent segment.
-4. When applying rotations on a non-hinge joint, enforce joint constraints by capping euler angles, one valid range per axis.
+1. In each joint's rotation step, instead of choosing a pivot that aligns the end-effector with the target, choose a pivot that minimizes the distance between the end-effector and the target, and is perpendicular to the joint's plane of free rotation.
+2. After applying rotation to a "hinge" joint, enforce joint constraints perpendicular to the joint's pivot by squeezing post-rotation orientation of the segment to be within the joint's plane of free rotation.
+3. After applying rotation to a "hinge" joint, enforce joint constraints within the joint's plane of free rotation by squeezing post-rotation orientation of the segment to be within the joint's maximal allowed deviation from neutral orientation.
+4. After applying rotation to a "non-hinge" joint, enforce joint constraints in euler space by squeezing post-rotation orientation of the segment to be within the joint's maximal allowed deviation from neutral orientation per euler rotation.
 
 Screenshots
 -----------
