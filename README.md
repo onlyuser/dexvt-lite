@@ -18,19 +18,18 @@ Algorithm
 
 * Revolute Joint Constraints
     * "Non-hinge" joints
-        1. In each joint's rotation step, choose a pivot that aligns the end-effector with the target.
-        2. Enforce joint constraints in euler space by squeezing the post-rotation orientation of the adjacent segment to be within the joint's maximal deviation from neutral orientation, for each euler axis.
-        3. Resume normal CCD to finish.
+        1. In each joint's rotation step, rotate on a pivot that aligns the end-effector with the target.
+        2. Enforce joint constraints in euler space by capping the post-rotation orientation of the adjacent segment to be within the joint's maximal deviation from neutral orientation. Do this for each axis.
     * "Hinge" joints
-        1. In each joint's rotation step, instead of choosing a pivot that aligns the end-effector with the target, choose a pivot that minimizes the distance between the end-effector and the target, all the while staying within the joint's plane of free rotation. Setting correct goals early on avoids most problems described [here](https://stackoverflow.com/questions/21373012/best-inverse-kinematics-algorithm-with-constraints-on-joint-angles).
+        1. In each joint's rotation step, instead of rotating on a pivot that aligns the end-effector with the target, rotate on a pivot that minimizes the distance between the end-effector and the target, all the while staying within the joint's plane of free rotation. Setting correct goals early on avoids most problems described [here](https://stackoverflow.com/questions/21373012/best-inverse-kinematics-algorithm-with-constraints-on-joint-angles).
         2. Enforce joint constraints perpendicular to the joint's pivot by squeezing the post-rotation orientation of the adjacent segment to be within the joint's plane of free rotation. This seems redundant with #1, but it provides added numerical stability so the pivot doesn't "drift".
-        3. Enforce joint constraints within the joint's plane of free rotation by squeezing the post-rotation orientation of the adjacent segment to be within the joint's maximal deviation from neutral orientation.
+        3. Enforce joint constraints within the joint's plane of free rotation by capping the post-rotation orientation of the adjacent segment to be within the joint's maximal deviation from neutral orientation.
 
 * Prismatic Joint Constraints
     * In each joint's translation step, slide the adjacent segment by the maximal extent it can slide within the joint's range of free translation to align the end-effector with the target.
 
 * End-effector Orientation Constraints
-    * In each joint's rotation/translation step, simply extend the end-effector position by the end-effector orientation offset.
+    * In each joint's rotation/translation step, extend the end-effector position by the end-effector orientation offset.
 
 Screenshots
 -----------
