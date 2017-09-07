@@ -17,10 +17,11 @@ Algorithm
 ---------
 
 * Revolute Joint Constraints
-    1. In each joint's rotation step, instead of choosing a pivot that aligns the end-effector with the target, choose a pivot that minimizes the distance between the end-effector and the target, and is perpendicular to the joint's plane of free rotation.
-    2. After rotating a "hinge" joint, first enforce joint constraints perpendicular to the joint's pivot by squeezing the post-rotation orientation of the adjacent segment to be within the joint's plane of free rotation, then enforce joint constraints within the joint's plane of free rotation by squeezing the post-rotation orientation of the adjacent segment to be within the joint's maximal deviation from neutral orientation.
-    3. After rotating a "non-hinge" joint, enforce joint constraints in euler space by squeezing the post-rotation orientation of the adjacent segment to be within the joint's maximal deviation from neutral orientation, for each euler axis.
-    4. Resume normal CCD to finish.
+    1. In each joint's rotation step for "hinge" joints, instead of choosing a pivot that aligns the end-effector with the target, choose a pivot that minimizes the distance between the end-effector and the target, all the while staying within the joint's plane of free rotation. Setting correct goals early on avoids most problems described [here](https://stackoverflow.com/questions/21373012/best-inverse-kinematics-algorithm-with-constraints-on-joint-angles).
+    2. Enforce "hinge" joint constraints perpendicular to the joint's pivot by squeezing the post-rotation orientation of the adjacent segment to be within the joint's plane of free rotation. This provides added numerical stability so the pivot doesn't "drift".
+    3. Enforce "hinge" joint constraints within the joint's plane of free rotation by squeezing the post-rotation orientation of the adjacent segment to be within the joint's maximal deviation from neutral orientation. This seems redundant with #1, but further helps reduce error accumulation.
+    4. Enforce "non-hinge" joint constraints in euler space by squeezing the post-rotation orientation of the adjacent segment to be within the joint's maximal deviation from neutral orientation, for each euler axis. Fallback to the naive way of enforcing joint constraints.
+    5. Resume normal CCD to finish.
 
 * Prismatic Joint Constraints
     * In the prismatic joint's translation step, slide the adjacent segment by the maximal extent it can slide within the joint's range of free translation to align the end-effector with the target, and resume normal CCD to finish.

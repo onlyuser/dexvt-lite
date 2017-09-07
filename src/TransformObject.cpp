@@ -408,7 +408,9 @@ bool TransformObject::solve_ik_ccd(TransformObject* root,
                                                                              current_segment->from_origin_in_parent_system(end_effector_tip)));
                 continue;
             }
-            current_segment->project_to_plane_of_free_rotation(&_target, &end_effector_tip);
+            if(is_hinge()) {
+                current_segment->project_to_plane_of_free_rotation(&_target, &end_effector_tip);
+            }
 #if 1
             glm::vec3 local_arc_pivot_dir;
             float angle_delta = 0;
