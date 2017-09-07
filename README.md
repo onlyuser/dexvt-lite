@@ -11,6 +11,8 @@ About
 dexvt-lite is a 3D Inverse Kinematics ([Cyclic Coordinate Descent](http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/)) tech demonstrator.
 It features rovolute joint constraints, prismatic joint constraints, and end-effector orientation constraints.
 
+See sister project demonstrating shader features: [dexvt-test](https://github.com/onlyuser/dexvt-test)
+
 Algorithm
 ---------
 
@@ -176,4 +178,4 @@ References
 Keywords
 --------
 
-    OpenGL, glsl shader, glm, environment map, cube map, normal map, bitangent, tbn matrix, ssao, screen space ambient occlusion, backface refraction, double refraction, second refraction, backface sampling, Fresnel effect, chromatic dispersion, chromatic aberration, Bloom filter, Beer's law, Snell's law, Newton's method, 3ds file import, round brilliant diamond rendering, gemstone rendering, hierarchy linkages, 3D Inverse Kinematics (Cyclic Coordinate Descent)
+    3D inverse kinematics (cyclic coordinate descent), forward kinematics, rovolute joint constraints, prismatic joint constraints, end-effector orientation constraints
