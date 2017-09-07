@@ -314,17 +314,17 @@ void TransformObject::apply_joint_constraints()
             if(is_hinge()) {
                 apply_hinge_constraints_perpendicular_to_plane_of_free_rotation(); // provides stability; prevents numerical errors from accumulating
                 apply_hinge_constraints_within_plane_of_free_rotation();           // enforces joint limits
-            } else {
-                for(int i = 0; i < 3; i++) {
-                    if(!m_enable_joint_constraints[i]) {
-                        continue;
-                    }
-                    if(angle_distance(m_euler[i], m_joint_constraints_center[i]) > m_joint_constraints_max_deviation[i]) {
-                        float min_value = m_joint_constraints_center[i] - m_joint_constraints_max_deviation[i];
-                        float max_value = m_joint_constraints_center[i] + m_joint_constraints_max_deviation[i];
-                        m_euler[i] = (angle_distance(m_euler[i], min_value) < angle_distance(m_euler[i], max_value)) ? min_value : max_value;
-                        mark_dirty_transform();
-                    }
+                break;
+            }
+            for(int i = 0; i < 3; i++) {
+                if(!m_enable_joint_constraints[i]) {
+                    continue;
+                }
+                if(angle_distance(m_euler[i], m_joint_constraints_center[i]) > m_joint_constraints_max_deviation[i]) {
+                    float min_value = m_joint_constraints_center[i] - m_joint_constraints_max_deviation[i];
+                    float max_value = m_joint_constraints_center[i] + m_joint_constraints_max_deviation[i];
+                    m_euler[i] = (angle_distance(m_euler[i], min_value) < angle_distance(m_euler[i], max_value)) ? min_value : max_value;
+                    mark_dirty_transform();
                 }
             }
             break;

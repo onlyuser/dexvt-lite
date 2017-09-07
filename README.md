@@ -15,14 +15,16 @@ See sister project demonstrating shader features: [dexvt-test](https://github.co
 
 Algorithm
 ---------
+There are rovolute joint constraints, prismatic joint constraints, and end-effector orientation constraints.
+The way each constraint type is handled is described below:
 
 * Revolute Joint Constraints
     * "Non-hinge" joints
         1. In each joint's rotation step, rotate on a pivot that aligns the end-effector with the target.
         2. Enforce joint constraints in euler space by capping the post-rotation orientation of the adjacent segment to be within the joint's maximal deviation from neutral orientation. Do this for each axis.
     * "Hinge" joints
-        1. In each joint's rotation step, instead of rotating on a pivot that aligns the end-effector with the target, rotate on a pivot that minimizes the distance between the end-effector and the target, all the while staying within the joint's plane of free rotation. Setting correct goals early on avoids most problems described [here](https://stackoverflow.com/questions/21373012/best-inverse-kinematics-algorithm-with-constraints-on-joint-angles).
-        2. Enforce joint constraints perpendicular to the joint's pivot by squeezing the post-rotation orientation of the adjacent segment to be within the joint's plane of free rotation. This seems redundant with #1, but it provides added numerical stability so the pivot doesn't "drift".
+        1. In each joint's rotation step, rotate on a pivot that minimizes the distance between the end-effector and the target, all the while staying within the joint's plane of free rotation. Setting non-constraint-violating goals early on avoids most problems described [here](https://stackoverflow.com/questions/21373012/best-inverse-kinematics-algorithm-with-constraints-on-joint-angles).
+        2. Enforce joint constraints perpendicular to the joint's pivot by squeezing the post-rotation orientation of the adjacent segment to be within the joint's plane of free rotation. This adds numerical stability to the pivot so it doesn't "drift".
         3. Enforce joint constraints within the joint's plane of free rotation by capping the post-rotation orientation of the adjacent segment to be within the joint's maximal deviation from neutral orientation.
 
 * Prismatic Joint Constraints
