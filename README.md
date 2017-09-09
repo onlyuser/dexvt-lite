@@ -136,8 +136,10 @@ References
 <dl>
     <dt>"Setting up an OpenGL development environment in Ubuntu Linux"</dt>
     <dd>http://www.codeproject.com/Articles/182109/Setting-up-an-OpenGL-development-environment-in-Ub</dd>
-    <dt>"OpenGL Programming/Intermediate/Textures - A simple libpng example"</dt>
-    <dd>http://en.wikibooks.org/wiki/OpenGL_Programming/Intermediate/Textures#A_simple_libpng_example</dd>
+    <dt>"OpenGL Programming/Intermediate"</dt>
+    <dd>http://en.wikibooks.org/wiki/OpenGL_Programming</dd>
+    <dt>"Tutorial - Getting Started with the OpenGL Shading Language (GLSL)"</dt>
+    <dd>http://joshbeam.com/articles/getting_started_with_glsl/</dd>
     <dt>"Cube Maps: Sky Boxes and Environment Mapping"</dt>
     <dd>http://antongerdelan.net/opengl/cubemaps.html</dd>
     <dt>"3D C/C++ tutorials - OpenGL - GLSL cube mapping"</dt>
