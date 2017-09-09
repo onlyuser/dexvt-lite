@@ -136,7 +136,7 @@ References
 <dl>
     <dt>"Setting up an OpenGL development environment in Ubuntu Linux"</dt>
     <dd>http://www.codeproject.com/Articles/182109/Setting-up-an-OpenGL-development-environment-in-Ub</dd>
-    <dt>"OpenGL Programming/Intermediate"</dt>
+    <dt>"OpenGL Programming"</dt>
     <dd>http://en.wikibooks.org/wiki/OpenGL_Programming</dd>
     <dt>"Tutorial - Getting Started with the OpenGL Shading Language (GLSL)"</dt>
     <dd>http://joshbeam.com/articles/getting_started_with_glsl/</dd>
