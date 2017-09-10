@@ -73,8 +73,7 @@ Program::~Program()
 void Program::attach_shader(Shader* shader)
 {
     glAttachShader(m_id, shader->id());
-    switch(shader->type())
-    {
+    switch(shader->type()) {
         case GL_VERTEX_SHADER:
             m_vertex_shader = shader;
             break;
@@ -100,18 +99,18 @@ bool Program::auto_add_shader_vars()
             std::string type_name;
             std::string var_name;
             if(regexp(line, "attribute[ ]+([^ ]+)[ ]+([^ ;\[]+)[;\[]", 3,
-                    NULL,
-                    &type_name,
-                    &var_name))
+                      NULL,
+                      &type_name,
+                      &var_name))
             {
                 //std::cout << "VAR ATTRIBUTE TYPE: " << type_name << std::endl;
                 //std::cout << "VAR ATTRIBUTE NAME: " << var_name << std::endl;
                 add_var(Program::VAR_TYPE_ATTRIBUTE, var_name);
             }
             if(regexp(line, "uniform[ ]+([^ ]+)[ ]+([^ ;\[]+)[;\[]", 3,
-                    NULL,
-                    &type_name,
-                    &var_name))
+                      NULL,
+                      &type_name,
+                      &var_name))
             {
                 //std::cout << "VAR UNIFORM TYPE: " << type_name << std::endl;
                 //std::cout << "VAR UNIFORM NAME: " << var_name << std::endl;
@@ -160,9 +159,7 @@ VarUniform* Program::get_var_uniform(const GLchar* name) const
     return var_uniform;
 }
 
-void Program::get_program_iv(
-        GLenum pname,
-        GLint* params) const
+void Program::get_program_iv(GLenum pname, GLint* params) const
 {
     glGetProgramiv(m_id, pname, params);
 }
