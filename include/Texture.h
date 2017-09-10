@@ -20,7 +20,7 @@ class Texture : public NamedObject,
                 public BindableObjectBase
 {
 public:
-    typedef enum { RGB, DEPTH, STENCIL } type_t;
+    typedef enum { RGB, DEPTH } type_t;
 
     Texture(std::string          name       = "",
             glm::ivec2           dim        = glm::ivec2(DEFAULT_TEXTURE_WIDTH,
