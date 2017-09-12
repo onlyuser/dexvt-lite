@@ -8,8 +8,6 @@
 #include <iostream>
 #include <memory.h>
 
-#define TEXTURE_LOAD_ERROR 0
-
 namespace vt {
 
 Texture::Texture(std::string          name,
@@ -21,52 +19,67 @@ Texture::Texture(std::string          name,
     : NamedObject(name),
       FrameObject(glm::ivec2(0), dim),
       m_skybox(false),
-      m_type(type)
+      m_type(type),
+      m_pixel_data(NULL),
+      m_pixel_data_pos_x(NULL),
+      m_pixel_data_neg_x(NULL),
+      m_pixel_data_pos_y(NULL),
+      m_pixel_data_neg_y(NULL),
+      m_pixel_data_pos_z(NULL),
+      m_pixel_data_neg_z(NULL)
 {
     if(pixel_data) {
-        m_id = gen_texture_internal(dim.x, dim.y, pixel_data, type, smooth);
+        size_t n = dim.x * dim.y * sizeof(unsigned char) * 3;
+        m_pixel_data = new unsigned char[n];
+        memcpy(m_pixel_data, pixel_data, n);
+        m_id = gen_texture_internal(dim.x, dim.y, m_pixel_data, type, smooth);
     } else {
-        if(type == Texture::DEPTH) {
-            float* _pixel_data = new float[dim.x * dim.y * sizeof(float)];
-            memset(_pixel_data, 0, dim.x * dim.y * sizeof(float));
-            for(int i = 0; i < static_cast<int>(std::min(dim.x, dim.y)); i++) {
-                _pixel_data[i * dim.x + i]         = 1;
-                _pixel_data[i * dim.x + dim.x - i] = 1;
-            }
-            m_id = gen_texture_internal(dim.x, dim.y, _pixel_data, type, smooth);
-            delete[] _pixel_data;
-        } else {
-            if(random) {
-                srand(time(NULL));
-                unsigned char* _pixel_data = new unsigned char[dim.x * dim.y * sizeof(unsigned char) * 3];
-                memset(_pixel_data, 0, dim.x * dim.y * sizeof(unsigned char) * 3);
-                for(int i = 0; i < static_cast<int>(dim.y); i++) {
-                    for(int j = 0; j < static_cast<int>(dim.x); j++) {
-                        int pixel_offset = (i * dim.x + j) * 3;
-                        _pixel_data[pixel_offset + 0] = rand() % 256;
-                        _pixel_data[pixel_offset + 1] = rand() % 256;
-                        _pixel_data[pixel_offset + 2] = rand() % 256;
+        switch(m_type) {
+            case Texture::DEPTH:
+                {
+                    size_t n = dim.x * dim.y * sizeof(float) * 3;
+                    m_pixel_data = new unsigned char[n];
+                    memset(m_pixel_data, 0, n);
+                    for(int i = 0; i < static_cast<int>(std::min(dim.x, dim.y)); i++) {
+                        m_pixel_data[i * dim.x + i]         = 1;
+                        m_pixel_data[i * dim.x + dim.x - i] = 1;
                     }
+                    m_id = gen_texture_internal(dim.x, dim.y, m_pixel_data, type, smooth);
                 }
-                m_id = gen_texture_internal(dim.x, dim.y, _pixel_data, type, smooth);
-                delete[] _pixel_data;
-            } else {
-                // draw big red 'x'
-                unsigned char* _pixel_data = new unsigned char[dim.x * dim.y * sizeof(unsigned char) * 3];
-                memset(_pixel_data, 0, dim.x * dim.y * sizeof(unsigned char) * 3);
-                for(int i = 0; i < static_cast<int>(std::min(dim.x, dim.y)); i++) {
-                    int pixel_offset_scanline_start = (i * dim.x + i) * 3;
-                    int pixel_offset_scanline_end   = (i * dim.x + (dim.x - i)) * 3;
-                    _pixel_data[pixel_offset_scanline_start + 0] = 255;
-                    _pixel_data[pixel_offset_scanline_start + 1] = 0;
-                    _pixel_data[pixel_offset_scanline_start + 2] = 0;
-                    _pixel_data[pixel_offset_scanline_end   + 0] = 255;
-                    _pixel_data[pixel_offset_scanline_end   + 1] = 0;
-                    _pixel_data[pixel_offset_scanline_end   + 2] = 0;
+                break;
+            case Texture::RGB:
+                if(random) {
+                    srand(time(NULL));
+                    size_t n = dim.x * dim.y * sizeof(unsigned char) * 3;
+                    m_pixel_data = new unsigned char[n];
+                    memset(m_pixel_data, 0, n);
+                    for(int i = 0; i < static_cast<int>(dim.y); i++) {
+                        for(int j = 0; j < static_cast<int>(dim.x); j++) {
+                            int pixel_offset = (i * dim.x + j) * 3;
+                            m_pixel_data[pixel_offset + 0] = rand() % 256;
+                            m_pixel_data[pixel_offset + 1] = rand() % 256;
+                            m_pixel_data[pixel_offset + 2] = rand() % 256;
+                        }
+                    }
+                    m_id = gen_texture_internal(dim.x, dim.y, m_pixel_data, type, smooth);
+                } else {
+                    // draw big red 'x'
+                    size_t n = dim.x * dim.y * sizeof(unsigned char) * 3;
+                    m_pixel_data = new unsigned char[n];
+                    memset(m_pixel_data, 0, n);
+                    for(int i = 0; i < static_cast<int>(std::min(dim.x, dim.y)); i++) {
+                        int pixel_offset_scanline_start = (i * dim.x + i) * 3;
+                        int pixel_offset_scanline_end   = (i * dim.x + (dim.x - i)) * 3;
+                        m_pixel_data[pixel_offset_scanline_start + 0] = 255;
+                        m_pixel_data[pixel_offset_scanline_start + 1] = 0;
+                        m_pixel_data[pixel_offset_scanline_start + 2] = 0;
+                        m_pixel_data[pixel_offset_scanline_end   + 0] = 255;
+                        m_pixel_data[pixel_offset_scanline_end   + 1] = 0;
+                        m_pixel_data[pixel_offset_scanline_end   + 2] = 0;
+                    }
+                    m_id = gen_texture_internal(dim.x, dim.y, m_pixel_data, type, smooth);
                 }
-                m_id = gen_texture_internal(dim.x, dim.y, _pixel_data, type, smooth);
-                delete[] _pixel_data;
-            }
+                break;
         }
     }
 }
@@ -86,8 +99,10 @@ Texture::Texture(std::string name,
         return;
     }
     if(pixel_data) {
+        size_t n = width * height * sizeof(unsigned char) * 3;
+        m_pixel_data = new unsigned char[n];
+        memcpy(m_pixel_data, pixel_data, n);
         m_id = gen_texture_internal(width, height, pixel_data, Texture::RGB, smooth);
-        delete[] pixel_data;
         m_dim.x = width;
         m_dim.y = height;
     }
@@ -144,28 +159,52 @@ Texture::Texture(std::string name,
        pixel_data_pos_z &&
        pixel_data_neg_z)
     {
+        size_t n = width * height * sizeof(unsigned char) * 3;
+        m_pixel_data_pos_x = new unsigned char[n];
+        m_pixel_data_neg_x = new unsigned char[n];
+        m_pixel_data_pos_y = new unsigned char[n];
+        m_pixel_data_neg_y = new unsigned char[n];
+        m_pixel_data_pos_z = new unsigned char[n];
+        m_pixel_data_neg_z = new unsigned char[n];
+        memcpy(m_pixel_data_pos_x, pixel_data_pos_x, n);
+        memcpy(m_pixel_data_neg_x, pixel_data_neg_x, n);
+        memcpy(m_pixel_data_pos_y, pixel_data_pos_y, n);
+        memcpy(m_pixel_data_neg_y, pixel_data_neg_y, n);
+        memcpy(m_pixel_data_pos_z, pixel_data_pos_z, n);
+        memcpy(m_pixel_data_neg_z, pixel_data_neg_z, n);
         m_id = gen_texture_skybox_internal(width,
                                            height,
-                                           pixel_data_pos_x,
-                                           pixel_data_neg_x,
-                                           pixel_data_pos_y,
-                                           pixel_data_neg_y,
-                                           pixel_data_pos_z,
-                                           pixel_data_neg_z);
+                                           m_pixel_data_pos_x,
+                                           m_pixel_data_neg_x,
+                                           m_pixel_data_pos_y,
+                                           m_pixel_data_neg_y,
+                                           m_pixel_data_pos_z,
+                                           m_pixel_data_neg_z);
         m_dim.x = width;
         m_dim.y = height;
-        delete[] pixel_data_pos_x;
-        delete[] pixel_data_neg_x;
-        delete[] pixel_data_pos_y;
-        delete[] pixel_data_neg_y;
-        delete[] pixel_data_pos_z;
-        delete[] pixel_data_neg_z;
     }
 }
 
 Texture::~Texture()
 {
     glDeleteTextures(1, &m_id);
+    if(m_skybox) {
+        if(m_pixel_data_pos_x) { delete[] m_pixel_data_pos_x; }
+        if(m_pixel_data_neg_x) { delete[] m_pixel_data_neg_x; }
+        if(m_pixel_data_pos_y) { delete[] m_pixel_data_pos_y; }
+        if(m_pixel_data_neg_y) { delete[] m_pixel_data_neg_y; }
+        if(m_pixel_data_pos_z) { delete[] m_pixel_data_pos_z; }
+        if(m_pixel_data_neg_z) { delete[] m_pixel_data_neg_z; }
+    } else {
+        switch(m_type) {
+            case Texture::DEPTH:
+                if(m_pixel_data) { delete[] reinterpret_cast<float*>(m_pixel_data); }
+                break;
+            case Texture::RGB:
+                if(m_pixel_data) { delete[] m_pixel_data; }
+                break;
+        }
+    }
 }
 
 void Texture::bind()
@@ -190,26 +229,29 @@ GLuint Texture::gen_texture_internal(size_t      width,
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, smooth ? GL_LINEAR : GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    if(type == Texture::DEPTH) {
-        glTexImage2D(GL_TEXTURE_2D,      // target
-                     0,                  // level, 0 = base, no mipmap,
-                     GL_DEPTH_COMPONENT, // internal format
-                     width,              // width
-                     height,             // height
-                     0,                  // border, always 0 in OpenGL ES
-                     GL_DEPTH_COMPONENT, // format
-                     GL_FLOAT,           // type
-                     pixel_data);
-    } else {
-        glTexImage2D(GL_TEXTURE_2D,    // target
-                     0,                // level, 0 = base, no mipmap,
-                     GL_RGB,           // internal format
-                     width,            // width
-                     height,           // height
-                     0,                // border, always 0 in OpenGL ES
-                     GL_RGB,           // format
-                     GL_UNSIGNED_BYTE, // type
-                     pixel_data);
+    switch(type) {
+        case Texture::DEPTH:
+            glTexImage2D(GL_TEXTURE_2D,      // target
+                         0,                  // level, 0 = base, no mipmap,
+                         GL_DEPTH_COMPONENT, // internal format
+                         width,              // width
+                         height,             // height
+                         0,                  // border, always 0 in OpenGL ES
+                         GL_DEPTH_COMPONENT, // format
+                         GL_FLOAT,           // type
+                         pixel_data);
+            break;
+        case Texture::RGB:
+            glTexImage2D(GL_TEXTURE_2D,    // target
+                         0,                // level, 0 = base, no mipmap,
+                         GL_RGB,           // internal format
+                         width,            // width
+                         height,           // height
+                         0,                // border, always 0 in OpenGL ES
+                         GL_RGB,           // format
+                         GL_UNSIGNED_BYTE, // type
+                         pixel_data);
+            break;
     }
     return id;
 }
@@ -286,6 +328,56 @@ GLuint Texture::gen_texture_skybox_internal(size_t      width,
                  GL_UNSIGNED_BYTE,               // type
                  pixel_data_neg_z);
     return id;
+}
+
+void Texture::update(unsigned char* pixel_data)
+{
+    bind();
+    switch(m_type) {
+        case Texture::DEPTH:
+            glTexImage2D(GL_TEXTURE_2D,      // target
+                         0,                  // level, 0 = base, no mipmap,
+                         GL_DEPTH_COMPONENT, // internal format
+                         m_dim.x,            // width
+                         m_dim.y,            // height
+                         0,                  // border, always 0 in OpenGL ES
+                         GL_DEPTH_COMPONENT, // format
+                         GL_FLOAT,           // type
+                         pixel_data);
+            break;
+        case Texture::RGB:
+            glTexImage2D(GL_TEXTURE_2D,    // target
+                         0,                // level, 0 = base, no mipmap,
+                         GL_RGB,           // internal format
+                         m_dim.x,          // width
+                         m_dim.y,          // height
+                         0,                // border, always 0 in OpenGL ES
+                         GL_RGB,           // format
+                         GL_UNSIGNED_BYTE, // type
+                         pixel_data);
+            break;
+    }
+}
+
+void Texture::refresh(unsigned char* pixel_data)
+{
+    bind();
+    switch(m_type) {
+        case Texture::DEPTH:
+            glGetTexImage(GL_TEXTURE_2D,      // target
+                          0,                  // level, 0 = base, no mipmap,
+                          GL_DEPTH_COMPONENT, // format
+                          GL_FLOAT,           // type
+                          pixel_data);
+            break;
+        case Texture::RGB:
+            glGetTexImage(GL_TEXTURE_2D,    // target
+                          0,                // level, 0 = base, no mipmap,
+                          GL_RGB,           // format
+                          GL_UNSIGNED_BYTE, // type
+                          pixel_data);
+            break;
+    }
 }
 
 }

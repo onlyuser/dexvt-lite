@@ -45,10 +45,19 @@ public:
     {
         return m_type;
     }
+    void update(unsigned char* pixel_data);
+    void refresh(unsigned char* pixel_data);
 
 private:
     bool   m_skybox;
     type_t m_type;
+    unsigned char* m_pixel_data;
+    unsigned char* m_pixel_data_pos_x;
+    unsigned char* m_pixel_data_neg_x;
+    unsigned char* m_pixel_data_pos_y;
+    unsigned char* m_pixel_data_neg_y;
+    unsigned char* m_pixel_data_pos_z;
+    unsigned char* m_pixel_data_neg_z;
 
     static GLuint gen_texture_internal(size_t      width,
                                        size_t      height,
