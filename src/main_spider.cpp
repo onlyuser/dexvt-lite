@@ -72,7 +72,8 @@
 
 const char* DEFAULT_CAPTION = NULL;
 
-int init_screen_width = 800, init_screen_height = 600;
+int init_screen_width  = 800,
+    init_screen_height = 600;
 vt::Camera  *camera         = NULL;
 vt::Mesh    *mesh_skybox    = NULL;
 vt::Light   *light          = NULL,
@@ -80,30 +81,39 @@ vt::Light   *light          = NULL,
             *light3         = NULL;
 vt::Texture *texture_skybox = NULL;
 
-bool left_mouse_down = false, right_mouse_down = false;
-glm::vec2 prev_mouse_coord, mouse_drag;
-glm::vec3 prev_euler, euler, orbit_speed = glm::vec3(0, -0.5, -0.5);
-float prev_orbit_radius = 0, orbit_radius = 8, dolly_speed = 0.1, light_distance = 4;
-bool show_bbox = false;
-bool show_fps = false;
-bool show_help = false;
-bool show_lights = false;
-bool show_normals = false;
-bool wireframe_mode = false;
-bool show_guide_wires = false;
-bool show_paths = true;
-bool show_axis = false;
-bool show_axis_labels = false;
-bool do_animation = true;
-bool left_key = false;
-bool right_key = false;
-bool up_key = false;
-bool down_key = false;
-bool page_up_key = false;
-bool page_down_key = false;
-bool user_input = true;
+bool left_mouse_down  = false,
+     right_mouse_down = false;
+glm::vec2 prev_mouse_coord,
+          mouse_drag;
+glm::vec3 prev_euler,
+          euler,
+          orbit_speed = glm::vec3(0, -0.5, -0.5);
+float prev_orbit_radius = 0,
+      orbit_radius      = 8,
+      dolly_speed       = 0.1,
+      light_distance    = 4;
+bool show_bbox        = false,
+     show_fps         = false,
+     show_help        = false,
+     show_lights      = false,
+     show_normals     = false,
+     wireframe_mode   = false,
+     show_guide_wires = false,
+     show_paths       = true,
+     show_axis        = false,
+     show_axis_labels = false,
+     do_animation     = true,
+     left_key         = false,
+     right_key        = false,
+     up_key           = false,
+     down_key         = false,
+     page_up_key      = false,
+     page_down_key    = false,
+     user_input       = true;
 
-float prev_zoom = 0, zoom = 1, ortho_dolly_speed = 0.1;
+float prev_zoom         = 0,
+      zoom              = 1,
+      ortho_dolly_speed = 0.1;
 
 int angle_delta = 1;
 
@@ -111,9 +121,9 @@ unsigned char* height_map_pixel_data = NULL;
 size_t tex_width = 0;
 size_t tex_length = 0;
 
-vt::Mesh* terrain = NULL;
-vt::Mesh* box     = NULL;
-vt::Mesh* dummy   = NULL;
+vt::Mesh *terrain = NULL,
+         *box     = NULL,
+         *dummy   = NULL;
 
 struct IK_Leg
 {
