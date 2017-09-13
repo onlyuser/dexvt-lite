@@ -35,7 +35,7 @@ Texture::Texture(std::string          name,
     switch(m_type) {
         case Texture::RGB:
             {
-                size_t size_buf = dim.x * dim.y * sizeof(unsigned char) * 3;
+                size_t size_buf = get_pixel_data_size();
                 unsigned char* init_pixel_data = new unsigned char[size_buf];
                 if(!init_pixel_data) {
                     return;
@@ -43,9 +43,9 @@ Texture::Texture(std::string          name,
                 memset(init_pixel_data, 0, size_buf);
                 if(random) {
                     srand(time(NULL));
-                    for(int i = 0; i < static_cast<int>(dim.y); i++) {
-                        for(int j = 0; j < static_cast<int>(dim.x); j++) {
-                            int pixel_offset = (i * dim.x + j) * 3;
+                    for(int y = 0; y < static_cast<int>(dim.y); y++) {
+                        for(int x = 0; x < static_cast<int>(dim.x); x++) {
+                            int pixel_offset = (y * dim.x + x) * 3;
                             init_pixel_data[pixel_offset + 0] = rand() % 256;
                             init_pixel_data[pixel_offset + 1] = rand() % 256;
                             init_pixel_data[pixel_offset + 2] = rand() % 256;
@@ -54,7 +54,8 @@ Texture::Texture(std::string          name,
                     gen_texture_internal(dim, init_pixel_data, type, smooth);
                 } else {
                     // draw big red 'x'
-                    for(int i = 0; i < static_cast<int>(std::min(dim.x, dim.y)); i++) {
+                    size_t min_dim = std::min(dim.x, dim.y);
+                    for(int i = 0; i < static_cast<int>(min_dim); i++) {
                         int pixel_offset_scanline_start = (i * dim.x + i) * 3;
                         int pixel_offset_scanline_end   = (i * dim.x + (dim.x - i)) * 3;
                         init_pixel_data[pixel_offset_scanline_start + 0] = 255;
@@ -71,15 +72,16 @@ Texture::Texture(std::string          name,
             break;
         case Texture::DEPTH:
             {
-                size_t size_buf = dim.x * dim.y * sizeof(float) * 3;
+                size_t size_buf = get_pixel_data_size();
                 unsigned char* init_pixel_data = new unsigned char[size_buf];
                 if(!init_pixel_data) {
                     return;
                 }
                 memset(init_pixel_data, 0, size_buf);
-                for(int i = 0; i < static_cast<int>(std::min(dim.x, dim.y)); i++) {
-                    init_pixel_data[i * dim.x + i]         = 1;
-                    init_pixel_data[i * dim.x + dim.x - i] = 1;
+                size_t min_dim = std::min(dim.x, dim.y);
+                for(int i = 0; i < static_cast<int>(min_dim); i++) {
+                    init_pixel_data[i * dim.x + i]           = 1;
+                    init_pixel_data[i * dim.x + (dim.x - i)] = 1;
                 }
                 gen_texture_internal(dim, init_pixel_data, type, smooth);
                 delete []init_pixel_data;
