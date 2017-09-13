@@ -1,3 +1,5 @@
+// From Josh Beam's Website: http://joshbeam.com/articles/getting_started_with_glsl/
+
 /*
  * Copyright (C) 2010 Josh A. Beam
  * All rights reserved.

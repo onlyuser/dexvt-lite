@@ -45,8 +45,10 @@ public:
     {
         return m_type;
     }
-    void update(unsigned char* pixel_data);
-    void refresh(unsigned char* pixel_data);
+    unsigned char* get_pixel_data() const { return m_pixel_data; }
+    size_t get_pixel_data_size() const;
+    void update();
+    void refresh();
 
 private:
     bool   m_skybox;
@@ -59,19 +61,17 @@ private:
     unsigned char* m_pixel_data_pos_z;
     unsigned char* m_pixel_data_neg_z;
 
-    static GLuint gen_texture_internal(size_t      width,
-                                       size_t      height,
-                                       const void* pixel_data,
-                                       type_t      type   = Texture::RGB,
-                                       bool        smooth = true);
-    static GLuint gen_texture_skybox_internal(size_t      width,
-                                              size_t      height,
-                                              const void* pixel_data_pos_x,
-                                              const void* pixel_data_neg_x,
-                                              const void* pixel_data_pos_y,
-                                              const void* pixel_data_neg_y,
-                                              const void* pixel_data_pos_z,
-                                              const void* pixel_data_neg_z);
+    void gen_texture_internal(glm::ivec2  dim,
+                              const void* pixel_data,
+                              type_t      type,
+                              bool        smooth);
+    void gen_texture_skybox_internal(glm::ivec2  dim,
+                                     const void* pixel_data_pos_x,
+                                     const void* pixel_data_neg_x,
+                                     const void* pixel_data_pos_y,
+                                     const void* pixel_data_neg_y,
+                                     const void* pixel_data_pos_z,
+                                     const void* pixel_data_neg_z);
 };
 
 }
