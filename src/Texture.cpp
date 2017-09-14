@@ -73,7 +73,7 @@ Texture::Texture(std::string          name,
         case Texture::DEPTH:
             {
                 size_t size_buf = get_pixel_data_size();
-                unsigned char* init_pixel_data = new unsigned char[size_buf];
+                float* init_pixel_data = reinterpret_cast<float*>(new unsigned char[size_buf]);
                 if(!init_pixel_data) {
                     return;
                 }
@@ -281,9 +281,25 @@ size_t Texture::get_pixel_data_size() const
     }
     switch(m_type) {
         case Texture::RGB:   return m_dim.x * m_dim.y * sizeof(unsigned char) * 3;
-        case Texture::DEPTH: return m_dim.x * m_dim.y * sizeof(float) * 3;
+        case Texture::DEPTH: return m_dim.x * m_dim.y * sizeof(float);
     }
     return 0;
+}
+
+glm::ivec3 Texture::get_pixel(glm::ivec2 pos) const
+{
+    int pixel_offset = (pos.y * m_dim.x + pos.x) * 3;
+    return glm::ivec3(m_pixel_data[pixel_offset + 0],
+                      m_pixel_data[pixel_offset + 1],
+                      m_pixel_data[pixel_offset + 2]);
+}
+
+void Texture::set_pixel(glm::ivec2 pos, glm::ivec3 color)
+{
+    int pixel_offset = (pos.y * m_dim.x + pos.x) * 3;
+    m_pixel_data[pixel_offset + 0] = color.r;
+    m_pixel_data[pixel_offset + 1] = color.g;
+    m_pixel_data[pixel_offset + 2] = color.b;
 }
 
 void Texture::set_solid_color(glm::ivec3 color)
@@ -327,21 +343,6 @@ void Texture::randomize()
         case Texture::DEPTH:
             break;
     }
-}
-
-glm::ivec3 Texture::get_pixel(glm::ivec2 pos) const
-{
-    int pixel_offset = (pos.y * m_dim.x + pos.x) * 3;
-    return glm::ivec3(m_pixel_data[pixel_offset + 0],
-                      m_pixel_data[pixel_offset + 1],
-                      m_pixel_data[pixel_offset + 2]);
-}
-void Texture::set_pixel(glm::ivec2 pos, glm::ivec3 color)
-{
-    int pixel_offset = (pos.y * m_dim.x + pos.x) * 3;
-    m_pixel_data[pixel_offset + 0] = color.r;
-    m_pixel_data[pixel_offset + 1] = color.g;
-    m_pixel_data[pixel_offset + 2] = color.b;
 }
 
 void Texture::update()
