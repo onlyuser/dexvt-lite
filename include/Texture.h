@@ -47,6 +47,10 @@ public:
     }
     unsigned char* get_pixel_data() const { return m_pixel_data; }
     size_t get_pixel_data_size() const;
+    glm::ivec3 get_pixel(glm::ivec2 pos) const;
+    void set_pixel(glm::ivec2 pos, glm::ivec3 color);
+    void set_solid_color(glm::ivec3 color);
+    void randomize();
     void update();
     void refresh();
 

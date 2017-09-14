@@ -78,6 +78,7 @@ Texture::Texture(std::string          name,
                     return;
                 }
                 memset(init_pixel_data, 0, size_buf);
+                // draw big white 'x'
                 size_t min_dim = std::min(dim.x, dim.y);
                 for(int i = 0; i < static_cast<int>(min_dim); i++) {
                     init_pixel_data[i * dim.x + i]           = 1;
@@ -283,6 +284,64 @@ size_t Texture::get_pixel_data_size() const
         case Texture::DEPTH: return m_dim.x * m_dim.y * sizeof(float) * 3;
     }
     return 0;
+}
+
+void Texture::set_solid_color(glm::ivec3 color)
+{
+    if(m_skybox) {
+        return;
+    }
+    switch(m_type) {
+        case Texture::RGB:
+            {
+                unsigned char* pixel_data = get_pixel_data();
+                size_t size_buf = get_pixel_data_size();
+                for(int i = 0; i < size_buf; i += 3) {
+                    pixel_data[i + 0] = color.r;
+                    pixel_data[i + 1] = color.g;
+                    pixel_data[i + 2] = color.b;
+                }
+            }
+            break;
+        case Texture::DEPTH:
+            break;
+    }
+}
+
+void Texture::randomize()
+{
+    if(m_skybox) {
+        return;
+    }
+    switch(m_type) {
+        case Texture::RGB:
+            {
+                unsigned char* pixel_data = get_pixel_data();
+                size_t size_buf = get_pixel_data_size();
+                srand(time(NULL));
+                for(int i = 0; i < size_buf; i++) {
+                    pixel_data[i] = rand() % 256;
+                }
+            }
+            break;
+        case Texture::DEPTH:
+            break;
+    }
+}
+
+glm::ivec3 Texture::get_pixel(glm::ivec2 pos) const
+{
+    int pixel_offset = (pos.y * m_dim.x + pos.x) * 3;
+    return glm::ivec3(m_pixel_data[pixel_offset + 0],
+                      m_pixel_data[pixel_offset + 1],
+                      m_pixel_data[pixel_offset + 2]);
+}
+void Texture::set_pixel(glm::ivec2 pos, glm::ivec3 color)
+{
+    int pixel_offset = (pos.y * m_dim.x + pos.x) * 3;
+    m_pixel_data[pixel_offset + 0] = color.r;
+    m_pixel_data[pixel_offset + 1] = color.g;
+    m_pixel_data[pixel_offset + 2] = color.b;
 }
 
 void Texture::update()
