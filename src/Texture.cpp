@@ -312,7 +312,7 @@ void Texture::set_solid_color(glm::ivec3 color)
             {
                 unsigned char* pixel_data = get_pixel_data();
                 size_t size_buf = get_pixel_data_size();
-                for(int i = 0; i < size_buf; i += 3) {
+                for(int i = 0; i < static_cast<int>(size_buf); i += 3) {
                     pixel_data[i + 0] = color.r;
                     pixel_data[i + 1] = color.g;
                     pixel_data[i + 2] = color.b;
@@ -335,7 +335,7 @@ void Texture::randomize()
                 unsigned char* pixel_data = get_pixel_data();
                 size_t size_buf = get_pixel_data_size();
                 srand(time(NULL));
-                for(int i = 0; i < size_buf; i++) {
+                for(int i = 0; i < static_cast<int>(size_buf); i++) {
                     pixel_data[i] = rand() % 256;
                 }
             }
