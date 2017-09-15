@@ -27,8 +27,7 @@ public:
                                                          DEFAULT_TEXTURE_HEIGHT),
             const unsigned char* pixel_data = NULL,
             type_t               type       = Texture::RGB,
-            bool                 smooth     = true,
-            bool                 random     = false);
+            bool                 smooth     = true);
     Texture(std::string name,
             std::string png_filename,
             bool        smooth = true);
@@ -51,8 +50,9 @@ public:
     void set_pixel(glm::ivec2 pos, glm::ivec3 color);
     void set_solid_color(glm::ivec3 color);
     void randomize();
-    void update();
-    void refresh();
+    void draw_big_x();
+    void upload_to_gpu();
+    void download_from_gpu();
 
 private:
     bool   m_skybox;
@@ -65,17 +65,17 @@ private:
     unsigned char* m_pixel_data_pos_z;
     unsigned char* m_pixel_data_neg_z;
 
-    void gen_texture_internal(glm::ivec2  dim,
-                              const void* pixel_data,
-                              type_t      type,
-                              bool        smooth);
-    void gen_texture_skybox_internal(glm::ivec2  dim,
-                                     const void* pixel_data_pos_x,
-                                     const void* pixel_data_neg_x,
-                                     const void* pixel_data_pos_y,
-                                     const void* pixel_data_neg_y,
-                                     const void* pixel_data_pos_z,
-                                     const void* pixel_data_neg_z);
+    void alloc(glm::ivec2  dim,
+               const void* pixel_data,
+               type_t      type,
+               bool        smooth);
+    void alloc(glm::ivec2  dim,
+               const void* pixel_data_pos_x,
+               const void* pixel_data_neg_x,
+               const void* pixel_data_pos_y,
+               const void* pixel_data_neg_y,
+               const void* pixel_data_pos_z,
+               const void* pixel_data_neg_z);
 };
 
 }

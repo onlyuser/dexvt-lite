@@ -70,6 +70,7 @@ bool MotionTrack::erase_keyframe(int frame_number)
     if(!motion_track_keyframe) {
         return false;
     }
+    delete motion_track_keyframe;
     motion_track_keyframe = NULL;
     return true;
 }
