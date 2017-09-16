@@ -160,14 +160,7 @@ Texture::~Texture()
     if(!m_pixel_data) {
         return;
     }
-    switch(m_type) {
-        case Texture::RGB:
-            delete[] m_pixel_data;
-            break;
-        case Texture::DEPTH:
-            delete[] reinterpret_cast<float*>(m_pixel_data);
-            break;
-    }
+    delete[] m_pixel_data;
 }
 
 void Texture::bind()
@@ -201,7 +194,10 @@ void Texture::alloc(glm::ivec2  dim,
     m_type   = type;
     size_t size_buf = get_pixel_data_size();
     m_pixel_data = new unsigned char[size_buf];
-    if(!m_pixel_data || !pixel_data) {
+    if(!m_pixel_data) {
+        return;
+    }
+    if(!pixel_data) {
         upload_to_gpu();
         return;
     }
@@ -242,8 +238,11 @@ void Texture::alloc(glm::ivec2  dim,
        !m_pixel_data_pos_y ||
        !m_pixel_data_neg_y ||
        !m_pixel_data_pos_z ||
-       !m_pixel_data_neg_z ||
-       !pixel_data_pos_x   ||
+       !m_pixel_data_neg_z)
+    {
+        return;
+    }
+    if(!pixel_data_pos_x   ||
        !pixel_data_neg_x   ||
        !pixel_data_pos_y   ||
        !pixel_data_neg_y   ||
@@ -276,6 +275,9 @@ size_t Texture::get_pixel_data_size() const
 
 glm::ivec3 Texture::get_pixel(glm::ivec2 pos) const
 {
+    if(!m_pixel_data) {
+        return glm::ivec3(0);
+    }
     int pixel_offset = (pos.y * m_dim.x + pos.x) * 3;
     return glm::ivec3(m_pixel_data[pixel_offset + 0],
                       m_pixel_data[pixel_offset + 1],
@@ -284,6 +286,9 @@ glm::ivec3 Texture::get_pixel(glm::ivec2 pos) const
 
 void Texture::set_pixel(glm::ivec2 pos, glm::ivec3 color)
 {
+    if(!m_pixel_data) {
+        return;
+    }
     int pixel_offset = (pos.y * m_dim.x + pos.x) * 3;
     m_pixel_data[pixel_offset + 0] = color.r;
     m_pixel_data[pixel_offset + 1] = color.g;
@@ -293,6 +298,9 @@ void Texture::set_pixel(glm::ivec2 pos, glm::ivec3 color)
 void Texture::set_solid_color(glm::ivec3 color)
 {
     if(m_skybox) {
+        return;
+    }
+    if(!m_pixel_data) {
         return;
     }
     switch(m_type) {
@@ -317,6 +325,9 @@ void Texture::randomize()
     if(m_skybox) {
         return;
     }
+    if(!m_pixel_data) {
+        return;
+    }
     switch(m_type) {
         case Texture::RGB:
             {
@@ -336,6 +347,9 @@ void Texture::randomize()
 void Texture::draw_big_x()
 {
     if(m_skybox) {
+        return;
+    }
+    if(!m_pixel_data) {
         return;
     }
     switch(m_type) {
@@ -371,6 +385,15 @@ void Texture::upload_to_gpu()
 {
     bind();
     if(m_skybox) {
+        if(!m_pixel_data_pos_x ||
+           !m_pixel_data_neg_x ||
+           !m_pixel_data_pos_y ||
+           !m_pixel_data_neg_y ||
+           !m_pixel_data_pos_z ||
+           !m_pixel_data_neg_z)
+        {
+            return;
+        }
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, // target
                      0,                              // level, 0 = base, no mipmap,
                      GL_RGB,                         // internal format
@@ -427,6 +450,9 @@ void Texture::upload_to_gpu()
                      m_pixel_data_neg_z);
         return;
     }
+    if(!m_pixel_data) {
+        return;
+    }
     switch(m_type) {
         case Texture::RGB:
             glTexImage2D(GL_TEXTURE_2D,    // target
@@ -457,6 +483,15 @@ void Texture::download_from_gpu()
 {
     bind();
     if(m_skybox) {
+        if(!m_pixel_data_pos_x ||
+           !m_pixel_data_neg_x ||
+           !m_pixel_data_pos_y ||
+           !m_pixel_data_neg_y ||
+           !m_pixel_data_pos_z ||
+           !m_pixel_data_neg_z)
+        {
+            return;
+        }
         glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X, // target
                       0,                              // level, 0 = base, no mipmap,
                       GL_RGB,                         // format
@@ -487,6 +522,9 @@ void Texture::download_from_gpu()
                       GL_RGB,                         // format
                       GL_UNSIGNED_BYTE,               // type
                       m_pixel_data_neg_z);
+        return;
+    }
+    if(!m_pixel_data) {
         return;
     }
     switch(m_type) {
