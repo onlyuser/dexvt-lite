@@ -50,7 +50,7 @@ public:
     void set_pixel(glm::ivec2 pos, glm::ivec3 color);
     void set_solid_color(glm::ivec3 color);
     void randomize();
-    void draw_big_x();
+    void draw_big_x(glm::ivec3 color);
     void upload_to_gpu();
     void download_from_gpu();
 

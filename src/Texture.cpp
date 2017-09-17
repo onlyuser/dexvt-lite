@@ -32,7 +32,7 @@ Texture::Texture(std::string          name,
     if(pixel_data) {
         return;
     }
-    draw_big_x();
+    draw_big_x(glm::ivec3(255));
 }
 
 Texture::Texture(std::string name,
@@ -344,7 +344,7 @@ void Texture::randomize()
     upload_to_gpu();
 }
 
-void Texture::draw_big_x()
+void Texture::draw_big_x(glm::ivec3 color)
 {
     if(m_skybox) {
         return;
@@ -359,12 +359,12 @@ void Texture::draw_big_x()
                 for(int i = 0; i < static_cast<int>(min_dim); i++) {
                     int pixel_offset_scanline_start = (i * m_dim.x + i) * 3;
                     int pixel_offset_scanline_end   = (i * m_dim.x + (m_dim.x - i)) * 3;
-                    m_pixel_data[pixel_offset_scanline_start + 0] = 255;
-                    m_pixel_data[pixel_offset_scanline_start + 1] = 0;
-                    m_pixel_data[pixel_offset_scanline_start + 2] = 0;
-                    m_pixel_data[pixel_offset_scanline_end   + 0] = 255;
-                    m_pixel_data[pixel_offset_scanline_end   + 1] = 0;
-                    m_pixel_data[pixel_offset_scanline_end   + 2] = 0;
+                    m_pixel_data[pixel_offset_scanline_start + 0] = color.r;
+                    m_pixel_data[pixel_offset_scanline_start + 1] = color.g;
+                    m_pixel_data[pixel_offset_scanline_start + 2] = color.b;
+                    m_pixel_data[pixel_offset_scanline_end   + 0] = color.r;
+                    m_pixel_data[pixel_offset_scanline_end   + 1] = color.g;
+                    m_pixel_data[pixel_offset_scanline_end   + 2] = color.b;
                 }
             }
             break;
