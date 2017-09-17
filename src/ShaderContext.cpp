@@ -278,9 +278,9 @@ void ShaderContext::set_view_proj_transform(glm::mat4 view_proj_transform)
     m_var_uniforms[Program::var_uniform_type_view_proj_transform]->uniform_matrix_4fv(1, GL_FALSE, glm::value_ptr(view_proj_transform));
 }
 
-void ShaderContext::set_viewport_dim(const float* viewport_dim_arr)
+void ShaderContext::set_viewport_dim(const GLint* viewport_dim_arr)
 {
-    m_var_uniforms[Program::var_uniform_type_viewport_dim]->uniform_2fv(1, viewport_dim_arr);
+    m_var_uniforms[Program::var_uniform_type_viewport_dim]->uniform_2iv(1, viewport_dim_arr);
 }
 
 }

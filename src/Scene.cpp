@@ -453,10 +453,10 @@ void Scene::render(bool                clear_canvas,
         }
         if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_viewport_dim)) {
             if(texture) {
-                float dim[2];
-                dim[0] = static_cast<float>(texture->get_dim().x);
-                dim[1] = static_cast<float>(texture->get_dim().y);
-                shader_context->set_viewport_dim(dim);
+                int dim[2];
+                dim[0] = texture->get_dim().x;
+                dim[1] = texture->get_dim().y;
+                shader_context->set_viewport_dim(reinterpret_cast<GLint*>(dim));
             } else {
                 shader_context->set_viewport_dim(glm::value_ptr(m_camera->get_dim()));
             }

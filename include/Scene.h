@@ -151,7 +151,7 @@ public:
 
 private:
     Camera*     m_camera;
-    Octree*    m_oct_tree;
+    Octree*     m_oct_tree;
     Mesh*       m_skybox;
     Mesh*       m_overlay;
     lights_t    m_lights;
