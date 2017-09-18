@@ -32,7 +32,7 @@ Texture::Texture(std::string          name,
     if(pixel_data) {
         return;
     }
-    draw_big_x(glm::ivec3(255));
+    draw_big_x();
 }
 
 Texture::Texture(std::string name,
@@ -344,7 +344,7 @@ void Texture::randomize()
     upload_to_gpu();
 }
 
-void Texture::draw_big_x(glm::ivec3 color)
+void Texture::draw_big_x()
 {
     if(m_skybox) {
         return;
@@ -359,21 +359,22 @@ void Texture::draw_big_x(glm::ivec3 color)
                 for(int i = 0; i < static_cast<int>(min_dim); i++) {
                     int pixel_offset_scanline_start = (i * m_dim.x + i) * 3;
                     int pixel_offset_scanline_end   = (i * m_dim.x + (m_dim.x - i)) * 3;
-                    m_pixel_data[pixel_offset_scanline_start + 0] = color.r;
-                    m_pixel_data[pixel_offset_scanline_start + 1] = color.g;
-                    m_pixel_data[pixel_offset_scanline_start + 2] = color.b;
-                    m_pixel_data[pixel_offset_scanline_end   + 0] = color.r;
-                    m_pixel_data[pixel_offset_scanline_end   + 1] = color.g;
-                    m_pixel_data[pixel_offset_scanline_end   + 2] = color.b;
+                    m_pixel_data[pixel_offset_scanline_start + 0] = 255;
+                    m_pixel_data[pixel_offset_scanline_start + 1] = 255;
+                    m_pixel_data[pixel_offset_scanline_start + 2] = 255;
+                    m_pixel_data[pixel_offset_scanline_end   + 0] = 255;
+                    m_pixel_data[pixel_offset_scanline_end   + 1] = 255;
+                    m_pixel_data[pixel_offset_scanline_end   + 2] = 255;
                 }
             }
             break;
         case Texture::DEPTH:
             {
+                float* pixel_data = reinterpret_cast<float*>(m_pixel_data);
                 size_t min_dim = std::min(m_dim.x, m_dim.y);
                 for(int i = 0; i < static_cast<int>(min_dim); i++) {
-                    m_pixel_data[i * m_dim.x + i]             = 1;
-                    m_pixel_data[i * m_dim.x + (m_dim.x - i)] = 1;
+                    pixel_data[i * m_dim.x + i]             = 1;
+                    pixel_data[i * m_dim.x + (m_dim.x - i)] = 1;
                 }
             }
             break;
