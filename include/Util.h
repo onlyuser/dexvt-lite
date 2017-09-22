@@ -77,6 +77,11 @@ bool regexp(std::string &s, std::string pattern, int nmatch, ...);
 bool read_png(std::string png_filename,
               void**      pixel_data,
               size_t*     width,
+              size_t*     height,
+              bool        include_alpha);
+bool read_png(std::string png_filename,
+              void**      pixel_data,
+              size_t*     width,
               size_t*     height);
 
 }

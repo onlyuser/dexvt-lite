@@ -20,13 +20,13 @@ class Texture : public NamedObject,
                 public BindableObjectBase
 {
 public:
-    typedef enum { RGB, DEPTH } type_t;
+    typedef enum { RGBA, RGB, DEPTH } type_t;
 
     Texture(std::string          name       = "",
             glm::ivec2           dim        = glm::ivec2(DEFAULT_TEXTURE_WIDTH,
                                                          DEFAULT_TEXTURE_HEIGHT),
             const unsigned char* pixel_data = NULL,
-            type_t               type       = Texture::RGB,
+            type_t               type       = Texture::RGBA,
             bool                 smooth     = true);
     Texture(std::string name,
             std::string png_filename,
@@ -46,9 +46,9 @@ public:
     }
     unsigned char* get_pixel_data() const { return m_pixel_data; }
     size_t get_pixel_data_size() const;
-    glm::ivec3 get_pixel(glm::ivec2 pos) const;
-    void set_pixel(glm::ivec2 pos, glm::ivec3 color);
-    void set_solid_color(glm::ivec3 color);
+    glm::ivec4 get_pixel(glm::ivec2 pos) const;
+    void set_pixel(glm::ivec2 pos, glm::ivec4 color);
+    void set_solid_color(glm::ivec4 color);
     void randomize();
     void draw_big_x();
     void upload_to_gpu();

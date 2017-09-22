@@ -28,7 +28,28 @@ Texture::Texture(std::string          name,
       m_pixel_data_pos_z(NULL),
       m_pixel_data_neg_z(NULL)
 {
-    alloc(dim, pixel_data, type, smooth);
+    unsigned char* dest_pixel_data = NULL;
+    if(type == RGB && pixel_data) {
+        size_t size_buf = dim.x * dim.y * sizeof(unsigned char) * 4;
+        dest_pixel_data = new unsigned char[size_buf];
+        if(!dest_pixel_data) {
+            return;
+        }
+        for(int y = 0; y < dim.y; y++) {
+            for(int x = 0; x < dim.x; x++) {
+                int src_pixel_offset_scanline_start  = (y * dim.x + x) * 3;
+                int dest_pixel_offset_scanline_start = (y * dim.x + x) * 4;
+                dest_pixel_data[dest_pixel_offset_scanline_start + 0] = pixel_data[src_pixel_offset_scanline_start + 0];
+                dest_pixel_data[dest_pixel_offset_scanline_start + 1] = pixel_data[src_pixel_offset_scanline_start + 1];
+                dest_pixel_data[dest_pixel_offset_scanline_start + 2] = pixel_data[src_pixel_offset_scanline_start + 2];
+                dest_pixel_data[dest_pixel_offset_scanline_start + 3] = 1;
+            }
+        }
+        type = RGBA; // force include alpha
+    } else {
+        dest_pixel_data = const_cast<unsigned char*>(pixel_data);
+    }
+    alloc(dim, dest_pixel_data, type, smooth);
     if(pixel_data) {
         return;
     }
@@ -41,15 +62,22 @@ Texture::Texture(std::string name,
     : NamedObject(name),
       FrameObject(glm::ivec2(0), glm::ivec2(0)),
       m_skybox(false),
-      m_type(Texture::RGB)
+      m_type(Texture::RGBA),
+      m_pixel_data(NULL),
+      m_pixel_data_pos_x(NULL),
+      m_pixel_data_neg_x(NULL),
+      m_pixel_data_pos_y(NULL),
+      m_pixel_data_neg_y(NULL),
+      m_pixel_data_pos_z(NULL),
+      m_pixel_data_neg_z(NULL)
 {
     unsigned char* pixel_data = NULL;
     size_t width  = 0;
     size_t height = 0;
-    if(!read_png(png_filename, (void**)&pixel_data, &width, &height) || !pixel_data) {
+    if(!read_png(png_filename, (void**)&pixel_data, &width, &height, true) || !pixel_data) {
         return;
     }
-    alloc(glm::ivec2(width, height), pixel_data, Texture::RGB, smooth);
+    alloc(glm::ivec2(width, height), pixel_data, Texture::RGBA, smooth);
     if(!pixel_data) {
         return;
     }
@@ -66,7 +94,14 @@ Texture::Texture(std::string name,
     : NamedObject(name),
       FrameObject(glm::ivec2(0), glm::ivec2(0)),
       m_skybox(true),
-      m_type(Texture::RGB)
+      m_type(Texture::RGBA),
+      m_pixel_data(NULL),
+      m_pixel_data_pos_x(NULL),
+      m_pixel_data_neg_x(NULL),
+      m_pixel_data_pos_y(NULL),
+      m_pixel_data_neg_y(NULL),
+      m_pixel_data_pos_z(NULL),
+      m_pixel_data_neg_z(NULL)
 {
     if(png_filename_pos_x.empty() ||
        png_filename_neg_x.empty() ||
@@ -94,27 +129,27 @@ Texture::Texture(std::string name,
     unsigned char* pixel_data_neg_y = NULL;
     unsigned char* pixel_data_pos_z = NULL;
     unsigned char* pixel_data_neg_z = NULL;
-    if(!read_png(png_filename_pos_x, (void**)&pixel_data_pos_x, &width, &height) || !pixel_data_pos_x) {
+    if(!read_png(png_filename_pos_x, (void**)&pixel_data_pos_x, &width, &height, true) || !pixel_data_pos_x) {
         std::cout << "failed to load cube map positive x" << std::endl;
         return;
     }
-    if(!read_png(png_filename_neg_x, (void**)&pixel_data_neg_x, &width, &height) || !pixel_data_neg_x) {
+    if(!read_png(png_filename_neg_x, (void**)&pixel_data_neg_x, &width, &height, true) || !pixel_data_neg_x) {
         std::cout << "failed to load cube map negative x" << std::endl;
         return;
     }
-    if(!read_png(png_filename_pos_y, (void**)&pixel_data_pos_y, &width, &height) || !pixel_data_pos_y) {
+    if(!read_png(png_filename_pos_y, (void**)&pixel_data_pos_y, &width, &height, true) || !pixel_data_pos_y) {
         std::cout << "failed to load cube map positive y" << std::endl;
         return;
     }
-    if(!read_png(png_filename_neg_y, (void**)&pixel_data_neg_y, &width, &height) || !pixel_data_neg_y) {
+    if(!read_png(png_filename_neg_y, (void**)&pixel_data_neg_y, &width, &height, true) || !pixel_data_neg_y) {
         std::cout << "failed to load cube map negative y" << std::endl;
         return;
     }
-    if(!read_png(png_filename_pos_z, (void**)&pixel_data_pos_z, &width, &height) || !pixel_data_pos_z) {
+    if(!read_png(png_filename_pos_z, (void**)&pixel_data_pos_z, &width, &height, true) || !pixel_data_pos_z) {
         std::cout << "failed to load cube map positive z" << std::endl;
         return;
     }
-    if(!read_png(png_filename_neg_z, (void**)&pixel_data_neg_z, &width, &height) || !pixel_data_neg_z) {
+    if(!read_png(png_filename_neg_z, (void**)&pixel_data_neg_z, &width, &height, true) || !pixel_data_neg_z) {
         std::cout << "failed to load cube map negative z" << std::endl;
         return;
     }
@@ -225,7 +260,7 @@ void Texture::alloc(glm::ivec2  dim,
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     m_dim    = dim;
     m_skybox = true;
-    m_type   = Texture::RGB;
+    m_type   = Texture::RGBA;
     size_t size_buf = get_pixel_data_size();
     m_pixel_data_pos_x = new unsigned char[size_buf];
     m_pixel_data_neg_x = new unsigned char[size_buf];
@@ -264,38 +299,42 @@ void Texture::alloc(glm::ivec2  dim,
 size_t Texture::get_pixel_data_size() const
 {
     if(m_skybox) {
-        return m_dim.x * m_dim.y * sizeof(unsigned char) * 3; // per cube face
+        return m_dim.x * m_dim.y * sizeof(unsigned char) * 4; // per cube face
     }
     switch(m_type) {
-        case Texture::RGB:   return m_dim.x * m_dim.y * sizeof(unsigned char) * 3;
+        case Texture::RGBA:  return m_dim.x * m_dim.y * sizeof(unsigned char) * 4;
         case Texture::DEPTH: return m_dim.x * m_dim.y * sizeof(float);
+        default:
+            break;
     }
     return 0;
 }
 
-glm::ivec3 Texture::get_pixel(glm::ivec2 pos) const
+glm::ivec4 Texture::get_pixel(glm::ivec2 pos) const
 {
     if(!m_pixel_data) {
-        return glm::ivec3(0);
+        return glm::ivec4(0);
     }
-    int pixel_offset = (pos.y * m_dim.x + pos.x) * 3;
-    return glm::ivec3(m_pixel_data[pixel_offset + 0],
+    int pixel_offset = (pos.y * m_dim.x + pos.x) * 4;
+    return glm::ivec4(m_pixel_data[pixel_offset + 0],
                       m_pixel_data[pixel_offset + 1],
-                      m_pixel_data[pixel_offset + 2]);
+                      m_pixel_data[pixel_offset + 2],
+                      m_pixel_data[pixel_offset + 3]);
 }
 
-void Texture::set_pixel(glm::ivec2 pos, glm::ivec3 color)
+void Texture::set_pixel(glm::ivec2 pos, glm::ivec4 color)
 {
     if(!m_pixel_data) {
         return;
     }
-    int pixel_offset = (pos.y * m_dim.x + pos.x) * 3;
+    int pixel_offset = (pos.y * m_dim.x + pos.x) * 4;
     m_pixel_data[pixel_offset + 0] = color.r;
     m_pixel_data[pixel_offset + 1] = color.g;
     m_pixel_data[pixel_offset + 2] = color.b;
+    m_pixel_data[pixel_offset + 3] = color.a;
 }
 
-void Texture::set_solid_color(glm::ivec3 color)
+void Texture::set_solid_color(glm::ivec4 color)
 {
     if(m_skybox) {
         return;
@@ -304,17 +343,20 @@ void Texture::set_solid_color(glm::ivec3 color)
         return;
     }
     switch(m_type) {
-        case Texture::RGB:
+        case Texture::RGBA:
             {
                 size_t size_buf = get_pixel_data_size();
-                for(int i = 0; i < static_cast<int>(size_buf); i += 3) {
+                for(int i = 0; i < static_cast<int>(size_buf); i += 4) {
                     m_pixel_data[i + 0] = color.r;
                     m_pixel_data[i + 1] = color.g;
                     m_pixel_data[i + 2] = color.b;
+                    m_pixel_data[i + 3] = color.a;
                 }
             }
             break;
         case Texture::DEPTH:
+            break;
+        default:
             break;
     }
     upload_to_gpu();
@@ -329,7 +371,7 @@ void Texture::randomize()
         return;
     }
     switch(m_type) {
-        case Texture::RGB:
+        case Texture::RGBA:
             {
                 size_t size_buf = get_pixel_data_size();
                 srand(time(NULL));
@@ -339,6 +381,8 @@ void Texture::randomize()
             }
             break;
         case Texture::DEPTH:
+            break;
+        default:
             break;
     }
     upload_to_gpu();
@@ -353,18 +397,20 @@ void Texture::draw_big_x()
         return;
     }
     switch(m_type) {
-        case Texture::RGB:
+        case Texture::RGBA:
             {
                 size_t min_dim = std::min(m_dim.x, m_dim.y);
                 for(int i = 0; i < static_cast<int>(min_dim); i++) {
-                    int pixel_offset_scanline_start = (i * m_dim.x + i) * 3;
-                    int pixel_offset_scanline_end   = (i * m_dim.x + (m_dim.x - i)) * 3;
+                    int pixel_offset_scanline_start = (i * m_dim.x + i) * 4;
+                    int pixel_offset_scanline_end   = (i * m_dim.x + (m_dim.x - i)) * 4;
                     m_pixel_data[pixel_offset_scanline_start + 0] = 255;
                     m_pixel_data[pixel_offset_scanline_start + 1] = 255;
                     m_pixel_data[pixel_offset_scanline_start + 2] = 255;
+                    m_pixel_data[pixel_offset_scanline_start + 3] = 255;
                     m_pixel_data[pixel_offset_scanline_end   + 0] = 255;
                     m_pixel_data[pixel_offset_scanline_end   + 1] = 255;
                     m_pixel_data[pixel_offset_scanline_end   + 2] = 255;
+                    m_pixel_data[pixel_offset_scanline_end   + 3] = 255;
                 }
             }
             break;
@@ -377,6 +423,8 @@ void Texture::draw_big_x()
                     pixel_data[i * m_dim.x + (m_dim.x - i)] = 1;
                 }
             }
+            break;
+        default:
             break;
     }
     upload_to_gpu();
@@ -397,56 +445,56 @@ void Texture::upload_to_gpu()
         }
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, // target
                      0,                              // level, 0 = base, no mipmap,
-                     GL_RGB,                         // internal format
+                     GL_RGBA,                        // internal format
                      m_dim.x,                        // width
                      m_dim.y,                        // height
                      0,                              // border, always 0 in OpenGL ES
-                     GL_RGB,                         // format
+                     GL_RGBA,                        // format
                      GL_UNSIGNED_BYTE,               // type
                      m_pixel_data_pos_x);
         glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, // target
                      0,                              // level, 0 = base, no mipmap,
-                     GL_RGB,                         // internal format
+                     GL_RGBA,                        // internal format
                      m_dim.x,                        // width
                      m_dim.y,                        // height
                      0,                              // border, always 0 in OpenGL ES
-                     GL_RGB,                         // format
+                     GL_RGBA,                        // format
                      GL_UNSIGNED_BYTE,               // type
                      m_pixel_data_neg_x);
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, // target
                      0,                              // level, 0 = base, no mipmap,
-                     GL_RGB,                         // internal format
+                     GL_RGBA,                        // internal format
                      m_dim.x,                        // width
                      m_dim.y,                        // height
                      0,                              // border, always 0 in OpenGL ES
-                     GL_RGB,                         // format
+                     GL_RGBA,                        // format
                      GL_UNSIGNED_BYTE,               // type
                      m_pixel_data_neg_y);
         glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, // target
                      0,                              // level, 0 = base, no mipmap,
-                     GL_RGB,                         // internal format
+                     GL_RGBA,                        // internal format
                      m_dim.x,                        // width
                      m_dim.y,                        // height
                      0,                              // border, always 0 in OpenGL ES
-                     GL_RGB,                         // format
+                     GL_RGBA,                        // format
                      GL_UNSIGNED_BYTE,               // type
                      m_pixel_data_pos_y);
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, // target
                      0,                              // level, 0 = base, no mipmap,
-                     GL_RGB,                         // internal format
+                     GL_RGBA,                        // internal format
                      m_dim.x,                        // width
                      m_dim.y,                        // height
                      0,                              // border, always 0 in OpenGL ES
-                     GL_RGB,                         // format
+                     GL_RGBA,                        // format
                      GL_UNSIGNED_BYTE,               // type
                      m_pixel_data_pos_z);
         glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, // target
                      0,                              // level, 0 = base, no mipmap,
-                     GL_RGB,                         // internal format
+                     GL_RGBA,                        // internal format
                      m_dim.x,                        // width
                      m_dim.y,                        // height
                      0,                              // border, always 0 in OpenGL ES
-                     GL_RGB,                         // format
+                     GL_RGBA,                        // format
                      GL_UNSIGNED_BYTE,               // type
                      m_pixel_data_neg_z);
         return;
@@ -455,14 +503,14 @@ void Texture::upload_to_gpu()
         return;
     }
     switch(m_type) {
-        case Texture::RGB:
+        case Texture::RGBA:
             glTexImage2D(GL_TEXTURE_2D,    // target
                          0,                // level, 0 = base, no mipmap,
-                         GL_RGB,           // internal format
+                         GL_RGBA,          // internal format
                          m_dim.x,          // width
                          m_dim.y,          // height
                          0,                // border, always 0 in OpenGL ES
-                         GL_RGB,           // format
+                         GL_RGBA,          // format
                          GL_UNSIGNED_BYTE, // type
                          m_pixel_data);
             break;
@@ -476,6 +524,8 @@ void Texture::upload_to_gpu()
                          GL_DEPTH_COMPONENT, // format
                          GL_FLOAT,           // type
                          m_pixel_data);
+            break;
+        default:
             break;
     }
 }
@@ -495,32 +545,32 @@ void Texture::download_from_gpu()
         }
         glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X, // target
                       0,                              // level, 0 = base, no mipmap,
-                      GL_RGB,                         // format
+                      GL_RGBA,                        // format
                       GL_UNSIGNED_BYTE,               // type
                       m_pixel_data_pos_x);
         glGetTexImage(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, // target
                       0,                              // level, 0 = base, no mipmap,
-                      GL_RGB,                         // format
+                      GL_RGBA,                        // format
                       GL_UNSIGNED_BYTE,               // type
                       m_pixel_data_neg_x);
         glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, // target
                       0,                              // level, 0 = base, no mipmap,
-                      GL_RGB,                         // format
+                      GL_RGBA,                        // format
                       GL_UNSIGNED_BYTE,               // type
                       m_pixel_data_neg_y);
         glGetTexImage(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, // target
                       0,                              // level, 0 = base, no mipmap,
-                      GL_RGB,                         // format
+                      GL_RGBA,                        // format
                       GL_UNSIGNED_BYTE,               // type
                       m_pixel_data_pos_y);
         glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, // target
                       0,                              // level, 0 = base, no mipmap,
-                      GL_RGB,                         // format
+                      GL_RGBA,                        // format
                       GL_UNSIGNED_BYTE,               // type
                       m_pixel_data_pos_z);
         glGetTexImage(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, // target
                       0,                              // level, 0 = base, no mipmap,
-                      GL_RGB,                         // format
+                      GL_RGBA,                        // format
                       GL_UNSIGNED_BYTE,               // type
                       m_pixel_data_neg_z);
         return;
@@ -529,10 +579,10 @@ void Texture::download_from_gpu()
         return;
     }
     switch(m_type) {
-        case Texture::RGB:
+        case Texture::RGBA:
             glGetTexImage(GL_TEXTURE_2D,    // target
                           0,                // level, 0 = base, no mipmap,
-                          GL_RGB,           // format
+                          GL_RGBA,          // format
                           GL_UNSIGNED_BYTE, // type
                           m_pixel_data);
             break;
@@ -542,6 +592,8 @@ void Texture::download_from_gpu()
                           GL_DEPTH_COMPONENT, // format
                           GL_FLOAT,           // type
                           m_pixel_data);
+            break;
+        default:
             break;
     }
 }

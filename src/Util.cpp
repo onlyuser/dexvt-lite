@@ -253,6 +253,54 @@ bool regexp(std::string &s, std::string pattern, int nmatch, ...)
 bool read_png(std::string png_filename,
               void**      pixel_data,
               size_t*     width,
+              size_t*     height,
+              bool        include_alpha)
+{
+    if(!pixel_data || !width || !height) {
+        return false;
+    }
+    if(!include_alpha) {
+        return read_png(png_filename,
+                        pixel_data,
+                        width,
+                        height);
+    }
+    unsigned char* src_pixel_data = NULL;
+    size_t src_width  = 0;
+    size_t src_height = 0;
+    if(!read_png(png_filename,
+                 reinterpret_cast<void**>(&src_pixel_data),
+                 &src_width,
+                 &src_height) || !src_pixel_data)
+    {
+        return false;
+    }
+    unsigned char* dest_pixel_data = NULL;
+    size_t size_buf = src_width * src_height * sizeof(unsigned char) * 4;
+    dest_pixel_data = new unsigned char[size_buf];
+    if(!dest_pixel_data) {
+        return false;
+    }
+    for(int y = 0; y < static_cast<int>(src_height); y++) {
+        for(int x = 0; x < static_cast<int>(src_width); x++) {
+            int src_pixel_offset_scanline_start  = (y * src_width + x) * 3;
+            int dest_pixel_offset_scanline_start = (y * src_width + x) * 4;
+            dest_pixel_data[dest_pixel_offset_scanline_start + 0] = src_pixel_data[src_pixel_offset_scanline_start + 0];
+            dest_pixel_data[dest_pixel_offset_scanline_start + 1] = src_pixel_data[src_pixel_offset_scanline_start + 1];
+            dest_pixel_data[dest_pixel_offset_scanline_start + 2] = src_pixel_data[src_pixel_offset_scanline_start + 2];
+            dest_pixel_data[dest_pixel_offset_scanline_start + 3] = 1;
+        }
+    }
+    delete []src_pixel_data;
+    *pixel_data = dest_pixel_data;
+    *width      = src_width;
+    *height     = src_height;
+    return true;
+}
+
+bool read_png(std::string png_filename,
+              void**      pixel_data,
+              size_t*     width,
               size_t*     height)
 {
     if(!pixel_data || !width || !height) {
