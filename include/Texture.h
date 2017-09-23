@@ -23,11 +23,11 @@ public:
     typedef enum { RGBA, RGB, DEPTH } format_t;
 
     Texture(std::string          name            = "",
+            format_t             internal_format = Texture::RGBA,
             glm::ivec2           dim             = glm::ivec2(DEFAULT_TEXTURE_WIDTH,
                                                               DEFAULT_TEXTURE_HEIGHT),
-            const unsigned char* pixel_data      = NULL,
-            format_t             internal_format = Texture::RGBA,
             format_t             format          = Texture::RGBA,
+            const unsigned char* pixel_data      = NULL,
             bool                 smooth          = true);
     Texture(std::string name,
             std::string png_filename,

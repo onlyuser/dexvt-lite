@@ -185,34 +185,30 @@ int init_resources()
     mesh_skybox = vt::PrimitiveFactory::create_viewport_quad("grid");
     scene->set_skybox(mesh_skybox);
 
-    vt::Material* ambient_material = new vt::Material(
-            "ambient",
-            "src/shaders/ambient.v.glsl",
-            "src/shaders/ambient.f.glsl");
+    vt::Material* ambient_material = new vt::Material("ambient",
+                                                      "src/shaders/ambient.v.glsl",
+                                                      "src/shaders/ambient.f.glsl");
     scene->add_material(ambient_material);
     scene->set_wireframe_material(ambient_material);
 
-    vt::Material* skybox_material = new vt::Material(
-            "skybox",
-            "src/shaders/skybox.v.glsl",
-            "src/shaders/skybox.f.glsl",
-            true); // use_overlay
+    vt::Material* skybox_material = new vt::Material("skybox",
+                                                     "src/shaders/skybox.v.glsl",
+                                                     "src/shaders/skybox.f.glsl",
+                                                     true); // use_overlay
     scene->add_material(skybox_material);
 
-    vt::Material* phong_material = new vt::Material(
-            "phong",
-            "src/shaders/phong.v.glsl",
-            "src/shaders/phong.f.glsl");
+    vt::Material* phong_material = new vt::Material("phong",
+                                                    "src/shaders/phong.v.glsl",
+                                                    "src/shaders/phong.f.glsl");
     scene->add_material(phong_material);
 
-    texture_skybox = new vt::Texture(
-            "skybox_texture",
-            "data/SaintPetersSquare2/posx.png",
-            "data/SaintPetersSquare2/negx.png",
-            "data/SaintPetersSquare2/posy.png",
-            "data/SaintPetersSquare2/negy.png",
-            "data/SaintPetersSquare2/posz.png",
-            "data/SaintPetersSquare2/negz.png");
+    texture_skybox = new vt::Texture("skybox_texture",
+                                     "data/SaintPetersSquare2/posx.png",
+                                     "data/SaintPetersSquare2/negx.png",
+                                     "data/SaintPetersSquare2/posy.png",
+                                     "data/SaintPetersSquare2/negy.png",
+                                     "data/SaintPetersSquare2/posz.png",
+                                     "data/SaintPetersSquare2/negz.png");
     scene->add_texture(          texture_skybox);
     skybox_material->add_texture(texture_skybox);
 

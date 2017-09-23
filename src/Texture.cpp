@@ -12,10 +12,10 @@
 namespace vt {
 
 Texture::Texture(std::string          name,
-                 glm::ivec2           dim,
-                 const unsigned char* pixel_data,
                  format_t             internal_format,
+                 glm::ivec2           dim,
                  format_t             format,
+                 const unsigned char* pixel_data,
                  bool                 smooth)
     : NamedObject(name),
       FrameObject(glm::ivec2(0), dim),
