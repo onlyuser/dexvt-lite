@@ -21,7 +21,7 @@ FrameBuffer::FrameBuffer(Texture* texture, Camera* camera)
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_texture->get_width(), m_texture->get_height());
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    if(texture->get_type() == Texture::DEPTH) {
+    if(texture->get_internal_format() == Texture::DEPTH) {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_texture->id(), 0);
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);

@@ -254,12 +254,12 @@ bool read_png(std::string png_filename,
               void**      pixel_data,
               size_t*     width,
               size_t*     height,
-              bool        include_alpha)
+              bool        internal_format_rgba)
 {
     if(!pixel_data || !width || !height) {
         return false;
     }
-    if(!include_alpha) {
+    if(!internal_format_rgba) {
         return read_png(png_filename,
                         pixel_data,
                         width,

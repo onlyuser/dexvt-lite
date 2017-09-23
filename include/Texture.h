@@ -20,14 +20,15 @@ class Texture : public NamedObject,
                 public BindableObjectBase
 {
 public:
-    typedef enum { RGBA, RGB, DEPTH } type_t;
+    typedef enum { RGBA, RGB, DEPTH } format_t;
 
-    Texture(std::string          name       = "",
-            glm::ivec2           dim        = glm::ivec2(DEFAULT_TEXTURE_WIDTH,
-                                                         DEFAULT_TEXTURE_HEIGHT),
-            const unsigned char* pixel_data = NULL,
-            type_t               type       = Texture::RGBA,
-            bool                 smooth     = true);
+    Texture(std::string          name            = "",
+            glm::ivec2           dim             = glm::ivec2(DEFAULT_TEXTURE_WIDTH,
+                                                              DEFAULT_TEXTURE_HEIGHT),
+            const unsigned char* pixel_data      = NULL,
+            format_t             internal_format = Texture::RGBA,
+            format_t             format          = Texture::RGBA,
+            bool                 smooth          = true);
     Texture(std::string name,
             std::string png_filename,
             bool        smooth = true);
@@ -40,9 +41,9 @@ public:
             std::string png_filename_neg_z);
     virtual ~Texture();
     void bind();
-    type_t get_type() const
+    format_t get_internal_format() const
     {
-        return m_type;
+        return m_internal_format;
     }
     unsigned char* get_pixel_data() const { return m_pixel_data; }
     size_t get_pixel_data_size() const;
@@ -55,8 +56,8 @@ public:
     void download_from_gpu();
 
 private:
-    bool   m_skybox;
-    type_t m_type;
+    bool           m_skybox;
+    format_t       m_internal_format;
     unsigned char* m_pixel_data;
     unsigned char* m_pixel_data_pos_x;
     unsigned char* m_pixel_data_neg_x;
@@ -67,7 +68,7 @@ private:
 
     void alloc(glm::ivec2  dim,
                const void* pixel_data,
-               type_t      type,
+               format_t    internal_format,
                bool        smooth);
     void alloc(glm::ivec2  dim,
                const void* pixel_data_pos_x,

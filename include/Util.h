@@ -78,7 +78,7 @@ bool read_png(std::string png_filename,
               void**      pixel_data,
               size_t*     width,
               size_t*     height,
-              bool        include_alpha);
+              bool        internal_format_rgba);
 bool read_png(std::string png_filename,
               void**      pixel_data,
               size_t*     width,

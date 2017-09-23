@@ -64,7 +64,7 @@
 #define PUMP_SHRINK_FACTOR           0.5
 #define PUMP_SIDES                   6
 
-const char* DEFAULT_CAPTION = NULL;
+const char* DEFAULT_CAPTION = "";
 
 int init_screen_width  = 800,
     init_screen_height = 600;

@@ -48,7 +48,7 @@
 #define BOID_COUNT         50
 #define BOID_FORWARD_SPEED 0.025
 
-const char* DEFAULT_CAPTION = NULL;
+const char* DEFAULT_CAPTION = "";
 
 int init_screen_width  = 800,
     init_screen_height = 600;

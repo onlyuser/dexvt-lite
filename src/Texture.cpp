@@ -14,12 +14,13 @@ namespace vt {
 Texture::Texture(std::string          name,
                  glm::ivec2           dim,
                  const unsigned char* pixel_data,
-                 type_t               type,
+                 format_t             internal_format,
+                 format_t             format,
                  bool                 smooth)
     : NamedObject(name),
       FrameObject(glm::ivec2(0), dim),
       m_skybox(false),
-      m_type(type),
+      m_internal_format(internal_format),
       m_pixel_data(NULL),
       m_pixel_data_pos_x(NULL),
       m_pixel_data_neg_x(NULL),
@@ -29,7 +30,7 @@ Texture::Texture(std::string          name,
       m_pixel_data_neg_z(NULL)
 {
     unsigned char* dest_pixel_data = NULL;
-    if(type == RGB && pixel_data) {
+    if(format == RGB && pixel_data) {
         size_t size_buf = dim.x * dim.y * sizeof(unsigned char) * 4;
         dest_pixel_data = new unsigned char[size_buf];
         if(!dest_pixel_data) {
@@ -45,11 +46,10 @@ Texture::Texture(std::string          name,
                 dest_pixel_data[dest_pixel_offset_scanline_start + 3] = 1;
             }
         }
-        type = RGBA; // force include alpha
     } else {
         dest_pixel_data = const_cast<unsigned char*>(pixel_data);
     }
-    alloc(dim, dest_pixel_data, type, smooth);
+    alloc(dim, dest_pixel_data, internal_format, smooth);
     if(pixel_data) {
         return;
     }
@@ -62,7 +62,7 @@ Texture::Texture(std::string name,
     : NamedObject(name),
       FrameObject(glm::ivec2(0), glm::ivec2(0)),
       m_skybox(false),
-      m_type(Texture::RGBA),
+      m_internal_format(Texture::RGBA),
       m_pixel_data(NULL),
       m_pixel_data_pos_x(NULL),
       m_pixel_data_neg_x(NULL),
@@ -94,7 +94,7 @@ Texture::Texture(std::string name,
     : NamedObject(name),
       FrameObject(glm::ivec2(0), glm::ivec2(0)),
       m_skybox(true),
-      m_type(Texture::RGBA),
+      m_internal_format(Texture::RGBA),
       m_pixel_data(NULL),
       m_pixel_data_pos_x(NULL),
       m_pixel_data_neg_x(NULL),
@@ -212,7 +212,7 @@ void Texture::bind()
 
 void Texture::alloc(glm::ivec2  dim,
                     const void* pixel_data,
-                    type_t      type,
+                    format_t    internal_format,
                     bool        smooth)
 {
     glGenTextures(1, &m_id);
@@ -224,9 +224,9 @@ void Texture::alloc(glm::ivec2  dim,
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, smooth ? GL_LINEAR : GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    m_dim    = dim;
-    m_skybox = false;
-    m_type   = type;
+    m_dim             = dim;
+    m_skybox          = false;
+    m_internal_format = internal_format;
     size_t size_buf = get_pixel_data_size();
     m_pixel_data = new unsigned char[size_buf];
     if(!m_pixel_data) {
@@ -258,9 +258,9 @@ void Texture::alloc(glm::ivec2  dim,
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    m_dim    = dim;
-    m_skybox = true;
-    m_type   = Texture::RGBA;
+    m_dim             = dim;
+    m_skybox          = true;
+    m_internal_format = Texture::RGBA;
     size_t size_buf = get_pixel_data_size();
     m_pixel_data_pos_x = new unsigned char[size_buf];
     m_pixel_data_neg_x = new unsigned char[size_buf];
@@ -301,7 +301,7 @@ size_t Texture::get_pixel_data_size() const
     if(m_skybox) {
         return m_dim.x * m_dim.y * sizeof(unsigned char) * 4; // per cube face
     }
-    switch(m_type) {
+    switch(m_internal_format) {
         case Texture::RGBA:  return m_dim.x * m_dim.y * sizeof(unsigned char) * 4;
         case Texture::DEPTH: return m_dim.x * m_dim.y * sizeof(float);
         default:
@@ -342,7 +342,7 @@ void Texture::set_solid_color(glm::ivec4 color)
     if(!m_pixel_data) {
         return;
     }
-    switch(m_type) {
+    switch(m_internal_format) {
         case Texture::RGBA:
             {
                 size_t size_buf = get_pixel_data_size();
@@ -370,7 +370,7 @@ void Texture::randomize()
     if(!m_pixel_data) {
         return;
     }
-    switch(m_type) {
+    switch(m_internal_format) {
         case Texture::RGBA:
             {
                 size_t size_buf = get_pixel_data_size();
@@ -396,7 +396,7 @@ void Texture::draw_big_x()
     if(!m_pixel_data) {
         return;
     }
-    switch(m_type) {
+    switch(m_internal_format) {
         case Texture::RGBA:
             {
                 size_t min_dim = std::min(m_dim.x, m_dim.y);
@@ -502,7 +502,7 @@ void Texture::upload_to_gpu()
     if(!m_pixel_data) {
         return;
     }
-    switch(m_type) {
+    switch(m_internal_format) {
         case Texture::RGBA:
             glTexImage2D(GL_TEXTURE_2D,    // target
                          0,                // level, 0 = base, no mipmap,
@@ -578,7 +578,7 @@ void Texture::download_from_gpu()
     if(!m_pixel_data) {
         return;
     }
-    switch(m_type) {
+    switch(m_internal_format) {
         case Texture::RGBA:
             glGetTexImage(GL_TEXTURE_2D,    // target
                           0,                // level, 0 = base, no mipmap,

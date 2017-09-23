@@ -50,7 +50,7 @@
 #define IK_SEGMENT_LENGTH            1
 #define IK_SEGMENT_WIDTH             0.25
 
-const char* DEFAULT_CAPTION = NULL;
+const char* DEFAULT_CAPTION = "";
 
 int init_screen_width  = 800,
     init_screen_height = 600;
