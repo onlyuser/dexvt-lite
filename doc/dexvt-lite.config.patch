@@ -1,0 +1,36 @@
+419c419
+< EXTRACT_ALL            = NO
+---
+> EXTRACT_ALL            = YES
+437c437
+< EXTRACT_STATIC         = NO
+---
+> EXTRACT_STATIC         = YES
+774c774
+< INPUT                  =
+---
+> INPUT                  = ../
+805c805
+< RECURSIVE              = NO
+---
+> RECURSIVE              = YES
+830c830
+< EXCLUDE_PATTERNS       =
+---
+> EXCLUDE_PATTERNS       = */doc/* */scripts/* */tests/*
+1419c1419
+< GENERATE_TREEVIEW      = NO
+---
+> GENERATE_TREEVIEW      = YES
+1607c1607
+< GENERATE_LATEX         = YES
+---
+> GENERATE_LATEX         = NO
+2272c2272
+< CALL_GRAPH             = NO
+---
+> CALL_GRAPH             = YES
+2284c2284
+< CALLER_GRAPH           = NO
+---
+> CALLER_GRAPH           = YES

@@ -216,19 +216,22 @@ clean_resources :
 # doc
 #==================
 
-DOC_PATH = ./doc
-DOXYGEN_CONFIG = $(DOC_PATH)/Doxyfile
+DOC_PATH = doc
+DOC_CONFIG_FILE = dexvt-lite.config
+DOC_CONFIG_PATCH_FILE = $(DOC_CONFIG_FILE).patch
+DOC_TOOL = doxygen
 
 .PHONY : doc
 doc :
-	doxygen $(DOXYGEN_CONFIG)
-	ln -fs html/index.html $(DOC_PATH)/index.html
+	mkdir -p $(BUILD_PATH)
+	doxygen -g $(BUILD_PATH)/$(DOC_CONFIG_FILE)
+	patch $(BUILD_PATH)/$(DOC_CONFIG_FILE) < $(DOC_PATH)/$(DOC_CONFIG_PATCH_FILE)
+	cd $(BUILD_PATH); $(DOC_TOOL) $(DOC_CONFIG_FILE)
 
 .PHONY : clean_docs
 clean_docs :
-	-rm -rf $(DOC_PATH)/html
-	-rm -rf $(DOC_PATH)/latex
-	-rm -rf $(DOC_PATH)/index.html
+	rm -rf $(BUILD_PATH)/html
+	rm -rf $(BUILD_PATH)/$(DOC_CONFIG_FILE)
 
 #==================
 # clean
