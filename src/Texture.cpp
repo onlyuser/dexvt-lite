@@ -14,9 +14,9 @@ namespace vt {
 Texture::Texture(std::string          name,
                  format_t             internal_format,
                  glm::ivec2           dim,
+                 bool                 smooth,
                  format_t             format,
-                 const unsigned char* pixel_data,
-                 bool                 smooth)
+                 const unsigned char* pixel_data)
     : NamedObject(name),
       FrameObject(glm::ivec2(0), dim),
       m_skybox(false),
@@ -49,7 +49,10 @@ Texture::Texture(std::string          name,
     } else {
         dest_pixel_data = const_cast<unsigned char*>(pixel_data);
     }
-    alloc(dim, dest_pixel_data, internal_format, smooth);
+    alloc(internal_format,
+          dim,
+          smooth,
+          dest_pixel_data);
     if(pixel_data) {
         return;
     }
@@ -77,7 +80,10 @@ Texture::Texture(std::string name,
     if(!read_png(png_filename, (void**)&pixel_data, &width, &height, true) || !pixel_data) {
         return;
     }
-    alloc(glm::ivec2(width, height), pixel_data, Texture::RGBA, smooth);
+    alloc(Texture::RGBA,
+          glm::ivec2(width, height),
+          smooth,
+          pixel_data);
     if(!pixel_data) {
         return;
     }
@@ -210,10 +216,10 @@ void Texture::bind()
     glBindTexture(GL_TEXTURE_2D, m_id);
 }
 
-void Texture::alloc(glm::ivec2  dim,
-                    const void* pixel_data,
-                    format_t    internal_format,
-                    bool        smooth)
+void Texture::alloc(format_t    internal_format,
+                    glm::ivec2  dim,
+                    bool        smooth,
+                    const void* pixel_data)
 {
     glGenTextures(1, &m_id);
     if(!m_id) {

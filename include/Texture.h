@@ -26,9 +26,9 @@ public:
             format_t             internal_format = Texture::RGBA,
             glm::ivec2           dim             = glm::ivec2(DEFAULT_TEXTURE_WIDTH,
                                                               DEFAULT_TEXTURE_HEIGHT),
+            bool                 smooth          = true,
             format_t             format          = Texture::RGBA,
-            const unsigned char* pixel_data      = NULL,
-            bool                 smooth          = true);
+            const unsigned char* pixel_data      = NULL);
     Texture(std::string name,
             std::string png_filename,
             bool        smooth = true);
@@ -66,10 +66,10 @@ private:
     unsigned char* m_pixel_data_pos_z;
     unsigned char* m_pixel_data_neg_z;
 
-    void alloc(glm::ivec2  dim,
-               const void* pixel_data,
-               format_t    internal_format,
-               bool        smooth);
+    void alloc(format_t    internal_format,
+               glm::ivec2  dim,
+               bool        smooth,
+               const void* pixel_data);
     void alloc(glm::ivec2  dim,
                const void* pixel_data_pos_x,
                const void* pixel_data_neg_x,
