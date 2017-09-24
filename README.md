@@ -180,6 +180,8 @@ References
     <dd>https://stackoverflow.com/questions/21373012/best-inverse-kinematics-algorithm-with-constraints-on-joint-angles</dd>
     <dt>"Real-Time 3d Robotics UI (Python)"</dt>
     <dd>https://coreykruger.wordpress.com/programming-and-scripting/462-2/</dd>
+    <dt>"Anand's blog - GPGPU In Android: Load a texture with floats and read it back"</dt>
+    <dd>http://www.anandmuralidhar.com/blog/tag/gpgpu/</dd>
 </dl>
 
 Keywords

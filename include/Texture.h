@@ -20,7 +20,7 @@ class Texture : public NamedObject,
                 public BindableObjectBase
 {
 public:
-    typedef enum { RGBA, RGB, DEPTH } format_t;
+    typedef enum { RGBA, RGB, RED, DEPTH } format_t;
 
     Texture(std::string          name            = "",
             format_t             internal_format = Texture::RGBA,
@@ -28,7 +28,7 @@ public:
                                                               DEFAULT_TEXTURE_HEIGHT),
             bool                 smooth          = true,
             format_t             format          = Texture::RGBA,
-            const unsigned char* pixel_data      = NULL);
+            const unsigned char* pixels      = NULL);
     Texture(std::string name,
             std::string png_filename,
             bool        smooth = true);
@@ -41,42 +41,56 @@ public:
             std::string png_filename_neg_z);
     virtual ~Texture();
     void bind();
-    format_t get_internal_format() const
-    {
-        return m_internal_format;
-    }
-    unsigned char* get_pixel_data() const { return m_pixel_data; }
-    size_t get_pixel_data_size() const;
+
+    // accessors
+    format_t get_internal_format() const { return m_internal_format; }
+    unsigned char* get_pixels() const    { return m_pixels; }
+
+private:
+    // core functionality
+    void alloc(format_t    internal_format,
+               glm::ivec2  dim,
+               bool        smooth,
+               const void* pixels);
+    void alloc(glm::ivec2  dim,
+               const void* pixels_pos_x,
+               const void* pixels_neg_x,
+               const void* pixels_pos_y,
+               const void* pixels_neg_y,
+               const void* pixels_pos_z,
+               const void* pixels_neg_z);
+
+public:
+    size_t size() const;
+
+    // basic modifiers
+    void randomize();
+    void draw_x();
+
+    // basic modifiers -- rgba only
     glm::ivec4 get_pixel(glm::ivec2 pos) const;
     void set_pixel(glm::ivec2 pos, glm::ivec4 color);
-    void set_solid_color(glm::ivec4 color);
-    void randomize();
-    void draw_big_x();
-    void upload_to_gpu();
-    void download_from_gpu();
+    void set_color(glm::ivec4 color);
+
+    // basic modifiers -- red only
+    float get_pixel_r32f(glm::ivec2 pos) const;
+    void set_pixel_r32f(glm::ivec2 pos, float color);
+    void set_color_r32f(float color);
+
+    // core functionality
+    void update();
+    void refresh();
 
 private:
     bool           m_skybox;
     format_t       m_internal_format;
-    unsigned char* m_pixel_data;
-    unsigned char* m_pixel_data_pos_x;
-    unsigned char* m_pixel_data_neg_x;
-    unsigned char* m_pixel_data_pos_y;
-    unsigned char* m_pixel_data_neg_y;
-    unsigned char* m_pixel_data_pos_z;
-    unsigned char* m_pixel_data_neg_z;
-
-    void alloc(format_t    internal_format,
-               glm::ivec2  dim,
-               bool        smooth,
-               const void* pixel_data);
-    void alloc(glm::ivec2  dim,
-               const void* pixel_data_pos_x,
-               const void* pixel_data_neg_x,
-               const void* pixel_data_pos_y,
-               const void* pixel_data_neg_y,
-               const void* pixel_data_pos_z,
-               const void* pixel_data_neg_z);
+    unsigned char* m_pixels;
+    unsigned char* m_pixels_pos_x;
+    unsigned char* m_pixels_neg_x;
+    unsigned char* m_pixels_pos_y;
+    unsigned char* m_pixels_neg_y;
+    unsigned char* m_pixels_pos_z;
+    unsigned char* m_pixels_neg_z;
 };
 
 }
