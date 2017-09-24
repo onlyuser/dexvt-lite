@@ -213,9 +213,25 @@ clean_resources :
 	-rm -rf $(RESOURCE_PATH)
 
 #==================
+# doc
+#==================
+
+DOC_PATH = ./doc
+DOXYGEN_CONFIG = $(DOC_PATH)/Doxyfile
+
+.PHONY : doc
+doc :
+	doxygen $(DOXYGEN_CONFIG)
+
+.PHONY : clean_docs
+clean_docs :
+	-rm -rf $(DOC_PATH)/html
+	-rm -rf $(DOC_PATH)/latex
+
+#==================
 # clean
 #==================
 
 .PHONY : clean
-clean : clean_binaries clean_objects clean_tests #clean_resources
+clean : clean_binaries clean_objects clean_tests #clean_docs #clean_resources
 	-rmdir $(BUILD_PATH) $(BIN_PATH)
