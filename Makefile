@@ -222,11 +222,13 @@ DOXYGEN_CONFIG = $(DOC_PATH)/Doxyfile
 .PHONY : doc
 doc :
 	doxygen $(DOXYGEN_CONFIG)
+	ln -s html/index.html $(DOC_PATH)/index.html
 
 .PHONY : clean_docs
 clean_docs :
 	-rm -rf $(DOC_PATH)/html
 	-rm -rf $(DOC_PATH)/latex
+	-rm -rf $(DOC_PATH)/index.html
 
 #==================
 # clean

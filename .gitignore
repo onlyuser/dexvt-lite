@@ -6,6 +6,4 @@
 data
 build
 bin
-Doxyfile
-html
-latex
+doc
