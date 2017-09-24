@@ -27,8 +27,7 @@ DEBUG = -g
 CXXFLAGS = -Wall $(DEBUG) $(INCLUDE_PATH_FLAGS) -std=c++0x
 LDFLAGS = -Wall $(DEBUG) $(LIB_PATH_FLAGS) $(LIB_FLAGS)
 
-SCRIPT_PATH = test
-TEST_PATH = test
+SCRIPT_PATH = scripts
 
 #==================
 # all
@@ -74,18 +73,42 @@ clean_objects :
 # binaries
 #==================
 
-CPP_STEMS_IK        = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_ik        Material Mesh NamedObject Octree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
-CPP_STEMS_IK_CONST  = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_ik_const  Material Mesh NamedObject Octree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
-CPP_STEMS_BOIDS     = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_boids     Material Mesh NamedObject Octree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
-CPP_STEMS_HEXAPOD   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_hexapod   Material Mesh NamedObject Octree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
-CPP_STEMS_DELTABOT  = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_deltabot  Material Mesh NamedObject Octree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
-CPP_STEMS_3DPRINTER = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_3dprinter Material Mesh NamedObject Octree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
-CPP_STEMS_TERRAIN   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_terrain   Material Mesh NamedObject Octree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
-CPP_STEMS_SPIDER    = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_spider    Material Mesh NamedObject Octree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
-CPP_STEMS_FREEROT   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_freerot   Material Mesh NamedObject Octree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
-CPP_STEMS_RAIL      = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_rail      Material Mesh NamedObject Octree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
-CPP_STEMS_STEWART   = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_stewart   Material Mesh NamedObject Octree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
-CPP_STEMS_FANTA     = BBoxObject Buffer Camera File3ds FrameBuffer IdentObject KeyframeMgr Light Modifiers main_fanta     Material Mesh NamedObject Octree PrimitiveFactory Program Scene Shader ShaderContext shader_utils Texture Util VarAttribute VarUniform TransformObject
+SHARED_CPP_STEMS = BBoxObject \
+                   Buffer \
+                   Camera \
+                   File3ds \
+                   FrameBuffer \
+                   IdentObject \
+                   KeyframeMgr \
+                   Light \
+                   Modifiers \
+                   Material \
+                   Mesh \
+                   NamedObject \
+                   Octree \
+                   PrimitiveFactory \
+                   Program \
+                   Scene \
+                   Shader \
+                   ShaderContext \
+                   shader_utils \
+                   Texture \
+                   Util \
+                   VarAttribute \
+                   VarUniform \
+                   TransformObject
+CPP_STEMS_IK        = $(SHARED_CPP_STEMS) main_ik
+CPP_STEMS_IK_CONST  = $(SHARED_CPP_STEMS) main_ik_const
+CPP_STEMS_BOIDS     = $(SHARED_CPP_STEMS) main_boids
+CPP_STEMS_HEXAPOD   = $(SHARED_CPP_STEMS) main_hexapod
+CPP_STEMS_DELTABOT  = $(SHARED_CPP_STEMS) main_deltabot
+CPP_STEMS_3DPRINTER = $(SHARED_CPP_STEMS) main_3dprinter
+CPP_STEMS_TERRAIN   = $(SHARED_CPP_STEMS) main_terrain
+CPP_STEMS_SPIDER    = $(SHARED_CPP_STEMS) main_spider
+CPP_STEMS_FREEROT   = $(SHARED_CPP_STEMS) main_freerot
+CPP_STEMS_RAIL      = $(SHARED_CPP_STEMS) main_rail
+CPP_STEMS_STEWART   = $(SHARED_CPP_STEMS) main_stewart
+CPP_STEMS_FANTA     = $(SHARED_CPP_STEMS) main_fanta
 OBJECTS_IK        = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK))
 OBJECTS_IK_CONST  = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK_CONST))
 OBJECTS_BOIDS     = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_BOIDS))
@@ -98,6 +121,7 @@ OBJECTS_FREEROT   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_FREEROT))
 OBJECTS_RAIL      = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_RAIL))
 OBJECTS_STEWART   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_STEWART))
 OBJECTS_FANTA     = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_FANTA))
+LINT_FILES        = $(patsubst %, $(BUILD_PATH)/%.lint, $(SHARED_CPP_STEMS))
 
 $(BIN_PATH)/main_ik : $(OBJECTS_IK)
 	mkdir -p $(BIN_PATH)
@@ -163,6 +187,46 @@ clean_tests :
 	-rm $(TEST_PASS_FILES) $(TEST_FAIL_FILES)
 
 #==================
+# lint
+#==================
+
+LINT_PASS_FILES = $(patsubst %, %.pass, $(LINT_FILES))
+LINT_FAIL_FILES = $(patsubst %, %.fail, $(LINT_FILES))
+LINT_SH = $(SCRIPT_PATH)/lint.sh
+
+$(BUILD_PATH)/%.lint.pass : $(SRC_PATH)/%.c*
+	mkdir -p $(BUILD_PATH)
+	-$(LINT_SH) $< $(BUILD_PATH)/$*.lint $(INCLUDE_PATH_FLAGS)
+
+.PHONY : lint
+lint : $(LINT_PASS_FILES)
+
+.PHONY : clean_lint
+clean_lint :
+	-rm $(LINT_PASS_FILES) $(LINT_FAIL_FILES)
+
+#==================
+# doc
+#==================
+
+DOC_PATH = doc
+DOC_CONFIG_FILE = dexvt-lite.config
+DOC_CONFIG_PATCH_FILE = $(DOC_CONFIG_FILE).patch
+DOC_TOOL = doxygen
+
+.PHONY : doc
+doc :
+	mkdir -p $(BUILD_PATH)
+	doxygen -g $(BUILD_PATH)/$(DOC_CONFIG_FILE)
+	patch $(BUILD_PATH)/$(DOC_CONFIG_FILE) < $(DOC_PATH)/$(DOC_CONFIG_PATCH_FILE)
+	cd $(BUILD_PATH); $(DOC_TOOL) $(DOC_CONFIG_FILE)
+
+.PHONY : clean_docs
+clean_docs :
+	rm -rf $(BUILD_PATH)/html
+	rm -rf $(BUILD_PATH)/$(DOC_CONFIG_FILE)
+
+#==================
 # resources
 #==================
 
@@ -211,27 +275,6 @@ resources : $(CHESTERFIELD_MAP_FILES) $(CUBE_MAP_FILES) $(HEIGHT_MAP_FILES) $(3D
 clean_resources :
 	-rm $(CHESTERFIELD_MAP_FILES) $(CUBE_MAP_FILES) $(HEIGHT_MAP_FILES) $(3DS_MESH_FILES)
 	-rm -rf $(RESOURCE_PATH)
-
-#==================
-# doc
-#==================
-
-DOC_PATH = doc
-DOC_CONFIG_FILE = dexvt-lite.config
-DOC_CONFIG_PATCH_FILE = $(DOC_CONFIG_FILE).patch
-DOC_TOOL = doxygen
-
-.PHONY : doc
-doc :
-	mkdir -p $(BUILD_PATH)
-	doxygen -g $(BUILD_PATH)/$(DOC_CONFIG_FILE)
-	patch $(BUILD_PATH)/$(DOC_CONFIG_FILE) < $(DOC_PATH)/$(DOC_CONFIG_PATCH_FILE)
-	cd $(BUILD_PATH); $(DOC_TOOL) $(DOC_CONFIG_FILE)
-
-.PHONY : clean_docs
-clean_docs :
-	rm -rf $(BUILD_PATH)/html
-	rm -rf $(BUILD_PATH)/$(DOC_CONFIG_FILE)
 
 #==================
 # clean
