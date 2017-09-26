@@ -57,6 +57,7 @@ Texture::Texture(std::string          name,
         return;
     }
     draw_x();
+    update();
 }
 
 Texture::Texture(std::string name,
@@ -360,7 +361,6 @@ void Texture::randomize()
         default:
             break;
     }
-    update();
 }
 
 void Texture::draw_x()
@@ -406,7 +406,6 @@ void Texture::draw_x()
         default:
             break;
     }
-    update();
 }
 
 //=============================
@@ -467,7 +466,6 @@ void Texture::set_color(glm::ivec4 color)
         default:
             break;
     }
-    update();
 }
 
 //============================
@@ -520,7 +518,6 @@ void Texture::set_color_r32f(float color)
         default:
             break;
     }
-    update();
 }
 
 //===================
