@@ -263,18 +263,8 @@ bool Program::add_var(var_type_t var_type, std::string name)
 bool Program::has_var(var_type_t var_type, std::string name) const
 {
     switch(var_type) {
-        case VAR_TYPE_ATTRIBUTE:
-            {
-                var_attribute_names_t::const_iterator p = m_var_attribute_names.find(name);
-                return (p != m_var_attribute_names.end());
-            }
-            break;
-        case VAR_TYPE_UNIFORM:
-            {
-                var_uniform_names_t::const_iterator p = m_var_uniform_names.find(name);
-                return (p != m_var_uniform_names.end());
-            }
-            break;
+        case VAR_TYPE_ATTRIBUTE: return (m_var_attribute_names.find(name) != m_var_attribute_names.end());
+        case VAR_TYPE_UNIFORM:   return (m_var_uniform_names.find(name)   != m_var_uniform_names.end());
     }
     return false;
 }
@@ -282,12 +272,8 @@ bool Program::has_var(var_type_t var_type, std::string name) const
 bool Program::has_var(var_type_t var_type, int id) const
 {
     switch(var_type) {
-        case VAR_TYPE_ATTRIBUTE:
-            return m_var_attribute_ids[id];
-            break;
-        case VAR_TYPE_UNIFORM:
-            return m_var_uniform_ids[id];
-            break;
+        case VAR_TYPE_ATTRIBUTE: return m_var_attribute_ids[id];
+        case VAR_TYPE_UNIFORM:   return m_var_uniform_ids[id];
     }
     return false;
 }

@@ -162,6 +162,10 @@ References
     <dd>http://prideout.net/archive/bloom/</dd>
     <dt>"An investigation of fast real-time GPU-based image blur algorithms"</dt>
     <dd>https://software.intel.com/en-us/blogs/2014/07/15/an-investigation-of-fast-real-time-gpu-based-image-blur-algorithms</dd>
+    <dt>"mattdesl/lwjgl-basics - ShaderLesson5"</dt>
+    <dd>https://github.com/mattdesl/lwjgl-basics/wiki/ShaderLesson5</dd>
+    <dt>"Jam3/glsl-fast-gaussian-blur - glsl-fast-gaussian-blur"</dt>
+    <dd>https://github.com/Jam3/glsl-fast-gaussian-blur</dd>
     <dt>"john-chapman-graphics SSAO Tutorial"</dt>
     <dd>http://john-chapman-graphics.blogspot.tw/2013/01/ssao-tutorial.html</dd>
     <dt>"Know your SSAO artifacts"</dt>
