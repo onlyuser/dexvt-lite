@@ -206,16 +206,16 @@ clean_lint :
 	-rm $(LINT_PASS_FILES) $(LINT_FAIL_FILES)
 
 #==================
-# doc
+# docs
 #==================
 
-DOC_PATH = doc
+DOC_PATH = docs
 DOC_CONFIG_FILE = dexvt-lite.config
 DOC_CONFIG_PATCH_FILE = $(DOC_CONFIG_FILE).patch
 DOC_TOOL = doxygen
 
-.PHONY : doc
-doc :
+.PHONY : docs
+docs :
 	mkdir -p $(BUILD_PATH)
 	doxygen -g $(BUILD_PATH)/$(DOC_CONFIG_FILE)
 	patch $(BUILD_PATH)/$(DOC_CONFIG_FILE) < $(DOC_PATH)/$(DOC_CONFIG_PATCH_FILE)
@@ -281,5 +281,5 @@ clean_resources :
 #==================
 
 .PHONY : clean
-clean : clean_binaries clean_objects clean_tests #clean_docs #clean_resources
+clean : clean_binaries clean_objects clean_tests #clean_lint #clean_docs #clean_resources
 	-rmdir $(BUILD_PATH) $(BIN_PATH)

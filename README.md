@@ -92,9 +92,12 @@ Make Targets
     <tr><th> target          </th><th> action                        </th></tr>
     <tr><td> all             </td><td> make binaries                 </td></tr>
     <tr><td> test            </td><td> all + run tests               </td></tr>
-    <tr><td> doc             </td><td> make doxygen documentation    </td></tr>
     <tr><td> clean           </td><td> remove all intermediate files </td></tr>
+    <tr><td> lint            </td><td> perform cppcheck              </td></tr>
+    <tr><td> docs            </td><td> make doxygen documentation    </td></tr>
     <tr><td> resources       </td><td> download resource files       </td></tr>
+    <tr><td> clean_lint      </td><td> remove cppcheck results       </td></tr>
+    <tr><td> clean_docs      </td><td> remove doxygen documentation  </td></tr>
     <tr><td> clean_resources </td><td> remove resource files         </td></tr>
 </table>
 
