@@ -92,6 +92,7 @@ Make Targets
     <tr><th> target          </th><th> action                        </th></tr>
     <tr><td> all             </td><td> make binaries                 </td></tr>
     <tr><td> test            </td><td> all + run tests               </td></tr>
+    <tr><td> doc             </td><td> make doxygen documentation    </td></tr>
     <tr><td> clean           </td><td> remove all intermediate files </td></tr>
     <tr><td> resources       </td><td> download resource files       </td></tr>
     <tr><td> clean_resources </td><td> remove resource files         </td></tr>
@@ -119,6 +120,7 @@ Keyboard:
     <tr><td> left/right  </td><td> yaw                     </td></tr>
     <tr><td> pg-up/pg-dn </td><td> roll                    </td></tr>
     <tr><td> home        </td><td> toggle target           </td></tr>
+    <tr><td> space       </td><td> toggle animation        </td></tr>
     <tr><td> esc         </td><td> exit                    </td></tr>
 </table>
 
