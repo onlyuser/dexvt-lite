@@ -327,7 +327,7 @@ size_t Texture::size() const
 // basic modifiers
 //================
 
-void Texture::randomize()
+void Texture::randomize(bool binary)
 {
     if(m_skybox) {
         return;
@@ -345,20 +345,18 @@ void Texture::randomize()
                 }
             }
             break;
-        case Texture::RGB:
-            assert(false);
-            break;
         case Texture::RED:
         case Texture::DEPTH:
             {
                 float* pixels = reinterpret_cast<float*>(m_pixels);
                 size_t n = m_dim.x * m_dim.y;
                 for(int i = 0; i < static_cast<int>(n); i++) {
-                    pixels[i] = static_cast<float>(rand()) / RAND_MAX;
+                    pixels[i] = (static_cast<float>(rand()) / RAND_MAX) > 0.5;
                 }
             }
             break;
         default:
+            assert(false);
             break;
     }
 }
@@ -389,9 +387,6 @@ void Texture::draw_x()
                 }
             }
             break;
-        case Texture::RGB:
-            assert(false);
-            break;
         case Texture::RED:
         case Texture::DEPTH:
             {
@@ -404,6 +399,7 @@ void Texture::draw_x()
             }
             break;
         default:
+            assert(false);
             break;
     }
 }
@@ -456,14 +452,8 @@ void Texture::set_color(glm::ivec4 color)
                 }
             }
             break;
-        case Texture::RGB:
-            assert(false);
-            break;
-        case Texture::RED:
-            break;
-        case Texture::DEPTH:
-            break;
         default:
+            assert(false);
             break;
     }
 }
@@ -499,11 +489,6 @@ void Texture::set_color_r32f(float color)
         return;
     }
     switch(m_internal_format) {
-        case Texture::RGBA:
-            break;
-        case Texture::RGB:
-            assert(false);
-            break;
         case Texture::RED:
             {
                 float* pixels = reinterpret_cast<float*>(m_pixels);
@@ -513,9 +498,8 @@ void Texture::set_color_r32f(float color)
                 }
             }
             break;
-        case Texture::DEPTH:
-            break;
         default:
+            assert(false);
             break;
     }
 }

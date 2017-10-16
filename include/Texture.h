@@ -64,7 +64,7 @@ public:
     size_t size() const;
 
     // basic modifiers
-    void randomize();
+    void randomize(bool binary = false);
     void draw_x();
 
     // basic modifiers -- rgba only
