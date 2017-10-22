@@ -37,6 +37,7 @@ Program::var_uniform_type_to_name_table_t Program::m_var_uniform_type_to_name_ta
         {Program::var_uniform_type_env_map_texture,                 "env_map_texture"},
         {Program::var_uniform_type_frontface_depth_overlay_texture, "frontface_depth_overlay_texture"},
         {Program::var_uniform_type_glow_cutoff_threshold,           "glow_cutoff_threshold"},
+        {Program::var_uniform_type_image_dim,                       "image_dim"},
         {Program::var_uniform_type_inv_normal_transform,            "inv_normal_transform"},
         {Program::var_uniform_type_inv_projection_transform,        "inv_projection_transform"},
         {Program::var_uniform_type_inv_view_proj_transform,         "inv_view_proj_transform"},

@@ -44,6 +44,7 @@ public:
         var_uniform_type_env_map_texture,
         var_uniform_type_frontface_depth_overlay_texture,
         var_uniform_type_glow_cutoff_threshold,
+        var_uniform_type_image_dim,
         var_uniform_type_inv_normal_transform,
         var_uniform_type_inv_projection_transform,
         var_uniform_type_inv_view_proj_transform,

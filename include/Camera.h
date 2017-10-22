@@ -105,6 +105,12 @@ public:
     }
     void set_frame_buffer(FrameBuffer* frame_buffer);
 
+    const glm::ivec2 get_image_dim() const
+    {
+        return m_image_dim;
+    }
+    void set_image_dim(glm::ivec2 image_dim);
+
     const glm::mat4 &get_projection_transform();
 
 private:
@@ -119,6 +125,7 @@ private:
     float             m_zoom;
     projection_mode_t m_projection_mode;
     FrameBuffer*      m_frame_buffer;
+    glm::ivec2        m_image_dim;
 
     void update_projection_transform();
     void update_transform();

@@ -59,6 +59,7 @@ public:
     void set_texture2_index(GLint texture_id);
     void set_view_proj_transform(glm::mat4 view_proj_transform);
     void set_viewport_dim(const GLint* viewport_dim_arr);
+    void set_image_dim(const GLint* image_dim_arr);
 
 private:
     Material *m_material;

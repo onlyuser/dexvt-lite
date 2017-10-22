@@ -283,4 +283,9 @@ void ShaderContext::set_viewport_dim(const GLint* viewport_dim_arr)
     m_var_uniforms[Program::var_uniform_type_viewport_dim]->uniform_2iv(1, viewport_dim_arr);
 }
 
+void ShaderContext::set_image_dim(const GLint* image_dim_arr)
+{
+    m_var_uniforms[Program::var_uniform_type_image_dim]->uniform_2iv(1, image_dim_arr);
+}
+
 }

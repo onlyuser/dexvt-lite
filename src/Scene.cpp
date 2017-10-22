@@ -282,6 +282,9 @@ void Scene::render(bool                clear_canvas,
         if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_viewport_dim)) {
             shader_context->set_viewport_dim(glm::value_ptr(m_camera->get_dim()));
         }
+        if(program->has_var(Program::VAR_TYPE_UNIFORM, Program::var_uniform_type_image_dim)) {
+            shader_context->set_image_dim(glm::value_ptr(m_camera->get_image_dim()));
+        }
         shader_context->render();
         return;
     }
