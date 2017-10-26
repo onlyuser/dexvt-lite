@@ -162,9 +162,9 @@ void Camera::set_frame_buffer(FrameBuffer* frame_buffer)
     m_frame_buffer = frame_buffer;
 }
 
-void Camera::set_image_dim(glm::ivec2 image_dim)
+void Camera::set_image_res(glm::ivec2 image_res)
 {
-    m_image_dim = image_dim;
+    m_image_res = image_res;
 }
 
 const glm::mat4 &Camera::get_projection_transform()
