@@ -1,7 +1,24 @@
+// This file is part of dexvt-lite.
+// -- 3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints
+// Copyright (C) 2018 onlyuser <mailto:onlyuser@gmail.com>
+//
+// dexvt-lite is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// dexvt-lite is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with dexvt-lite.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Based on Sylvain Beucler's tutorial from the OpenGL Programming wikibook: http://en.wikibooks.org/wiki/OpenGL_Programming
  * This file is in the public domain.
- * Author: Jerry Chen
+ * Author: onlyuser
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,10 +68,11 @@
 #define IK_BASE_LENGTH               0.5
 #define IK_BASE_WIDTH                0.5
 #define IK_ITERS                     1
-#define IK_SEGMENT_COUNT             4
+#define IK_SEGMENT_COUNT             5
 #define IK_SEGMENT_HEIGHT            0.125
-#define IK_SEGMENT_LENGTH            1.5
+#define IK_SEGMENT_LENGTH            1.25
 #define IK_SEGMENT_WIDTH             0.125
+#define CAMERA_ORBIT_HEIGHT          1
 #define PATH_RADIUS                  0.5
 
 const char* DEFAULT_CAPTION = "";
@@ -265,7 +283,7 @@ int init_resources()
     scene->add_texture(               texture_box_normal);
     bump_mapped_material->add_texture(texture_box_normal);
 
-    glm::vec3 origin = glm::vec3(0);
+    glm::vec3 origin = glm::vec3(0, CAMERA_ORBIT_HEIGHT, 0);
     camera = new vt::Camera("camera", origin + glm::vec3(0, 0, orbit_radius), origin);
     scene->set_camera(camera);
 
@@ -283,7 +301,7 @@ int init_resources()
     ik_base->flatten();
     ik_base->center_axis();
     ik_base->set_origin(glm::vec3(IK_ARM_DISTANCE, 0, 0));
-    ik_base->set_euler(glm::vec3(0, -90, 0));
+    ik_base->set_euler(glm::vec3(90, -90, 0));
     ik_base->set_material(phong_material);
     ik_base->set_ambient_color(glm::vec3(0));
 
@@ -294,7 +312,7 @@ int init_resources()
     ik_base2->flatten();
     ik_base2->center_axis();
     ik_base2->set_origin(glm::vec3(-IK_ARM_DISTANCE, 0, 0));
-    ik_base2->set_euler(glm::vec3(0, -90, 0));
+    ik_base2->set_euler(glm::vec3(270, -90, 0));
     ik_base2->set_material(phong_material);
     ik_base2->set_ambient_color(glm::vec3(0));
 
@@ -305,7 +323,7 @@ int init_resources()
     ik_base3->flatten();
     ik_base3->center_axis();
     ik_base3->set_origin(glm::vec3(0, 0, -IK_ARM_DISTANCE));
-    ik_base3->set_euler(glm::vec3(0, -90, 0));
+    ik_base3->set_euler(glm::vec3(180, -90, 0));
     ik_base3->set_material(phong_material);
     ik_base3->set_ambient_color(glm::vec3(0));
 
@@ -324,13 +342,15 @@ int init_resources()
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         if(!leg_segment_index) {
-            (*p)->set_enable_joint_constraints(glm::ivec3(0, 1, 1));
+            (*p)->set_hinge_type(vt::EULER_INDEX_ROLL);
+            (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 0));
             (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(60, 0, 0));
         } else {
-            (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 1));
-            (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+            (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
+            //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
+            (*p)->set_joint_constraints_center(glm::vec3(0, -60, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 60, 0));
         }
         leg_segment_index++;
     }
@@ -350,13 +370,15 @@ int init_resources()
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         if(!leg_segment_index2) {
-            (*p)->set_enable_joint_constraints(glm::ivec3(0, 1, 1));
+            (*p)->set_hinge_type(vt::EULER_INDEX_ROLL);
+            (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 0));
             (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(60, 0, 0));
         } else {
-            (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 1));
-            (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+            (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
+            //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
+            (*p)->set_joint_constraints_center(glm::vec3(0, -60, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 60, 0));
         }
         leg_segment_index2++;
     }
@@ -376,13 +398,15 @@ int init_resources()
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         if(!leg_segment_index3) {
-            (*p)->set_enable_joint_constraints(glm::ivec3(0, 1, 1));
+            (*p)->set_hinge_type(vt::EULER_INDEX_ROLL);
+            (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 0));
             (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(60, 0, 0));
         } else {
-            (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 1));
-            (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+            (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
+            //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
+            (*p)->set_joint_constraints_center(glm::vec3(0, -60, 0));
+            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 60, 0));
         }
         leg_segment_index3++;
     }

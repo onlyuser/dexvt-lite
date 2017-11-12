@@ -1,3 +1,20 @@
+// This file is part of dexvt-lite.
+// -- 3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints
+// Copyright (C) 2018 onlyuser <mailto:onlyuser@gmail.com>
+//
+// dexvt-lite is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// dexvt-lite is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with dexvt-lite.  If not, see <http://www.gnu.org/licenses/>.
+
 #ifndef VT_UTIL_H_
 #define VT_UTIL_H_
 
@@ -9,7 +26,8 @@
 #include <string>
 #include <iostream>
 
-#define EPSILON 0.0001
+#define EPSILON    0.0001
+#define BIG_NUMBER 10000
 
 #define SIGN(x)             (!(x) ? 0 : (((x) > 0) ? 1 : -1))
 #define LERP(p1, p2, alpha) ((p1) + ((p2) - (p1)) * (alpha))
@@ -69,20 +87,15 @@ glm::vec3 euler_modulo(glm::vec3 euler);
 float angle_modulo(float angle);
 float angle_distance(float angle1, float angle2);
 glm::vec3 nearest_point_on_plane(glm::vec3 plane_origin, glm::vec3 plane_normal, glm::vec3 point);
+float ray_plane_intersection(glm::vec3 plane_origin, glm::vec3 plane_normal, glm::vec3 ray_origin, glm::vec3 ray_dir);
+glm::vec3 projection_onto(glm::vec3 a, glm::vec3 b);
+glm::vec3 rejection_from(glm::vec3 a, glm::vec3 b);
+bool is_ray_sphere_intersection(glm::vec3 sphere_origin, float sphere_radius, glm::vec3 ray_origin, glm::vec3 ray_dir);
 glm::vec3 bezier_interpolate(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float alpha);
 bool read_file(std::string filename, std::string &s);
 bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups, size_t* start_pos);
 bool regexp(std::string &s, std::string pattern, std::vector<std::string*> &cap_groups);
 bool regexp(std::string &s, std::string pattern, int nmatch, ...);
-bool read_png(std::string png_filename,
-              void**      pixel_data,
-              size_t*     width,
-              size_t*     height,
-              bool        internal_format_rgba);
-bool read_png(std::string png_filename,
-              void**      pixel_data,
-              size_t*     width,
-              size_t*     height);
 
 }
 

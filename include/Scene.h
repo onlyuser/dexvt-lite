@@ -1,3 +1,20 @@
+// This file is part of dexvt-lite.
+// -- 3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints
+// Copyright (C) 2018 onlyuser <mailto:onlyuser@gmail.com>
+//
+// dexvt-lite is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// dexvt-lite is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with dexvt-lite.  If not, see <http://www.gnu.org/licenses/>.
+
 #ifndef VT_SCENE_H_
 #define VT_SCENE_H_
 
@@ -57,13 +74,13 @@ public:
         return m_camera;
     }
 
-    void set_oct_tree(Octree* oct_tree)
+    void set_octree(Octree* octree)
     {
-        m_oct_tree = oct_tree;
+        m_octree = octree;
     }
-    Octree* get_oct_tree() const
+    Octree* get_octree() const
     {
-        return m_oct_tree;
+        return m_octree;
     }
 
     Light* find_light(std::string name);
@@ -138,7 +155,7 @@ public:
                 bool                render_overlay    = false,
                 bool                render_skybox     = true,
                 use_material_type_t use_material_type = use_material_type_t::USE_MESH_MATERIAL);
-    void render_oct_tree(Octree* oct_tree, glm::mat4 camera_transform) const;
+    void render_octree(Octree* octree, glm::mat4 camera_transform) const;
     void render_lines_and_text(bool  draw_guide_wires,
                                bool  draw_paths,
                                bool  draw_axis,
@@ -151,7 +168,7 @@ public:
 
 private:
     Camera*     m_camera;
-    Octree*     m_oct_tree;
+    Octree*     m_octree;
     Mesh*       m_skybox;
     Mesh*       m_overlay;
     lights_t    m_lights;

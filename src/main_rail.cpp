@@ -1,7 +1,24 @@
+// This file is part of dexvt-lite.
+// -- 3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints
+// Copyright (C) 2018 onlyuser <mailto:onlyuser@gmail.com>
+//
+// dexvt-lite is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// dexvt-lite is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with dexvt-lite.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Based on Sylvain Beucler's tutorial from the OpenGL Programming wikibook: http://en.wikibooks.org/wiki/OpenGL_Programming
  * This file is in the public domain.
- * Author: Jerry Chen
+ * Author: onlyuser
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +41,7 @@
 #include <Camera.h>
 #include <File3ds.h>
 #include <FrameBuffer.h>
+#include <KeyframeMgr.h>
 #include <Light.h>
 #include <Material.h>
 #include <Mesh.h>
@@ -57,6 +75,7 @@
 #define IK_SEGMENT_LENGTH            1
 #define IK_SEGMENT_WIDTH             0.25
 #define LOCAL_TARGET_OFFSET_RADIUS   1
+#define PATH_RADIUS                  0.5
 
 const char* DEFAULT_CAPTION = "";
 
@@ -119,10 +138,11 @@ glm::vec3 targets[] = {glm::vec3( 1, 2,  2),
                        glm::vec3(-2, 2, -1),
                        glm::vec3(-2, 2,  1)};
 
-vt::Mesh *ground   = NULL,
-         *ik_hrail = NULL,
-         *ik_vrail = NULL,
-         *ik_base  = NULL;
+vt::Mesh *ground         = NULL,
+         *ik_hrail       = NULL,
+         *ik_vrail_dummy = NULL,
+         *ik_vrail       = NULL,
+         *ik_base        = NULL;
 
 std::vector<vt::Mesh*> ik_meshes;
 
@@ -156,6 +176,8 @@ static void create_linked_segments(vt::Scene*              scene,
         prev_mesh = mesh;
     }
 }
+
+void onSpecial(int key, int x, int y);
 
 int init_resources()
 {
@@ -246,24 +268,30 @@ int init_resources()
     ik_vrail->flatten();
     ik_vrail->set_material(phong_material);
     ik_vrail->set_ambient_color(glm::vec3(0));
-    ik_vrail->set_joint_type(vt::TransformObject::JOINT_TYPE_PRISMATIC);
-    ik_vrail->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
-    ik_vrail->set_joint_constraints_center(glm::vec3(0, 0, 0));
-    ik_vrail->set_joint_constraints_max_deviation(glm::vec3(IK_RAIL_LENGTH * 0.5, 0, 0));
 
-    ik_base = vt::PrimitiveFactory::create_box("base");
+    ik_vrail_dummy = vt::PrimitiveFactory::create_box("vrail_ghost");
+    scene->add_mesh(ik_vrail_dummy);
+    ik_vrail_dummy->center_axis();
+    ik_vrail_dummy->set_origin(glm::vec3(0));
+    ik_vrail_dummy->flatten();
+    ik_vrail_dummy->set_joint_type(vt::TransformObject::JOINT_TYPE_PRISMATIC);
+    ik_vrail_dummy->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
+    ik_vrail_dummy->set_joint_constraints_center(glm::vec3(0, 0, 0));
+    ik_vrail_dummy->set_joint_constraints_max_deviation(glm::vec3(IK_RAIL_LENGTH * 0.5, 0, 0));
+    ik_vrail_dummy->link_parent(ik_hrail);
+
+    ik_base = vt::PrimitiveFactory::create_cylinder("base", 8, IK_BASE_WIDTH * 0.5, IK_BASE_HEIGHT);
     scene->add_mesh(ik_base);
     ik_base->center_axis();
     ik_base->set_origin(glm::vec3(0));
-    ik_base->set_scale(glm::vec3(IK_BASE_WIDTH, IK_BASE_HEIGHT, IK_BASE_LENGTH));
     ik_base->flatten();
     ik_base->set_material(phong_material);
     ik_base->set_ambient_color(glm::vec3(0));
-    ik_base->set_joint_type(vt::TransformObject::JOINT_TYPE_PRISMATIC);
-    ik_base->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
+    ik_base->set_joint_type(vt::TransformObject::JOINT_TYPE_REVOLUTE);
+    ik_base->set_enable_joint_constraints(glm::ivec3(1, 1, 0));
     ik_base->set_joint_constraints_center(glm::vec3(0, 0, 0));
-    ik_base->set_joint_constraints_max_deviation(glm::vec3(0, 0, IK_RAIL_LENGTH * 0.5));
-    ik_base->link_parent(ik_vrail);
+    ik_base->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
+    ik_base->link_parent(ik_vrail_dummy);
 
     create_linked_segments(scene,
                            &ik_meshes,
@@ -276,23 +304,16 @@ int init_resources()
         ik_meshes[0]->set_origin(glm::vec3(0));
     }
     ik_meshes[0]->link_parent(ik_base);
-    int leg_segment_index = 0;
     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
-        if(!leg_segment_index) {
-            (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 0));
-            (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
-        } else {
-            (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 1));
-            (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
-            (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 0));
-        }
-        leg_segment_index++;
+        (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
+        //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
+        (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
+        (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 120, 0));
     }
 
-    vt::Scene::instance()->m_debug_target = targets[target_index];
+    onSpecial(GLUT_KEY_HOME, 0, 0);
 
     return 1;
 }
@@ -333,16 +354,19 @@ void onTick()
         return;
     }
     static int angle = 0;
-    glm::vec3 offset = vt::euler_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(LOCAL_TARGET_OFFSET_RADIUS);
-    glm::vec3 end_effector_euler = glm::vec3(0, 1, 0);
-    ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_vrail,
-                                                  glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-                                                  targets[target_index] + offset,
-                                                  angle_constraint ? &end_effector_euler : NULL,
-                                                  IK_ITERS,
-                                                  ACCEPT_END_EFFECTOR_DISTANCE,
-                                                  ACCEPT_AVG_ANGLE_DISTANCE);
-    ik_hrail->set_origin(ik_base->get_origin());
+    static glm::vec3 end_effector_dir = glm::vec3(0, 1, 0);
+    if(vt::Scene::instance()->m_debug_targets.size()) {
+        static int frame_target_index = 0;
+        ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_hrail,
+                                                      glm::vec3(0, 0, IK_SEGMENT_LENGTH),
+                                                      vt::Scene::instance()->m_debug_targets[frame_target_index],
+                                                      angle_constraint ? &end_effector_dir : NULL,
+                                                      IK_ITERS,
+                                                      ACCEPT_END_EFFECTOR_DISTANCE,
+                                                      ACCEPT_AVG_ANGLE_DISTANCE);
+        frame_target_index = (frame_target_index + 1) % vt::Scene::instance()->m_debug_targets.size();
+    }
+    ik_vrail->set_origin(ik_vrail_dummy->get_origin());
     angle = (angle + angle_delta) % 360;
 }
 
@@ -418,8 +442,9 @@ void onKeyboard(unsigned char key, int x, int y)
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
                 ground->set_ambient_color(glm::vec3(1));
-                ik_hrail->set_ambient_color(glm::vec3(1));
+                ik_hrail->set_ambient_color(glm::vec3(0, 1, 0));
                 ik_vrail->set_ambient_color(glm::vec3(0, 1, 0));
+                ik_vrail_dummy->set_ambient_color(glm::vec3(1, 0, 0));
                 ik_base->set_ambient_color(glm::vec3(0, 1, 0));
                 for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                     (*p)->set_ambient_color(glm::vec3(0, 1, 0));
@@ -429,6 +454,7 @@ void onKeyboard(unsigned char key, int x, int y)
                 ground->set_ambient_color(glm::vec3(0));
                 ik_hrail->set_ambient_color(glm::vec3(0));
                 ik_vrail->set_ambient_color(glm::vec3(0));
+                ik_vrail_dummy->set_ambient_color(glm::vec3(0));
                 ik_base->set_ambient_color(glm::vec3(0));
                 for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
                     (*p)->set_ambient_color(glm::vec3(0));
@@ -468,6 +494,25 @@ void onSpecial(int key, int x, int y)
                 target_index = (target_index + 1) % target_count;
                 std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
                 vt::Scene::instance()->m_debug_target = targets[target_index];
+
+                vt::KeyframeMgr::instance()->clear();
+                long object_id = 0;
+                glm::vec3 origin = vt::Scene::instance()->m_debug_target;
+                float low_height  = -0.25;
+                float high_height = 0.25;
+                vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(origin + glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS), true));
+                vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 25,  new vt::Keyframe(origin + glm::vec3(-PATH_RADIUS, high_height,  PATH_RADIUS), true));
+                vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(origin + glm::vec3(-PATH_RADIUS, low_height,  -PATH_RADIUS), true));
+                vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(origin + glm::vec3( PATH_RADIUS, high_height, -PATH_RADIUS), true));
+                vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(origin + glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS), true));
+                vt::KeyframeMgr::instance()->update_control_points(0.5);
+                std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_frame_values;
+                origin_frame_values.clear();
+                vt::KeyframeMgr::instance()->export_frame_values_for_object(object_id, &origin_frame_values, NULL, NULL, true);
+                std::vector<glm::vec3> &origin_keyframe_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_keyframe_values;
+                origin_keyframe_values.clear();
+                vt::KeyframeMgr::instance()->export_keyframe_values_for_object(object_id, &origin_keyframe_values, NULL, NULL, true);
+                vt::Scene::instance()->m_debug_targets = origin_frame_values;
             }
             break;
         case GLUT_KEY_LEFT:

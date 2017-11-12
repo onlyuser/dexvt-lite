@@ -1,7 +1,24 @@
+// This file is part of dexvt-lite.
+// -- 3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints
+// Copyright (C) 2018 onlyuser <mailto:onlyuser@gmail.com>
+//
+// dexvt-lite is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// dexvt-lite is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with dexvt-lite.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Based on Sylvain Beucler's tutorial from the OpenGL Programming wikibook: http://en.wikibooks.org/wiki/OpenGL_Programming
  * This file is in the public domain.
- * Author: Jerry Chen
+ * Author: onlyuser
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,7 +67,7 @@
 #define BODY_HEIGHT                  0.125
 #define BODY_SPEED                   0.05f
 #define IK_FOOTING_RADIUS            1
-#define IK_ITERS                     1
+#define IK_ITERS                     2
 #define IK_LEG_COUNT                 6
 #define IK_LEG_RADIUS                1
 #define IK_SEGMENT_COUNT             2
@@ -80,7 +97,7 @@ glm::vec3 prev_euler,
           euler,
           orbit_speed = glm::vec3(0, -0.5, -0.5);
 float prev_orbit_radius = 0,
-      orbit_radius      = 8,
+      orbit_radius      = 4,
       dolly_speed       = 0.1,
       light_distance    = 4;
 bool show_bbox        = false,
@@ -363,29 +380,30 @@ void onTick()
                                    body_origin.z));
         user_input = true;
     }
+    static int target_index = 0;
+    body->set_origin(vt::Scene::instance()->m_debug_targets[target_index]);
+    body->get_transform(); // ensure transform is updated
+    target_index = (target_index + 1) % vt::Scene::instance()->m_debug_targets.size();
     if(user_input) {
         for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
             std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
             ik_meshes[0]->set_origin((*q)->m_joint->in_abs_system());
         }
+        for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
+            std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
+            ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
+                                                          glm::vec3(0, 0, IK_SEGMENT_LENGTH),
+                                                          (*r)->m_target,
+                                                          NULL,
+                                                          IK_ITERS,
+                                                          ACCEPT_END_EFFECTOR_DISTANCE,
+                                                          ACCEPT_AVG_ANGLE_DISTANCE);
+        }
         user_input = false;
-    }
-    for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
-        std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
-        ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
-                                                      glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-                                                      (*r)->m_target,
-                                                      NULL,
-                                                      IK_ITERS,
-                                                      ACCEPT_END_EFFECTOR_DISTANCE,
-                                                      ACCEPT_AVG_ANGLE_DISTANCE);
     }
     static int angle = 0;
     angle = (angle + angle_delta) % 360;
-    static int target_index = 0;
-    body->set_origin(vt::Scene::instance()->m_debug_targets[target_index]);
     user_input = true;
-    target_index = (target_index + 1) % vt::Scene::instance()->m_debug_targets.size();
 }
 
 char* get_help_string()

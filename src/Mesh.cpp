@@ -1,11 +1,30 @@
+// This file is part of dexvt-lite.
+// -- 3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints
+// Copyright (C) 2018 onlyuser <mailto:onlyuser@gmail.com>
+//
+// dexvt-lite is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// dexvt-lite is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with dexvt-lite.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <Mesh.h>
 #include <Buffer.h>
 #include <Material.h>
 #include <Texture.h>
+#include <PrimitiveFactory.h>
 #include <Util.h>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/vector_angle.hpp>
 #include <string>
 #include <iostream>
 
@@ -246,12 +265,31 @@ void Mesh::set_tri_indices(int index, glm::ivec3 indices)
 
 void Mesh::update_bbox()
 {
+#if 1
+    glm::ivec3 tri_indices = get_tri_indices(0);
+    m_min = m_max = get_vert_coord(tri_indices[0]);
+    m_min = m_max = get_vert_coord(tri_indices[1]);
+    m_min = m_max = get_vert_coord(tri_indices[2]);
+    for(int i = 1; i < static_cast<int>(m_num_tri); i++) {
+        glm::ivec3 tri_indices = get_tri_indices(i);
+        glm::vec3 p0 = get_vert_coord(tri_indices[0]);
+        glm::vec3 p1 = get_vert_coord(tri_indices[1]);
+        glm::vec3 p2 = get_vert_coord(tri_indices[2]);
+        m_max = glm::max(m_max, p0);
+        m_min = glm::min(m_min, p0);
+        m_max = glm::max(m_max, p1);
+        m_min = glm::min(m_min, p1);
+        m_max = glm::max(m_max, p2);
+        m_min = glm::min(m_min, p2);
+    }
+#else
     m_min = m_max = get_vert_coord(0);
     for(int i = 1; i < static_cast<int>(m_num_vertex); i++) {
         glm::vec3 cur = get_vert_coord(i);
         m_max = glm::max(m_max, cur);
         m_min = glm::min(m_min, cur);
     }
+#endif
 }
 
 void Mesh::update_normals_and_tangents()
@@ -480,7 +518,7 @@ void Mesh::set_axis(glm::vec3 axis)
     mark_dirty_transform();
 }
 
-void Mesh::center_axis(align_t align)
+void Mesh::center_axis(BBoxObject::align_t align)
 {
     update_bbox();
     set_axis(glm::vec3(get_transform() * glm::vec4(get_center(align), 1)));

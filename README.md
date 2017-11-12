@@ -15,7 +15,7 @@ See sister project demonstrating shader features: [dexvt-test](https://github.co
 
 Algorithm
 ---------
-There are rovolute joint constraints, prismatic joint constraints, and end-effector orientation constraints.
+Supports rovolute joint constraints, prismatic joint constraints, and end-effector orientation constraints.
 The way each constraint type is handled is described below:
 
 * Revolute Joint Constraints

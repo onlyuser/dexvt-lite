@@ -1,7 +1,24 @@
+// This file is part of dexvt-lite.
+// -- 3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints
+// Copyright (C) 2018 onlyuser <mailto:onlyuser@gmail.com>
+//
+// dexvt-lite is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// dexvt-lite is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with dexvt-lite.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Based on Sylvain Beucler's tutorial from the OpenGL Programming wikibook: http://en.wikibooks.org/wiki/OpenGL_Programming
  * This file is in the public domain.
- * Author: Jerry Chen
+ * Author: onlyuser
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,12 +69,13 @@
 #define BODY_HEIGHT                  0.125
 #define BODY_SPEED                   0.05f
 #define IK_FOOTING_RADIUS            0.25
-#define IK_ITERS                     1
+#define IK_ITERS                     2
 #define IK_LEG_COUNT                 3
 #define IK_LEG_RADIUS                1
 #define IK_SEGMENT_0_LENGTH          0.25
-#define IK_SEGMENT_1_LENGTH          1.0
-#define IK_SEGMENT_COUNT             2
+#define IK_SEGMENT_1_LENGTH          0.1
+#define IK_SEGMENT_2_LENGTH          1.0
+#define IK_SEGMENT_COUNT             3
 #define IK_SEGMENT_HEIGHT            0.125
 #define IK_SEGMENT_WIDTH             0.25
 #define PATH_RADIUS                  0.25
@@ -83,7 +101,7 @@ glm::vec3 prev_euler,
           euler,
           orbit_speed = glm::vec3(0, -0.5, -0.5);
 float prev_orbit_radius = 0,
-      orbit_radius      = 8,
+      orbit_radius      = 4,
       dolly_speed       = 0.1,
       light_distance    = 4;
 bool show_bbox        = false,
@@ -117,7 +135,7 @@ vt::Mesh *base_upper = NULL,
 
 struct IK_Leg
 {
-    vt::Mesh*              m_joint_body;
+    vt::Mesh*              m_joint;
     std::vector<vt::Mesh*> m_ik_meshes;
     vt::Mesh*              m_rail;
 };
@@ -148,7 +166,7 @@ static void create_linked_segments(vt::Scene*              scene,
         std::stringstream ss;
         ss << name << "_" << i;
         vt::Mesh* mesh = NULL;
-        if(!prev_mesh) {
+        if(i <= 1) {
             mesh = vt::PrimitiveFactory::create_box(ss.str());
             mesh->center_axis();
         } else {
@@ -159,7 +177,7 @@ static void create_linked_segments(vt::Scene*              scene,
             mesh->flatten();
         }
         mesh->set_origin(glm::vec3(0, 0, 0));
-        if(!prev_mesh) {
+        if(i <= 1) {
             mesh->set_scale(glm::vec3(box_dim, ik_segment_lengths[i]));
         } else {
             mesh->set_scale(glm::vec3(box_dim_inner, ik_segment_lengths[i]));
@@ -251,15 +269,15 @@ int init_resources()
         float angle = i * 360 / IK_LEG_COUNT;
         IK_Leg* ik_leg = new IK_Leg();
 
-        std::stringstream joint_body_name_ss;
-        joint_body_name_ss << "joint_type_body_" << i;
-        ik_leg->m_joint_body = vt::PrimitiveFactory::create_box(joint_body_name_ss.str(), IK_SEGMENT_WIDTH,
-                                                                                          IK_SEGMENT_WIDTH,
-                                                                                          IK_SEGMENT_WIDTH);
-        ik_leg->m_joint_body->center_axis();
-        ik_leg->m_joint_body->link_parent(body);
-        ik_leg->m_joint_body->set_origin(vt::euler_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_FOOTING_RADIUS));
-        scene->add_mesh(ik_leg->m_joint_body);
+        std::stringstream joint_name_ss;
+        joint_name_ss << "joint_type_body_" << i;
+        ik_leg->m_joint = vt::PrimitiveFactory::create_box(joint_name_ss.str(), IK_SEGMENT_WIDTH,
+                                                                                IK_SEGMENT_WIDTH,
+                                                                                IK_SEGMENT_WIDTH);
+        ik_leg->m_joint->center_axis();
+        ik_leg->m_joint->link_parent(body);
+        ik_leg->m_joint->set_origin(vt::euler_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_FOOTING_RADIUS));
+        scene->add_mesh(ik_leg->m_joint);
 
         std::stringstream rail_name_ss;
         rail_name_ss << "ik_rail_" << i;
@@ -283,7 +301,8 @@ int init_resources()
                                          IK_SEGMENT_HEIGHT),
                                IK_SEGMENT_COUNT,
                                IK_SEGMENT_0_LENGTH,
-                               IK_SEGMENT_1_LENGTH);
+                               IK_SEGMENT_1_LENGTH,
+                               IK_SEGMENT_2_LENGTH);
         int leg_segment_index = 0;
         for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
             (*p)->set_material(phong_material);
@@ -295,6 +314,16 @@ int init_resources()
                 (*p)->set_joint_constraints_center(vt::euler_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS - IK_SEGMENT_HEIGHT) -
                                                    glm::vec3(0, BODY_ELEVATION * 0.5, 0));
                 (*p)->set_joint_constraints_max_deviation(glm::vec3(0, BODY_ELEVATION * 0.5, 0));
+            } else if(leg_segment_index == 1) {
+                (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
+                //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
+                (*p)->set_joint_constraints_center(glm::vec3(0, 30, 0));
+                (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 30, 0));
+            } else {
+                (*p)->set_hinge_type(vt::EULER_INDEX_YAW);
+                //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
+                (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
+                (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, 30));
             }
             leg_segment_index++;
         }
@@ -378,25 +407,26 @@ void onTick()
         body->set_origin(body->get_origin() - body->get_abs_up_direction() * BODY_SPEED);
         user_input = true;
     }
+    static int target_index = 0;
+    body->set_origin(vt::Scene::instance()->m_debug_targets[target_index]);
+    body->get_transform(); // ensure transform is updated
+    target_index = (target_index + 1) % vt::Scene::instance()->m_debug_targets.size();
     if(user_input) {
+        for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
+            std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
+            ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
+                                                          glm::vec3(0, 0, IK_SEGMENT_2_LENGTH),
+                                                          (*r)->m_joint->in_abs_system(),
+                                                          NULL,
+                                                          IK_ITERS,
+                                                          ACCEPT_END_EFFECTOR_DISTANCE,
+                                                          ACCEPT_AVG_ANGLE_DISTANCE);
+        }
         user_input = false;
-    }
-    for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
-        std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
-        ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
-                                                      glm::vec3(0, 0, IK_SEGMENT_1_LENGTH),
-                                                      (*r)->m_joint_body->in_abs_system(),
-                                                      NULL,
-                                                      IK_ITERS,
-                                                      ACCEPT_END_EFFECTOR_DISTANCE,
-                                                      ACCEPT_AVG_ANGLE_DISTANCE);
     }
     static int angle = 0;
     angle = (angle + angle_delta) % 360;
-    static int target_index = 0;
-    body->set_origin(vt::Scene::instance()->m_debug_targets[target_index]);
     user_input = true;
-    target_index = (target_index + 1) % vt::Scene::instance()->m_debug_targets.size();
 }
 
 char* get_help_string()
@@ -468,7 +498,7 @@ void onKeyboard(unsigned char key, int x, int y)
                 base_lower->set_ambient_color(glm::vec3(1));
                 body->set_ambient_color(glm::vec3(1));
                 for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
-                    (*q)->m_joint_body->set_ambient_color(glm::vec3(1, 0, 0));
+                    (*q)->m_joint->set_ambient_color(glm::vec3(1, 0, 0));
                     (*q)->m_rail->set_ambient_color(glm::vec3(1));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
                     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
@@ -481,7 +511,7 @@ void onKeyboard(unsigned char key, int x, int y)
                 base_lower->set_ambient_color(glm::vec3(0));
                 body->set_ambient_color(glm::vec3(0));
                 for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
-                    (*q)->m_joint_body->set_ambient_color(glm::vec3(0));
+                    (*q)->m_joint->set_ambient_color(glm::vec3(0));
                     (*q)->m_rail->set_ambient_color(glm::vec3(0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
                     for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {

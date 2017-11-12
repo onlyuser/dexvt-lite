@@ -1,3 +1,20 @@
+// This file is part of dexvt-lite.
+// -- 3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints
+// Copyright (C) 2018 onlyuser <mailto:onlyuser@gmail.com>
+//
+// dexvt-lite is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// dexvt-lite is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with dexvt-lite.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <PrimitiveFactory.h>
 #include <Modifiers.h>
 #include <MeshBase.h>
@@ -15,6 +32,41 @@ class Mesh;
 
 Mesh* cast_mesh(MeshBase* mesh);
 MeshBase* cast_mesh_base(Mesh* mesh);
+
+void PrimitiveFactory::get_box_corners(glm::vec3        (&points)[8],
+                                       const glm::vec3* origin,
+                                       const glm::vec3* dim)
+{
+    // points
+    //
+    //     y
+    //     4-------7
+    //    /|      /|
+    //   / |     / |
+    //  5-------6  |
+    //  |  0----|--3 x
+    //  | /     | /
+    //  |/      |/
+    //  1-------2
+    // z
+
+    points[0] = glm::vec3(0, 0, 0);
+    points[1] = glm::vec3(0, 0, 1);
+    points[2] = glm::vec3(1, 0, 1);
+    points[3] = glm::vec3(1, 0, 0);
+    points[4] = glm::vec3(0, 1, 0);
+    points[5] = glm::vec3(0, 1, 1);
+    points[6] = glm::vec3(1, 1, 1);
+    points[7] = glm::vec3(1, 1, 0);
+    if(!origin && !dim) {
+        return;
+    }
+    glm::vec3 _origin = origin ? *origin : glm::vec3(0);
+    glm::vec3 _dim    = dim    ? *dim    : glm::vec3(1);
+    for(int i = 0; i < 8; i++) {
+        points[i] = _origin + points[i] * _dim;
+    }
+}
 
 Mesh* PrimitiveFactory::create_grid(std::string name,
                                     int         cols,
@@ -340,70 +392,155 @@ Mesh* PrimitiveFactory::create_box(std::string name,
     // init mesh vertex/normal coords
     // ==============================
 
+    glm::vec3 points[8];
+
+    // points
+    //
+    //     y
+    //     4-------7
+    //    /|      /|
+    //   / |     / |
+    //  5-------6  |
+    //  |  0----|--3 x
+    //  | /     | /
+    //  |/      |/
+    //  1-------2
+    // z
+
+    glm::vec3 dim(width, height, length);
+    get_box_corners(points, NULL, &dim);
+
+    int tri_indices[6][4];
+    glm::vec3 tri_normals[6];
+    glm::vec3 tri_tangents[6];
+
     // right
-    mesh->set_vert_coord(0, glm::vec3(0, 0, 0));
-    mesh->set_vert_coord(1, glm::vec3(0, 0, 1));
-    mesh->set_vert_coord(2, glm::vec3(0, 1, 1));
-    mesh->set_vert_coord(3, glm::vec3(0, 1, 0));
-    for(int i = 0; i < 4; i++) {
-        mesh->set_vert_normal( 0 * 4 + i, glm::vec3(-1, 0, 0));
-        mesh->set_vert_tangent(0 * 4 + i, glm::vec3( 0, 0, 1));
-    }
+    //
+    //     y
+    //     3-------*
+    //    /|      /|
+    //   / |     / |
+    //  2-------*  |
+    //  |  0----|--* x
+    //  | /     | /
+    //  |/      |/
+    //  1-------*
+    // z
+
+    tri_indices[0][0] = 0;
+    tri_indices[0][1] = 1;
+    tri_indices[0][2] = 5;
+    tri_indices[0][3] = 4;
+    tri_normals[0]  = glm::vec3(-1, 0, 0);
+    tri_tangents[0] = glm::vec3(0, 0, 1);
 
     // front
-    mesh->set_vert_coord(4, glm::vec3(0, 0, 1));
-    mesh->set_vert_coord(5, glm::vec3(1, 0, 1));
-    mesh->set_vert_coord(6, glm::vec3(1, 1, 1));
-    mesh->set_vert_coord(7, glm::vec3(0, 1, 1));
-    for(int j = 0; j < 4; j++) {
-        mesh->set_vert_normal( 1 * 4 + j, glm::vec3(0, 0, 1));
-        mesh->set_vert_tangent(1 * 4 + j, glm::vec3(1, 0, 0));
-    }
+    //
+    //     y
+    //     *-------*
+    //    /|      /|
+    //   / |     / |
+    //  3-------2  |
+    //  |  *----|--* x
+    //  | /     | /
+    //  |/      |/
+    //  0-------1
+    // z
+
+    tri_indices[1][0] = 1;
+    tri_indices[1][1] = 2;
+    tri_indices[1][2] = 6;
+    tri_indices[1][3] = 5;
+    tri_normals[1]  = glm::vec3(0, 0, 1);
+    tri_tangents[1] = glm::vec3(1, 0, 0);
 
     // left
-    mesh->set_vert_coord( 8, glm::vec3(1, 0, 1));
-    mesh->set_vert_coord( 9, glm::vec3(1, 0, 0));
-    mesh->set_vert_coord(10, glm::vec3(1, 1, 0));
-    mesh->set_vert_coord(11, glm::vec3(1, 1, 1));
-    for(int k = 0; k < 4; k++) {
-        mesh->set_vert_normal( 2 * 4 + k, glm::vec3(1, 0,  0));
-        mesh->set_vert_tangent(2 * 4 + k, glm::vec3(0, 0, -1));
-    }
+    //
+    //     y
+    //     *-------2
+    //    /|      /|
+    //   / |     / |
+    //  *-------3  |
+    //  |  *----|--1 x
+    //  | /     | /
+    //  |/      |/
+    //  *-------0
+    // z
+
+    tri_indices[2][0] = 2;
+    tri_indices[2][1] = 3;
+    tri_indices[2][2] = 7;
+    tri_indices[2][3] = 6;
+    tri_normals[2]  = glm::vec3(1, 0, 0);
+    tri_tangents[2] = glm::vec3(0, 0, -1);
 
     // back
-    mesh->set_vert_coord(12, glm::vec3(1, 0, 0));
-    mesh->set_vert_coord(13, glm::vec3(0, 0, 0));
-    mesh->set_vert_coord(14, glm::vec3(0, 1, 0));
-    mesh->set_vert_coord(15, glm::vec3(1, 1, 0));
-    for(int p = 0; p < 4; p++) {
-        mesh->set_vert_normal( 3 * 4 + p, glm::vec3( 0, 0, -1));
-        mesh->set_vert_tangent(3 * 4 + p, glm::vec3(-1, 0,  0));
-    }
+    //
+    //     y
+    //     2-------3
+    //    /|      /|
+    //   / |     / |
+    //  *-------*  |
+    //  |  1----|--0 x
+    //  | /     | /
+    //  |/      |/
+    //  *-------*
+    // z
+
+    tri_indices[3][0] = 3;
+    tri_indices[3][1] = 0;
+    tri_indices[3][2] = 4;
+    tri_indices[3][3] = 7;
+    tri_normals[3]  = glm::vec3(0, 0, -1);
+    tri_tangents[3] = glm::vec3(-1, 0, 0);
 
     // top
-    mesh->set_vert_coord(16, glm::vec3(1, 1, 0));
-    mesh->set_vert_coord(17, glm::vec3(0, 1, 0));
-    mesh->set_vert_coord(18, glm::vec3(0, 1, 1));
-    mesh->set_vert_coord(19, glm::vec3(1, 1, 1));
-    for(int q = 0; q < 4; q++) {
-        mesh->set_vert_normal( 4 * 4 + q, glm::vec3( 0, 1, 0));
-        mesh->set_vert_tangent(4 * 4 + q, glm::vec3(-1, 0, 0));
-    }
+    //
+    //     y
+    //     1-------0
+    //    /|      /|
+    //   / |     / |
+    //  2-------3  |
+    //  |  *----|--* x
+    //  | /     | /
+    //  |/      |/
+    //  *-------*
+    // z
+
+    tri_indices[4][0] = 7;
+    tri_indices[4][1] = 4;
+    tri_indices[4][2] = 5;
+    tri_indices[4][3] = 6;
+    tri_normals[4]  = glm::vec3(0, 1, 0);
+    tri_tangents[4] = glm::vec3(-1, 0, 0);
 
     // bottom
-    mesh->set_vert_coord(20, glm::vec3(0, 0, 0));
-    mesh->set_vert_coord(21, glm::vec3(1, 0, 0));
-    mesh->set_vert_coord(22, glm::vec3(1, 0, 1));
-    mesh->set_vert_coord(23, glm::vec3(0, 0, 1));
-    for(int r = 0; r < 4; r++) {
-        mesh->set_vert_normal( 5 * 4 + r, glm::vec3(0, -1, 0));
-        mesh->set_vert_tangent(5 * 4 + r, glm::vec3(1,  0, 0));
-    }
+    //
+    //     y
+    //     *-------*
+    //    /|      /|
+    //   / |     / |
+    //  *-------*  |
+    //  |  0----|--1 x
+    //  | /     | /
+    //  |/      |/
+    //  3-------2
+    // z
 
-    glm::mat4 scale_transform = glm::scale(glm::mat4(1), glm::vec3(width, height, length));
-    size_t num_vertex = mesh->get_num_vertex();
-    for(int t = 1; t < static_cast<int>(num_vertex); t++) {
-        mesh->set_vert_coord(t, glm::vec3(glm::vec4(mesh->get_vert_coord(t), 1) * scale_transform));
+    tri_indices[5][0] = 0;
+    tri_indices[5][1] = 3;
+    tri_indices[5][2] = 2;
+    tri_indices[5][3] = 1;
+    tri_normals[5]  = glm::vec3(0, -1, 0);
+    tri_tangents[5] = glm::vec3(1, 0, 0);
+
+    for(int i = 0; i < 6; i++) {
+        for(int j = 0; j < 4; j++) {
+            int vert_index = i * 4 + j;
+            mesh->set_vert_coord(  vert_index, points[tri_indices[i][j]]);
+            mesh->set_vert_normal( vert_index, tri_normals[i]);
+            mesh->set_vert_tangent(vert_index, tri_tangents[i]);
+        }
     }
 
     // ========================
@@ -416,11 +553,8 @@ Mesh* PrimitiveFactory::create_box(std::string name,
     mesh->set_tex_coord(2, glm::vec2(1, 1));
     mesh->set_tex_coord(3, glm::vec2(0, 1));
 
-    for(int u = 1; u < 6; u++) {
-        mesh->set_tex_coord(u * 4 + 0, mesh->get_tex_coord(0));
-        mesh->set_tex_coord(u * 4 + 1, mesh->get_tex_coord(1));
-        mesh->set_tex_coord(u * 4 + 2, mesh->get_tex_coord(2));
-        mesh->set_tex_coord(u * 4 + 3, mesh->get_tex_coord(3));
+    for(int i = 4; i < 24; i++) {
+        mesh->set_tex_coord(i, mesh->get_tex_coord(i % 4));
     }
 
     // ==========================

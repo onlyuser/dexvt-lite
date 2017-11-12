@@ -68,9 +68,9 @@
 #define BODY_SPEED                   0.05f
 #define IK_FOOTING_RADIUS            2.5
 #define IK_ITERS                     1
-#define IK_LEG_COUNT                 6
+#define IK_LEG_COUNT                 5
 #define IK_LEG_RADIUS                1
-#define IK_SEGMENT_COUNT             3
+#define IK_SEGMENT_COUNT             2
 #define IK_SEGMENT_HEIGHT            0.25
 #define IK_SEGMENT_LENGTH            1
 #define IK_SEGMENT_WIDTH             0.25
@@ -134,30 +134,49 @@ struct IK_Leg
 
 std::vector<IK_Leg*> ik_legs;
 
+static glm::vec3 end_effector_dir = glm::vec3(0, 0, 1);
+
+int                 leg_anim_frame[4];
+std::pair<int, int> leg_anim_frame_range[4];
+
 static void create_linked_segments(vt::Scene*              scene,
                                    std::vector<vt::Mesh*>* ik_meshes,
                                    int                     ik_segment_count,
                                    std::string             name,
-                                   glm::vec3               box_dim)
+                                   glm::vec3               box_dim,
+                                   size_t                  n,
+                                   ...)
 {
     if(!scene || !ik_meshes) {
         return;
     }
+    std::vector<double> length_vec;
+    va_list vl;
+    va_start(vl, n);
+    for(int i = 0; i < static_cast<int>(n); i++) {
+        double val = va_arg(vl, double);
+        length_vec.push_back(val);
+    }
+    va_end(vl);
     vt::Mesh* prev_mesh = NULL;
     for(int i = 0; i < ik_segment_count; i++) {
+        double z_scale = (i < static_cast<int>(length_vec.size())) ? length_vec[i] : 1.0;
         std::stringstream ss;
         ss << name << "_" << i;
         vt::Mesh* mesh = vt::PrimitiveFactory::create_box(ss.str());
         mesh->center_axis();
         mesh->set_origin(glm::vec3(0, 0, 0));
-        mesh->set_scale(box_dim);
+        mesh->set_scale(glm::vec3(box_dim.x,
+                                  box_dim.y,
+                                  box_dim.z * z_scale));
         mesh->flatten();
         mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
         if(!prev_mesh) {
             mesh->set_origin(glm::vec3(0, 0, 0));
         } else {
+            double prev_z_scale = (i < static_cast<int>(length_vec.size())) ? length_vec[i - 1] : 1.0;
             mesh->link_parent(prev_mesh, true);
-            mesh->set_origin(glm::vec3(0, 0, box_dim.z)); // must go after link_parent
+            mesh->set_origin(glm::vec3(0, 0, box_dim.z * prev_z_scale)); // must go after link_parent
         }
         scene->add_mesh(mesh);
         ik_meshes->push_back(mesh);
@@ -210,14 +229,15 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    body = vt::PrimitiveFactory::create_cylinder("body", IK_LEG_COUNT, IK_LEG_RADIUS, BODY_HEIGHT);
+    body = vt::PrimitiveFactory::create_box("body", 1, 0.5, 2);
     //body->center_axis(vt::BBoxObject::ALIGN_CENTER);
-    body->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
+    body->set_axis(glm::vec3(0.5, 0.25, 1));
+    body->set_origin(glm::vec3(0, 0, 0));
     body->set_material(phong_material);
     body->set_ambient_color(glm::vec3(0));
     scene->add_mesh(body);
 
-    int angle = 0;
+    //int angle = 0;
     for(int i = 0; i < IK_LEG_COUNT; i++) {
         IK_Leg* ik_leg = new IK_Leg();
         std::stringstream joint_name_ss;
@@ -227,59 +247,160 @@ int init_resources()
                                                                                 IK_SEGMENT_WIDTH);
         ik_leg->m_joint->center_axis();
         ik_leg->m_joint->link_parent(body);
-        ik_leg->m_joint->set_origin(vt::euler_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
-        ik_leg->m_joint->set_hinge_type(vt::EULER_INDEX_YAW);
-        //ik_leg->m_joint->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
-        ik_leg->m_joint->set_joint_constraints_center(glm::vec3(0, 0, angle));
-        ik_leg->m_joint->set_joint_constraints_max_deviation(glm::vec3(0, 0, 30));
-        scene->add_mesh(ik_leg->m_joint);
-        ik_leg->m_target = vt::euler_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_FOOTING_RADIUS) + glm::vec3(0, -BODY_ELEVATION, 0);
-        std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
-        std::stringstream ik_segment_name_ss;
-        ik_segment_name_ss << "ik_box_" << i;
-        create_linked_segments(scene,
-                               &ik_meshes,
-                               IK_SEGMENT_COUNT,
-                               ik_segment_name_ss.str(),
-                               glm::vec3(IK_SEGMENT_WIDTH,
-                                         IK_SEGMENT_HEIGHT,
-                                         IK_SEGMENT_LENGTH));
-        ik_meshes[0]->link_parent(ik_leg->m_joint);
-        int leg_segment_index = 0;
-        for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
-            (*p)->set_material(phong_material);
-            (*p)->set_ambient_color(glm::vec3(0));
-            if(!leg_segment_index) {
-                (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
-                //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
-                (*p)->set_joint_constraints_center(glm::vec3(0, -45, 0));
-                (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 15, 0));
-            } else {
-                (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
-                //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
-                (*p)->set_joint_constraints_center(glm::vec3(0, 60, 0));
-                (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 60, 0));
-            }
-            leg_segment_index++;
+        //ik_leg->m_joint->set_origin(vt::euler_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
+        switch(i) {
+            case 0:
+                ik_leg->m_joint->set_origin(glm::vec3(-0.5, 0, -1));
+                ik_leg->m_target = ik_leg->m_joint->get_origin() + glm::vec3(0.25, -1.5, 0.1);
+                break;
+            case 1:
+                ik_leg->m_joint->set_origin(glm::vec3(0.5, 0, -1));
+                ik_leg->m_target = ik_leg->m_joint->get_origin() + glm::vec3(-0.25, -1.5, 0.1);
+                break;
+            case 2:
+                ik_leg->m_joint->set_origin(glm::vec3(-0.5, 0, 1));
+                ik_leg->m_target = ik_leg->m_joint->get_origin() + glm::vec3(0.25, -1.5, 0.1);
+                break;
+            case 3:
+                ik_leg->m_joint->set_origin(glm::vec3(0.5, 0, 1));
+                ik_leg->m_target = ik_leg->m_joint->get_origin() + glm::vec3(-0.25, -1.5, 0.1);
+                break;
+            case 4: // end-effector
+                ik_leg->m_joint->set_origin(glm::vec3(0, 0, 1)); // FIX-ME! -- IK bug if y-coordinate is any value other than 0
+                ik_leg->m_target = ik_leg->m_joint->get_origin() + glm::vec3(0, 1, 1);
+                break;
         }
-        ik_legs.push_back(ik_leg);
-        angle += (360 / IK_LEG_COUNT);
+        if(i == 4) { // end-effector
+            ik_leg->m_joint->set_hinge_type(vt::EULER_INDEX_YAW);
+            //ik_leg->m_joint->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
+            //ik_leg->m_joint->set_joint_constraints_center(glm::vec3(0, 0, angle));
+            ik_leg->m_joint->set_joint_constraints_max_deviation(glm::vec3(0, 0, 60));
+            scene->add_mesh(ik_leg->m_joint);
+            //ik_leg->m_target = vt::euler_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_FOOTING_RADIUS) + glm::vec3(0, -BODY_ELEVATION, 0);
+            std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
+            std::stringstream ik_segment_name_ss;
+            ik_segment_name_ss << "ik_box_" << i;
+            create_linked_segments(scene,
+                                   &ik_meshes,
+                                   IK_SEGMENT_COUNT + 1,
+                                   ik_segment_name_ss.str(),
+                                   glm::vec3(IK_SEGMENT_WIDTH,
+                                             IK_SEGMENT_HEIGHT,
+                                             IK_SEGMENT_LENGTH * 1.5),
+                                   3,
+                                   1.0,
+                                   1.0,
+                                   0.33);
+            ik_meshes[0]->link_parent(ik_leg->m_joint);
+            int leg_segment_index = 0;
+            for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                (*p)->set_material(phong_material);
+                (*p)->set_ambient_color(glm::vec3(0));
+                if(!leg_segment_index) {
+                    (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
+                    //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
+                    (*p)->set_joint_constraints_center(glm::vec3(0, -120, 0));
+                    (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 30, 0));
+                } else if(leg_segment_index == 2) { // end-effector
+                    //(*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
+                    (*p)->set_enable_joint_constraints(glm::ivec3(1, 0, 0));
+                    //(*p)->set_joint_constraints_center(glm::vec3(0, 90, 0));
+                    //(*p)->set_joint_constraints_max_deviation(glm::vec3(0, 60, 0));
+                } else {
+                    (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
+                    //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
+                    (*p)->set_joint_constraints_center(glm::vec3(0, 90, 0));
+                    (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 60, 0));
+                }
+                leg_segment_index++;
+            }
+            ik_legs.push_back(ik_leg);
+        } else {
+            //ik_leg->m_joint->set_hinge_type(vt::EULER_INDEX_ROLL);
+            ik_leg->m_joint->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
+            ik_leg->m_joint->set_joint_constraints_center(glm::vec3(0, 0, 0));
+            ik_leg->m_joint->set_joint_constraints_max_deviation(glm::vec3(30, 0, 0));
+            scene->add_mesh(ik_leg->m_joint);
+            //ik_leg->m_target = vt::euler_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_FOOTING_RADIUS) + glm::vec3(0, -BODY_ELEVATION, 0);
+            std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
+            std::stringstream ik_segment_name_ss;
+            ik_segment_name_ss << "ik_box_" << i;
+            create_linked_segments(scene,
+                                   &ik_meshes,
+                                   IK_SEGMENT_COUNT,
+                                   ik_segment_name_ss.str(),
+                                   glm::vec3(IK_SEGMENT_WIDTH,
+                                             IK_SEGMENT_HEIGHT,
+                                             IK_SEGMENT_LENGTH),
+                                   0);
+            ik_meshes[0]->link_parent(ik_leg->m_joint);
+            int leg_segment_index = 0;
+            for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                (*p)->set_material(phong_material);
+                (*p)->set_ambient_color(glm::vec3(0));
+                if(!leg_segment_index) {
+                    (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
+                    //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
+                    (*p)->set_joint_constraints_center(glm::vec3(0, 120, 0));
+                    (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 30, 0));
+                } else {
+                    (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
+                    //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
+                    (*p)->set_joint_constraints_center(glm::vec3(0, -90, 0)); // FIX-ME! -- IK bug if pitch is less than or equal to -90 with joint hinge type ROLL
+                    (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 60, 0));
+                }
+                leg_segment_index++;
+            }
+            ik_legs.push_back(ik_leg);
+        }
+        //angle += (360 / IK_LEG_COUNT);
     }
 
-    long object_id = 0;
-    float low_height  = -BODY_ELEVATION * 0.25;
-    float high_height = 0;
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS), true));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 25,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, high_height,  PATH_RADIUS), true));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, low_height,  -PATH_RADIUS), true));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( PATH_RADIUS, high_height, -PATH_RADIUS), true));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS), true));
-    vt::KeyframeMgr::instance()->update_control_points(0.5);
-    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_frame_values;
-    vt::KeyframeMgr::instance()->export_frame_values_for_object(object_id, &origin_frame_values, NULL, NULL, true);
-    std::vector<glm::vec3> &origin_keyframe_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_keyframe_values;
-    vt::KeyframeMgr::instance()->export_keyframe_values_for_object(object_id, &origin_keyframe_values, NULL, NULL, true);
-    vt::Scene::instance()->m_debug_targets = origin_frame_values;
+    for(int i = 0; i < 4; i++) {
+        float x_offset = 0;
+        switch(i) {
+            case 0:
+            case 2:
+                x_offset = -0.1;
+                break;
+            case 1:
+            case 3:
+                x_offset = 0.1;
+                break;
+            default:
+                break;
+        }
+        vt::KeyframeMgr::instance()->insert_keyframe(i, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(ik_legs[i]->m_target + glm::vec3(x_offset, PATH_RADIUS,  0),           true));
+        vt::KeyframeMgr::instance()->insert_keyframe(i, vt::MotionTrack::MOTION_TYPE_ORIGIN, 10,  new vt::Keyframe(ik_legs[i]->m_target + glm::vec3(0,        0,            PATH_RADIUS), false));
+        vt::KeyframeMgr::instance()->insert_keyframe(i, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(ik_legs[i]->m_target + glm::vec3(0,        0,            0),           true));
+        vt::KeyframeMgr::instance()->insert_keyframe(i, vt::MotionTrack::MOTION_TYPE_ORIGIN, 90,  new vt::Keyframe(ik_legs[i]->m_target + glm::vec3(0,        0,           -PATH_RADIUS), false));
+        vt::KeyframeMgr::instance()->insert_keyframe(i, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(ik_legs[i]->m_target + glm::vec3(x_offset, PATH_RADIUS,  0),           true));
+        vt::KeyframeMgr::instance()->update_control_points(1);
+        std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[i].m_debug_origin_frame_values;
+        vt::KeyframeMgr::instance()->export_frame_values_for_object(i, &origin_frame_values, NULL, NULL, true);
+        std::vector<glm::vec3> &origin_keyframe_values = vt::Scene::instance()->m_debug_object_context[i].m_debug_origin_keyframe_values;
+        origin_keyframe_values.clear();
+        vt::KeyframeMgr::instance()->export_keyframe_values_for_object(i, &origin_keyframe_values, NULL, NULL, true);
+        leg_anim_frame_range[i].first  = vt::Scene::instance()->m_debug_targets.size();
+        leg_anim_frame_range[i].second = leg_anim_frame_range[i].first + origin_frame_values.size() - 1;
+        int phase = 0;
+        switch(i) {
+            case 0:
+            case 3:
+                phase = 0;
+                break;
+            case 1:
+            case 2:
+                phase = 50;
+                break;
+            default:
+                break;
+        }
+        leg_anim_frame[i] = leg_anim_frame_range[i].first + phase;
+        for(std::vector<glm::vec3>::iterator p = origin_frame_values.begin(); p != origin_frame_values.end(); p++) {
+            vt::Scene::instance()->m_debug_targets.push_back(*p);
+        }
+    }
 
     return 1;
 }
@@ -361,20 +482,34 @@ void onTick()
                                    body_origin.z));
         user_input = true;
     }
-    static int target_index = 0;
-    body->set_origin(vt::Scene::instance()->m_debug_targets[target_index]);
+    //body->set_origin(vt::Scene::instance()->m_debug_targets[target_index]);
     body->get_transform(); // ensure transform is updated
-    target_index = (target_index + 1) % vt::Scene::instance()->m_debug_targets.size();
+    //target_index = (target_index + 1) % vt::Scene::instance()->m_debug_targets.size();
     if(user_input) {
-        for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
-            std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
-            ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd((*r)->m_joint,
-                                                          glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-                                                          (*r)->m_target,
-                                                          NULL,
-                                                          IK_ITERS,
-                                                          ACCEPT_END_EFFECTOR_DISTANCE,
-                                                          ACCEPT_AVG_ANGLE_DISTANCE);
+        for(int i = 0; i < IK_LEG_COUNT; i++) {
+            IK_Leg* ik_leg = ik_legs[i];
+            std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
+            if(i == 4) { // end-effector
+                ik_meshes[IK_SEGMENT_COUNT + 1 - 1]->solve_ik_ccd(ik_leg->m_joint,
+                                                                  glm::vec3(0, 0, IK_SEGMENT_LENGTH),
+                                                                  ik_leg->m_target,
+                                                                  &end_effector_dir,
+                                                                  IK_ITERS,
+                                                                  ACCEPT_END_EFFECTOR_DISTANCE,
+                                                                  ACCEPT_AVG_ANGLE_DISTANCE);
+            } else {
+                ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_leg->m_joint,
+                                                              glm::vec3(0, 0, IK_SEGMENT_LENGTH),
+                                                              vt::Scene::instance()->m_debug_targets[leg_anim_frame[i]],
+                                                              NULL,
+                                                              IK_ITERS,
+                                                              ACCEPT_END_EFFECTOR_DISTANCE,
+                                                              ACCEPT_AVG_ANGLE_DISTANCE);
+                leg_anim_frame[i]++;
+                if(leg_anim_frame[i] > leg_anim_frame_range[i].second) {
+                    leg_anim_frame[i] = leg_anim_frame_range[i].first;
+                }
+            }
         }
         user_input = false;
     }

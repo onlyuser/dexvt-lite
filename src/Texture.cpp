@@ -1,7 +1,24 @@
+// This file is part of dexvt-lite.
+// -- 3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints
+// Copyright (C) 2018 onlyuser <mailto:onlyuser@gmail.com>
+//
+// dexvt-lite is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// dexvt-lite is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with dexvt-lite.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <Texture.h>
 #include <NamedObject.h>
 #include <FrameObject.h>
-#include <Util.h>
+#include <FilePng.h>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <string>
@@ -78,7 +95,7 @@ Texture::Texture(std::string name,
     unsigned char* pixels = NULL;
     size_t width  = 0;
     size_t height = 0;
-    if(!read_png(png_filename, (void**)&pixels, &width, &height, true) || !pixels) {
+    if(!read_png(png_filename, (void**)&pixels, &width, &height) || !pixels) {
         return;
     }
     alloc(Texture::RGBA,
@@ -136,27 +153,27 @@ Texture::Texture(std::string name,
     unsigned char* pixels_neg_y = NULL;
     unsigned char* pixels_pos_z = NULL;
     unsigned char* pixels_neg_z = NULL;
-    if(!read_png(png_filename_pos_x, (void**)&pixels_pos_x, &width, &height, true) || !pixels_pos_x) {
+    if(!read_png(png_filename_pos_x, (void**)&pixels_pos_x, &width, &height) || !pixels_pos_x) {
         std::cout << "failed to load cube map positive x" << std::endl;
         return;
     }
-    if(!read_png(png_filename_neg_x, (void**)&pixels_neg_x, &width, &height, true) || !pixels_neg_x) {
+    if(!read_png(png_filename_neg_x, (void**)&pixels_neg_x, &width, &height) || !pixels_neg_x) {
         std::cout << "failed to load cube map negative x" << std::endl;
         return;
     }
-    if(!read_png(png_filename_pos_y, (void**)&pixels_pos_y, &width, &height, true) || !pixels_pos_y) {
+    if(!read_png(png_filename_pos_y, (void**)&pixels_pos_y, &width, &height) || !pixels_pos_y) {
         std::cout << "failed to load cube map positive y" << std::endl;
         return;
     }
-    if(!read_png(png_filename_neg_y, (void**)&pixels_neg_y, &width, &height, true) || !pixels_neg_y) {
+    if(!read_png(png_filename_neg_y, (void**)&pixels_neg_y, &width, &height) || !pixels_neg_y) {
         std::cout << "failed to load cube map negative y" << std::endl;
         return;
     }
-    if(!read_png(png_filename_pos_z, (void**)&pixels_pos_z, &width, &height, true) || !pixels_pos_z) {
+    if(!read_png(png_filename_pos_z, (void**)&pixels_pos_z, &width, &height) || !pixels_pos_z) {
         std::cout << "failed to load cube map positive z" << std::endl;
         return;
     }
-    if(!read_png(png_filename_neg_z, (void**)&pixels_neg_z, &width, &height, true) || !pixels_neg_z) {
+    if(!read_png(png_filename_neg_z, (void**)&pixels_neg_z, &width, &height) || !pixels_neg_z) {
         std::cout << "failed to load cube map negative z" << std::endl;
         return;
     }
@@ -323,6 +340,17 @@ size_t Texture::size() const
     return 0;
 }
 
+Texture& Texture::operator=(Texture& other)
+{
+    assert(m_internal_format == other.get_internal_format());
+    size_t _size = size();
+    assert(_size == other.size());
+    other.refresh(); // download from gpu
+    memcpy(m_pixels, other.get_pixels(), _size); // copy in cpu
+    update(); // upload to gpu
+    return *this;
+}
+
 //================
 // basic modifiers
 //================
@@ -376,14 +404,10 @@ void Texture::draw_x()
                 for(int i = 0; i < static_cast<int>(min_dim); i++) {
                     int pixel_offset  = (i * m_dim.x + i) * 4;
                     int pixel_offset2 = (i * m_dim.x + (m_dim.x - i)) * 4;
-                    m_pixels[pixel_offset  + 0] = 255;
-                    m_pixels[pixel_offset  + 1] = 255;
-                    m_pixels[pixel_offset  + 2] = 255;
-                    m_pixels[pixel_offset  + 3] = 255;
-                    m_pixels[pixel_offset2 + 0] = 255;
-                    m_pixels[pixel_offset2 + 1] = 255;
-                    m_pixels[pixel_offset2 + 2] = 255;
-                    m_pixels[pixel_offset2 + 3] = 255;
+                    for(int c = 0; c < 4; c++) {
+                        m_pixels[pixel_offset  + c] = 255;
+                        m_pixels[pixel_offset2 + c] = 255;
+                    }
                 }
             }
             break;
@@ -393,8 +417,61 @@ void Texture::draw_x()
                 float* pixels = reinterpret_cast<float*>(m_pixels);
                 size_t min_dim = std::min(m_dim.x, m_dim.y);
                 for(int i = 0; i < static_cast<int>(min_dim); i++) {
-                    pixels[i * m_dim.x + i]             = 1;
-                    pixels[i * m_dim.x + (m_dim.x - i)] = 1;
+                    pixels[i * m_dim.x + i]                 = 1;
+                    pixels[i * m_dim.x + (m_dim.x - 1 - i)] = 1;
+                }
+            }
+            break;
+        default:
+            assert(false);
+            break;
+    }
+}
+
+void Texture::draw_frame()
+{
+    if(m_skybox) {
+        return;
+    }
+    if(!m_pixels) {
+        return;
+    }
+    switch(m_internal_format) {
+        case Texture::RGBA:
+            {
+                for(int x = 0; x < m_dim.x; x++) {
+                    int pixel_offset_top    = (0             * m_dim.x + x) * 4;
+                    int pixel_offset_bottom = ((m_dim.y - 1) * m_dim.x + x) * 4;
+                    for(int c = 0; c < 4; c++) {
+                        m_pixels[pixel_offset_top    + c] = 255;
+                        m_pixels[pixel_offset_bottom + c] = 255;
+                    }
+                }
+                for(int y = 1; y < m_dim.y - 1; y++) {
+                    int pixel_offset_left  = (y * m_dim.x + 0)             * 4;
+                    int pixel_offset_right = (y * m_dim.x + (m_dim.x - 1)) * 4;
+                    for(int c = 0; c < 4; c++) {
+                        m_pixels[pixel_offset_left  + c] = 255;
+                        m_pixels[pixel_offset_right + c] = 255;
+                    }
+                }
+            }
+            break;
+        case Texture::RED:
+        case Texture::DEPTH:
+            {
+                float* pixels = reinterpret_cast<float*>(m_pixels);
+                for(int x = 0; x < m_dim.x; x++) {
+                    int pixel_offset_top    = 0             * m_dim.x + x;
+                    int pixel_offset_bottom = (m_dim.y - 1) * m_dim.x + x;
+                    pixels[pixel_offset_top]    = 1;
+                    pixels[pixel_offset_bottom] = 1;
+                }
+                for(int y = 1; y < m_dim.y - 1; y++) {
+                    int pixel_offset_left  = y * m_dim.x + 0;
+                    int pixel_offset_right = y * m_dim.x + (m_dim.x - 1);
+                    pixels[pixel_offset_left]  = 1;
+                    pixels[pixel_offset_right] = 1;
                 }
             }
             break;

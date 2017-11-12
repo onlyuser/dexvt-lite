@@ -1,3 +1,20 @@
+# This file is part of dexvt-lite.
+# -- 3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints
+# Copyright (C) 2018 onlyuser <mailto:onlyuser@gmail.com>
+#
+# dexvt-lite is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# dexvt-lite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with dexvt-lite.  If not, see <http://www.gnu.org/licenses/>.
+
 #==================
 # compile flags
 #==================
@@ -9,7 +26,20 @@ LIB_PATH = $(EXTERN_LIB_PATH)
 SRC_PATH = src
 BUILD_PATH = build
 BIN_PATH = bin
-BIN_STEMS = main_ik main_ik_const main_boids main_hexapod main_deltabot main_3dprinter main_terrain main_spider main_freerot main_rail main_stewart main_fanta
+BIN_STEMS = main_ik \
+            main_ik_const \
+            main_boids \
+            main_nbody \
+            main_hexapod \
+            main_spot_mini \
+            main_deltabot \
+            main_3dprinter \
+            main_terrain \
+            main_spider \
+            main_freerot \
+            main_rail \
+            main_stewart \
+            main_fanta
 BINARIES = $(patsubst %, $(BIN_PATH)/%, $(BIN_STEMS))
 
 INCLUDE_PATHS = $(INCLUDE_PATH) $(EXTERN_INCLUDE_PATH)
@@ -67,7 +97,21 @@ $(BUILD_PATH)/%.o : $(SRC_PATH)/%.c
 
 .PHONY : clean_objects
 clean_objects :
-	-rm $(OBJECTS_IK) $(OBJECTS_IK_CONST) $(OBJECTS_BOIDS) $(OBJECTS_HEXAPOD) $(OBJECTS_DELTABOT) $(OBJECTS_3DPRINTER) $(OBJECTS_3DPRINTER) $(OBJECTS_TERRAIN) $(OBJECTS_SPIDER) $(OBJECTS_FREEROT) $(OBJECTS_RAIL) $(OBJECTS_STEWART) $(OBJECTS_FANTA)
+	-rm $(OBJECTS_IK) \
+        $(OBJECTS_IK_CONST) \
+        $(OBJECTS_BOIDS) \
+        $(OBJECTS_NBODY) \
+        $(OBJECTS_HEXAPOD) \
+        $(OBJECTS_SPOT_MINI) \
+        $(OBJECTS_DELTABOT) \
+        $(OBJECTS_3DPRINTER) \
+        $(OBJECTS_3DPRINTER) \
+        $(OBJECTS_TERRAIN) \
+        $(OBJECTS_SPIDER) \
+        $(OBJECTS_FREEROT) \
+        $(OBJECTS_RAIL) \
+        $(OBJECTS_STEWART) \
+        $(OBJECTS_FANTA)
 
 #==================
 # binaries
@@ -77,6 +121,7 @@ SHARED_CPP_STEMS = BBoxObject \
                    Buffer \
                    Camera \
                    File3ds \
+                   FilePng \
                    FrameBuffer \
                    IdentObject \
                    KeyframeMgr \
@@ -100,7 +145,9 @@ SHARED_CPP_STEMS = BBoxObject \
 CPP_STEMS_IK        = $(SHARED_CPP_STEMS) main_ik
 CPP_STEMS_IK_CONST  = $(SHARED_CPP_STEMS) main_ik_const
 CPP_STEMS_BOIDS     = $(SHARED_CPP_STEMS) main_boids
+CPP_STEMS_NBODY     = $(SHARED_CPP_STEMS) main_nbody
 CPP_STEMS_HEXAPOD   = $(SHARED_CPP_STEMS) main_hexapod
+CPP_STEMS_SPOT_MINI = $(SHARED_CPP_STEMS) main_spot_mini
 CPP_STEMS_DELTABOT  = $(SHARED_CPP_STEMS) main_deltabot
 CPP_STEMS_3DPRINTER = $(SHARED_CPP_STEMS) main_3dprinter
 CPP_STEMS_TERRAIN   = $(SHARED_CPP_STEMS) main_terrain
@@ -112,7 +159,9 @@ CPP_STEMS_FANTA     = $(SHARED_CPP_STEMS) main_fanta
 OBJECTS_IK        = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK))
 OBJECTS_IK_CONST  = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK_CONST))
 OBJECTS_BOIDS     = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_BOIDS))
+OBJECTS_NBODY     = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_NBODY))
 OBJECTS_HEXAPOD   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_HEXAPOD))
+OBJECTS_SPOT_MINI = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_SPOT_MINI))
 OBJECTS_DELTABOT  = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_DELTABOT))
 OBJECTS_3DPRINTER = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_3DPRINTER))
 OBJECTS_TERRAIN   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_TERRAIN))
@@ -132,7 +181,13 @@ $(BIN_PATH)/main_ik_const : $(OBJECTS_IK_CONST)
 $(BIN_PATH)/main_boids : $(OBJECTS_BOIDS)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
+$(BIN_PATH)/main_nbody : $(OBJECTS_NBODY)
+	mkdir -p $(BIN_PATH)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 $(BIN_PATH)/main_hexapod : $(OBJECTS_HEXAPOD)
+	mkdir -p $(BIN_PATH)
+	$(CXX) -o $@ $^ $(LDFLAGS)
+$(BIN_PATH)/main_spot_mini : $(OBJECTS_SPOT_MINI)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 $(BIN_PATH)/main_deltabot : $(OBJECTS_DELTABOT)

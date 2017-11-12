@@ -15,19 +15,25 @@
 // You should have received a copy of the GNU General Public License
 // along with dexvt-lite.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * From the OpenGL Programming wikibook: http://en.wikibooks.org/wiki/OpenGL_Programming
- * This file is in the public domain.
- * Contributors: Sylvain Beucler
- */
-#ifndef _CREATE_SHADER_H
-#define _CREATE_SHADER_H
-#include <GL/glew.h>
-char* file_read(const char* filename);
-void print_log(GLuint object);
-GLuint create_shader(const char* filename, GLenum type);
-GLuint create_program(const char* vertexfile, const char* fragmentfile);
-GLuint create_gs_program(const char* vertexfile, const char* geometryfile, const char* fragmentfile, GLint input, GLint output, GLint vertices);
-GLint get_attrib(GLuint program, const char* name);
-GLint get_uniform(GLuint program, const char* name);
+#ifndef VT_FILE_PNG_H_
+#define VT_FILE_PNG_H_
+
+#include <string>
+#include <stddef.h>
+
+namespace vt {
+
+bool read_png(std::string png_filename,
+              void**      pixel_data,
+              size_t*     width,
+              size_t*     height);
+
+bool read_png_impl(std::string png_filename,
+                   void**      pixel_data,
+                   size_t*     width,
+                   size_t*     height,
+                   int*        color_type);
+
+}
+
 #endif

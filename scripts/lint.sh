@@ -2,7 +2,7 @@
 
 # XLang
 # -- A parser framework for language modeling
-# Copyright (C) 2011 Jerry Chen <mailto:onlyuser@gmail.com>
+# Copyright (C) 2011 onlyuser <mailto:onlyuser@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

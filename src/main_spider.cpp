@@ -1,7 +1,24 @@
+// This file is part of dexvt-lite.
+// -- 3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints
+// Copyright (C) 2018 onlyuser <mailto:onlyuser@gmail.com>
+//
+// dexvt-lite is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// dexvt-lite is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with dexvt-lite.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Based on Sylvain Beucler's tutorial from the OpenGL Programming wikibook: http://en.wikibooks.org/wiki/OpenGL_Programming
  * This file is in the public domain.
- * Author: Jerry Chen
+ * Author: onlyuser
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +41,7 @@
 #include <Buffer.h>
 #include <Camera.h>
 #include <File3ds.h>
+#include <FilePng.h>
 #include <FrameBuffer.h>
 #include <Light.h>
 #include <Material.h>
@@ -362,7 +380,7 @@ static int find_nearest_target_for_leg(std::vector<glm::vec3> &leg_targets,
     int   best_index    = -1;
     for(std::set<int>::iterator p = available_target_indices.begin(); p != available_target_indices.end(); p++) {
         float distance = glm::distance(leg_targets[*p], ik_meshes[0]->in_abs_system());
-        //float distance = glm::distance(targets[*p], ik_meshes[IK_SEGMENT_COUNT - 1]->in_abs_system(glm::vec3(0, 0, IK_SEGMENT_LENGTH)));
+        //float distance = glm::distance(leg_targets[*p], ik_meshes[IK_SEGMENT_COUNT - 1]->in_abs_system(glm::vec3(0, 0, IK_SEGMENT_LENGTH)));
         if(distance < best_distance) {
             best_distance = distance;
             best_index    = *p;
@@ -451,13 +469,17 @@ int init_resources()
     for(int i = 0; i < IK_LEG_COUNT; i++) {
         IK_Leg* ik_leg = new IK_Leg();
         std::stringstream joint_name_ss;
-        joint_name_ss << "joint_type_" << i;
+        joint_name_ss << "joint_" << i;
         ik_leg->m_joint = vt::PrimitiveFactory::create_box(joint_name_ss.str(), IK_SEGMENT_WIDTH,
                                                                                 IK_SEGMENT_WIDTH,
                                                                                 IK_SEGMENT_WIDTH);
         ik_leg->m_joint->center_axis();
         ik_leg->m_joint->link_parent(dummy); // one extra layer of transform indirection to convert yaw around z-axis to yaw around y-axis
         ik_leg->m_joint->set_origin(vt::euler_to_offset(glm::vec3(0, 0, angle)) * static_cast<float>(IK_LEG_RADIUS));
+        ik_leg->m_joint->set_hinge_type(vt::EULER_INDEX_YAW);
+        //ik_leg->m_joint->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
+        ik_leg->m_joint->set_joint_constraints_center(glm::vec3(0, 0, angle));
+        ik_leg->m_joint->set_joint_constraints_max_deviation(glm::vec3(0, 0, 360));
         scene->add_mesh(ik_leg->m_joint);
         std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
         std::stringstream ik_segment_name_ss;
@@ -469,18 +491,21 @@ int init_resources()
                                glm::vec3(IK_SEGMENT_WIDTH,
                                          IK_SEGMENT_HEIGHT,
                                          IK_SEGMENT_LENGTH));
+        ik_meshes[0]->link_parent(ik_leg->m_joint);
         int leg_segment_index = 0;
         for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
             (*p)->set_material(phong_material);
             (*p)->set_ambient_color(glm::vec3(0));
             if(!leg_segment_index) {
-                (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 0));
+                (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
+                //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
                 (*p)->set_joint_constraints_center(glm::vec3(0, -45, 0));
-                (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 45, 0));
+                (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 30, 0));
             } else {
-                (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
+                (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
+                //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
                 (*p)->set_joint_constraints_center(glm::vec3(0, 45, 0));
-                (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 45, 0));
+                (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 30, 0));
             }
             leg_segment_index++;
         }
@@ -605,7 +630,6 @@ void onTick()
         }
         for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
             std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-            ik_meshes[0]->set_origin((*q)->m_joint->in_abs_system()); // make leg base follow forward-kinematics joint locations
             if((*q)->m_target_index == -1 ||                                                    // current leg has no target
                is_invalid_target(vt::Scene::instance()->m_debug_targets[(*q)->m_target_index])) // current leg has illegal target
             {
@@ -627,7 +651,7 @@ void onTick()
         std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
         glm::vec3 interp_point = LERP((*r)->m_from_point, (*r)->m_to_point, (*r)->m_alpha);
         float leg_lift_height = LERP_PARABOLIC_DOWN_ARC((*r)->m_alpha) * IK_LEG_MAX_LIFT_HEIGHT; // parabolic leg-lift path
-        ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
+        ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd((*r)->m_joint,
                                                       glm::vec3(0, 0, IK_SEGMENT_LENGTH),
                                                       interp_point + glm::vec3(0, leg_lift_height, 0),
                                                       NULL,

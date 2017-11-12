@@ -1,7 +1,24 @@
+// This file is part of dexvt-lite.
+// -- 3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints
+// Copyright (C) 2018 onlyuser <mailto:onlyuser@gmail.com>
+//
+// dexvt-lite is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// dexvt-lite is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with dexvt-lite.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Based on Sylvain Beucler's tutorial from the OpenGL Programming wikibook: http://en.wikibooks.org/wiki/OpenGL_Programming
  * This file is in the public domain.
- * Author: Jerry Chen
+ * Author: onlyuser
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,7 +40,9 @@
 
 #include <Buffer.h>
 #include <Camera.h>
+#include <Octree.h>
 #include <File3ds.h>
+#include <FilePng.h>
 #include <FrameBuffer.h>
 #include <Light.h>
 #include <Material.h>
@@ -59,7 +78,9 @@ const char* DEFAULT_CAPTION = "";
 int init_screen_width  = 800,
     init_screen_height = 600;
 vt::Camera  *camera         = NULL;
-vt::Mesh    *mesh_skybox    = NULL;
+vt::Octree  *octree         = NULL;
+vt::Mesh    *mesh_skybox    = NULL,
+            *_box           = NULL;
 vt::Light   *light          = NULL,
             *light2         = NULL,
             *light3         = NULL;
@@ -82,7 +103,7 @@ bool show_bbox        = false,
      show_lights      = false,
      show_normals     = false,
      wireframe_mode   = false,
-     show_guide_wires = false,
+     show_guide_wires = true,
      show_paths       = true,
      show_axis        = false,
      show_axis_labels = false,
@@ -93,6 +114,7 @@ bool show_bbox        = false,
      down_key         = false,
      page_up_key      = false,
      page_down_key    = false,
+     alt_down_key     = false,
      user_input       = true;
 
 float prev_zoom         = 0,
@@ -102,11 +124,19 @@ float prev_zoom         = 0,
 int angle_delta = 1;
 
 unsigned char* height_map_pixel_data = NULL;
-size_t tex_width = 0;
-size_t tex_length = 0;
+size_t         tex_width             = 0;
+size_t         tex_length            = 0;
 
 vt::Mesh *terrain = NULL,
-         *box     = NULL;
+         *box     = NULL,
+         *box2    = NULL,
+         *sphere  = NULL;
+
+bool is_bbox_collide      = false;
+bool prev_is_bbox_collide = false;
+
+bool is_sphere_collide      = false;
+bool prev_is_sphere_collide = false;
 
 static vt::Mesh* create_terrain(std::string     name,
                                 std::string     heightmap_png_filename,
@@ -144,27 +174,20 @@ static vt::Mesh* create_terrain(std::string     name,
     return terrain;
 }
 
-static glm::vec2 limit_to_within_terrain(glm::vec2 pos, float width, float length)
-{
-    pos.x = std::max(pos.x, static_cast<float>(-width * 0.5));
-    pos.x = std::min(pos.x, static_cast<float>(width * 0.5));
-    pos.y = std::max(pos.y, static_cast<float>(-length * 0.5));
-    pos.y = std::min(pos.y, static_cast<float>(length * 0.5));
-    return pos;
-}
-
-static float lookup_terrain_height(glm::vec2      pos,
-                                   float          width,
-                                   float          length,
-                                   float          height,
-                                   unsigned char* heightmap_pixel_data,
-                                   size_t         tex_width,
-                                   size_t         tex_length)
+static float lookup_terrain_height(vt::BBoxObject* bbox_object,
+                                   glm::vec2       pos,
+                                   float           width,
+                                   float           length,
+                                   float           height,
+                                   unsigned char*  heightmap_pixel_data,
+                                   size_t          tex_width,
+                                   size_t          tex_length)
 {
     if(!heightmap_pixel_data) {
         return 0;
     }
-    pos = limit_to_within_terrain(pos, width, length);
+    glm::vec3 _pos = bbox_object->limit(glm::vec3(pos.x, 0, pos.y));
+    pos = glm::vec2(_pos.x, _pos.z);
     glm::ivec2 tex_coord;
     tex_coord.x = (tex_width  - 1) * (pos.x + width  * 0.5) / width;
     tex_coord.y = (tex_length - 1) * (pos.y + length * 0.5) / length;
@@ -172,23 +195,26 @@ static float lookup_terrain_height(glm::vec2      pos,
     return -height * 0.5 + static_cast<float>(shade) / 255 * height;
 }
 
-static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
-                                       float          width,
-                                       float          length,
-                                       float          height,
-                                       unsigned char* heightmap_pixel_data,
-                                       size_t         tex_width,
-                                       size_t         tex_length,
-                                       float          sample_radius)
+static glm::vec3 lookup_terrain_normal(vt::BBoxObject* bbox_object,
+                                       glm::vec2       pos,
+                                       float           width,
+                                       float           length,
+                                       float           height,
+                                       unsigned char*  heightmap_pixel_data,
+                                       size_t          tex_width,
+                                       size_t          tex_length,
+                                       float           sample_radius)
 {
     if(!heightmap_pixel_data) {
         return glm::vec3(0);
     }
 
     glm::vec2 pos_left(pos.x - sample_radius, pos.y);
-    pos_left = limit_to_within_terrain(pos_left, width, length);
+    glm::vec3 _pos_left = bbox_object->limit(glm::vec3(pos_left.x, 0, pos_left.y));
+    pos_left = glm::vec2(_pos_left.x, _pos_left.z);
     glm::vec3 point_left(pos_left.x, 0, pos_left.y);
-    point_left.y = lookup_terrain_height(pos_left,
+    point_left.y = lookup_terrain_height(bbox_object,
+                                         pos_left,
                                          width,
                                          length,
                                          height,
@@ -197,9 +223,11 @@ static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
                                          tex_length);
 
     glm::vec2 pos_right(pos.x + sample_radius, pos.y);
-    pos_right = limit_to_within_terrain(pos_right, width, length);
+    glm::vec3 _pos_right = bbox_object->limit(glm::vec3(pos_right.x, 0, pos_right.y));
+    pos_right = glm::vec2(_pos_right.x, _pos_right.z);
     glm::vec3 point_right(pos_right.x, 0, pos_right.y);
-    point_right.y = lookup_terrain_height(pos_right,
+    point_right.y = lookup_terrain_height(bbox_object,
+                                          pos_right,
                                           width,
                                           length,
                                           height,
@@ -208,9 +236,11 @@ static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
                                           tex_length);
 
     glm::vec2 pos_back(pos.x, pos.y - sample_radius);
-    pos_back = limit_to_within_terrain(pos_back, width, length);
+    glm::vec3 _pos_back = bbox_object->limit(glm::vec3(pos_back.x, 0, pos_back.y));
+    pos_back = glm::vec2(_pos_back.x, _pos_back.z);
     glm::vec3 point_back(pos_back.x, 0, pos_back.y);
-    point_back.y = lookup_terrain_height(pos_back,
+    point_back.y = lookup_terrain_height(bbox_object,
+                                         pos_back,
                                          width,
                                          length,
                                          height,
@@ -219,9 +249,11 @@ static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
                                          tex_length);
 
     glm::vec2 pos_front(pos.x, pos.y + sample_radius);
-    pos_front = limit_to_within_terrain(pos_front, width, length);
+    glm::vec3 _pos_front = bbox_object->limit(glm::vec3(pos_front.x, 0, pos_front.y));
+    pos_front = glm::vec2(_pos_front.x, _pos_front.z);
     glm::vec3 point_front(pos_front.x, 0, pos_front.y);
-    point_front.y = lookup_terrain_height(pos_front,
+    point_front.y = lookup_terrain_height(bbox_object,
+                                          pos_front,
                                           width,
                                           length,
                                           height,
@@ -268,9 +300,19 @@ int init_resources()
     scene->add_texture(          texture_skybox);
     skybox_material->add_texture(texture_skybox);
 
+    _box = vt::PrimitiveFactory::create_box("octree", TERRAIN_WIDTH, -1, TERRAIN_LENGTH);
+    _box->center_axis();
+    _box->set_origin(glm::vec3(0));
+    //_box->set_material(phong_material);
+    _box->set_ambient_color(glm::vec3(1));
+    _box->set_visible(false);
+    scene->add_mesh(_box);
+
     glm::vec3 origin = glm::vec3(0);
     camera = new vt::Camera("camera", origin + glm::vec3(0, 0, orbit_radius), origin);
     scene->set_camera(camera);
+    octree = new vt::Octree(glm::vec3(-5, -1, -5), glm::vec3(10, 10, 10));
+    scene->set_octree(octree);
 
     scene->add_light(light  = new vt::Light("light1", origin + glm::vec3(light_distance, 0, 0), glm::vec3(1, 0, 0)));
     scene->add_light(light2 = new vt::Light("light2", origin + glm::vec3(0, light_distance, 0), glm::vec3(0, 1, 0)));
@@ -299,6 +341,20 @@ int init_resources()
     box->set_material(phong_material);
     box->set_ambient_color(glm::vec3(0));
     scene->add_mesh(box);
+
+    box2 = vt::PrimitiveFactory::create_box("box2");
+    box2->center_axis();
+    box2->set_origin(glm::vec3(3, 0, 3));
+    box2->set_material(phong_material);
+    box2->set_ambient_color(glm::vec3(0));
+    scene->add_mesh(box2);
+
+    sphere = vt::PrimitiveFactory::create_sphere("sphere", 12, 12, 0.5);
+    sphere->center_axis();
+    sphere->set_origin(glm::vec3(-3, 0, -3));
+    sphere->set_material(phong_material);
+    sphere->set_ambient_color(glm::vec3(0));
+    scene->add_mesh(sphere);
 
     return 1;
 }
@@ -342,12 +398,22 @@ void onTick()
     //    return;
     //}
     if(left_key) {
-        box->rotate(BOX_ANGLE_SPEED, box->get_abs_heading());
-        user_input = true;
+        if(alt_down_key) {
+            box->set_origin(box->get_origin() - box->get_abs_left_direction() * BOX_SPEED);
+            user_input = true;
+        } else {
+            box->rotate(BOX_ANGLE_SPEED, box->get_abs_heading());
+            user_input = true;
+        }
     }
     if(right_key) {
-        box->rotate(-BOX_ANGLE_SPEED, box->get_abs_heading());
-        user_input = true;
+        if(alt_down_key) {
+            box->set_origin(box->get_origin() + box->get_abs_left_direction() * BOX_SPEED);
+            user_input = true;
+        } else {
+            box->rotate(-BOX_ANGLE_SPEED, box->get_abs_heading());
+            user_input = true;
+        }
     }
     if(up_key) {
         box->set_origin(box->get_origin() + box->get_abs_up_direction() * BOX_SPEED);
@@ -358,17 +424,18 @@ void onTick()
         user_input = true;
     }
     if(user_input) {
-        glm::vec2 pos_within_terrain = limit_to_within_terrain(glm::vec2(box->get_origin().x, box->get_origin().z),
-                                                               TERRAIN_WIDTH,
-                                                               TERRAIN_LENGTH);
-        float terrain_height = lookup_terrain_height(pos_within_terrain,
+        glm::vec3 _pos_within_terrain = _box->limit(box->get_origin());
+        glm::vec2 pos_within_terrain = glm::vec2(_pos_within_terrain.x, _pos_within_terrain.z);
+        float terrain_height = lookup_terrain_height(_box,
+                                                     pos_within_terrain,
                                                      TERRAIN_WIDTH,
                                                      TERRAIN_LENGTH,
                                                      TERRAIN_HEIGHT,
                                                      height_map_pixel_data,
                                                      tex_width,
                                                      tex_length);
-        glm::vec3 terrain_normal = lookup_terrain_normal(pos_within_terrain,
+        glm::vec3 terrain_normal = lookup_terrain_normal(_box,
+                                                         pos_within_terrain,
                                                          TERRAIN_WIDTH,
                                                          TERRAIN_LENGTH,
                                                          TERRAIN_HEIGHT,
@@ -381,6 +448,74 @@ void onTick()
         glm::vec3 pivot       = glm::cross(terrain_normal, abs_heading);
         float     delta_angle = glm::degrees(glm::angle(terrain_normal, abs_heading));
         box->rotate(-delta_angle, pivot);
+
+        is_bbox_collide = box->is_bbox_collide(box,
+                                               box2,
+                                               box2);
+        float nearest_distance = 10;
+        is_bbox_collide |= box2->is_ray_intersect(box2,
+                                                  box->in_abs_system(),
+                                                  box->get_abs_up_direction(),
+                                                  &nearest_distance);
+        if(is_bbox_collide != prev_is_bbox_collide) {
+            if(is_bbox_collide) {
+                box2->set_ambient_color(glm::vec3(1, 0, 0));
+            } else {
+                box2->set_ambient_color(glm::vec3(0));
+            }
+        }
+        prev_is_bbox_collide = is_bbox_collide;
+
+        is_sphere_collide = box->is_sphere_collide(box,
+                                                   sphere->in_abs_system(),
+                                                   0.5);
+        is_sphere_collide |= sphere->as_sphere_is_ray_intersect(sphere,
+                                                                box->in_abs_system(),
+                                                                box->get_abs_up_direction());
+        if(is_sphere_collide != prev_is_sphere_collide) {
+            if(is_sphere_collide) {
+                sphere->set_ambient_color(glm::vec3(1, 0, 0));
+            } else {
+                sphere->set_ambient_color(glm::vec3(0));
+            }
+        }
+        prev_is_sphere_collide = is_sphere_collide;
+
+        // clear
+        //octree->clear();
+
+        // add/update box
+        if(!octree->exists(0)) {
+            octree->insert(0, box->get_origin());
+        } else {
+            octree->move(0, box->get_origin());
+        }
+
+        // add/update box2
+        if(!octree->exists(1)) {
+            octree->insert(1, box2->get_origin());
+        } else {
+            octree->move(1, box2->get_origin());
+        }
+
+        // add/update sphere
+        if(!octree->exists(2)) {
+            octree->insert(2, sphere->get_origin());
+        } else {
+            octree->move(2, sphere->get_origin());
+        }
+
+        // rebalance
+        octree->rebalance();
+
+        box->m_debug_lines.clear();
+        box->m_debug_lines.push_back(std::tuple<glm::vec3, glm::vec3, glm::vec3>(glm::vec3(0, 1, 1),
+                                                                                 box->in_abs_system(),
+                                                                                 box->in_abs_system(glm::vec3(0, nearest_distance, 0))));
+
+        // dump octree
+        //octree->dump();
+
         user_input = false;
     }
     static int angle = 0;
@@ -454,10 +589,22 @@ void onKeyboard(unsigned char key, int x, int y)
                 glPolygonMode(GL_FRONT, GL_LINE);
                 terrain->set_ambient_color(glm::vec3(1));
                 box->set_ambient_color(    glm::vec3(0, 1, 0));
+                box2->set_ambient_color(   glm::vec3(0, 1, 0));
+                sphere->set_ambient_color( glm::vec3(0, 1, 0));
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
                 terrain->set_ambient_color(glm::vec3(0));
                 box->set_ambient_color(    glm::vec3(0));
+                if(is_bbox_collide) {
+                    box2->set_ambient_color(glm::vec3(1, 0, 0));
+                } else {
+                    box2->set_ambient_color(glm::vec3(0));
+                }
+                if(is_sphere_collide) {
+                    sphere->set_ambient_color(glm::vec3(1, 0, 0));
+                } else {
+                    sphere->set_ambient_color(glm::vec3(0));
+                }
             }
             break;
         case 'x': // axis
@@ -512,6 +659,9 @@ void onSpecial(int key, int x, int y)
             page_down_key = true;
             break;
     }
+    if(glutGetModifiers() == GLUT_ACTIVE_ALT) {
+        alt_down_key = true;
+    }
 }
 
 void onSpecialUp(int key, int x, int y)
@@ -535,6 +685,9 @@ void onSpecialUp(int key, int x, int y)
         case GLUT_KEY_PAGE_DOWN:
             page_down_key = false;
             break;
+    }
+    if(glutGetModifiers() == GLUT_ACTIVE_ALT) {
+        alt_down_key = false;
     }
 }
 
