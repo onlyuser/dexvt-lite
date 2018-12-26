@@ -94,7 +94,7 @@ bool Octree::insert(long id, glm::vec3 pos)
             return true;
         }
         // create sub-nodes and copy leaf contents to sub-nodes
-        for(std::map<long, glm::vec3>::iterator p = m_leaf_objects.begin(); p != m_leaf_objects.end(); p++) {
+        for(std::map<long, glm::vec3>::iterator p = m_leaf_objects.begin(); p != m_leaf_objects.end(); ++p) {
             long      _id  = (*p).first;
             glm::vec3 _pos = (*p).second;
             Octree* node = alloc_octant(_pos);
@@ -177,7 +177,7 @@ void Octree::find_hier(glm::vec3                                                
     //==========
 
     if(is_leaf()) {
-        for(std::map<long, glm::vec3>::const_iterator p = m_leaf_objects.begin(); p != m_leaf_objects.end(); p++) {
+        for(std::map<long, glm::vec3>::const_iterator p = m_leaf_objects.begin(); p != m_leaf_objects.end(); ++p) {
             long      id  = (*p).first;
             glm::vec3 pos = (*p).second;
             if(radius > 0 && glm::distance(pos, target) > radius) { // apply radius filter
@@ -309,14 +309,14 @@ bool Octree::rebalance()
     bool changed = false;
     if(is_leaf()) {
         std::vector<long> remove_vec;
-        for(std::map<long, glm::vec3>::iterator p = m_leaf_objects.begin(); p != m_leaf_objects.end(); p++) {
+        for(std::map<long, glm::vec3>::iterator p = m_leaf_objects.begin(); p != m_leaf_objects.end(); ++p) {
             long      id  = (*p).first;
             glm::vec3 pos = (*p).second;
             if(!within_bbox(pos)) {
                 remove_vec.push_back(id);
             }
         }
-        for(std::vector<long>::iterator q = remove_vec.begin(); q != remove_vec.end(); q++) {
+        for(std::vector<long>::iterator q = remove_vec.begin(); q != remove_vec.end(); ++q) {
             long id = *q;
             std::map<long, glm::vec3>::iterator r = m_leaf_objects.find(id);
             if(r == m_leaf_objects.end()) {

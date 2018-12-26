@@ -38,9 +38,9 @@ class Mesh : public TransformObject,
              public MeshBase
 {
 public:
-    Mesh(std::string name,
-         size_t      num_vertex,
-         size_t      num_tri);
+    Mesh(const std::string& name,
+               size_t       num_vertex,
+               size_t       num_tri);
     virtual ~Mesh();
     void resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry = false);
     void merge(const MeshBase* other, bool copy_tex_coords = false);
@@ -83,6 +83,8 @@ public:
     glm::ivec3 get_tri_indices(int index) const;
     void       set_tri_indices(int index, glm::ivec3 indices);
 
+    glm::vec3 get_vert_bitangent(int index) const;
+
     void update_bbox();
     void update_normals_and_tangents();
 
@@ -111,22 +113,31 @@ public:
     ShaderContext* get_wireframe_shader_context(Material* wireframe_material);
     ShaderContext* get_ssao_shader_context(Material* ssao_material);
 
-    int get_texture_index() const
+    int get_color_texture_index() const
     {
-        return m_texture_index;
+        return m_color_texture_index;
     }
-    void set_texture_index(int texture_index)
+    void set_color_texture_index(int color_texture_index)
     {
-        m_texture_index = texture_index;
+        m_color_texture_index = color_texture_index;
     }
 
-    int get_texture2_index() const
+    int get_color_texture2_index() const
     {
-        return m_texture2_index;
+        return m_color_texture2_index;
     }
-    void set_texture2_index(int texture2_index)
+    void set_color_texture2_index(int color_texture2_index)
     {
-        m_texture2_index = texture2_index;
+        m_color_texture2_index = color_texture2_index;
+    }
+
+    int get_color_texture_source() const
+    {
+        return m_color_texture_source;
+    }
+    void set_color_texture_source(int color_texture_source)
+    {
+        m_color_texture_source = color_texture_source;
     }
 
     int get_bump_texture_index() const
@@ -222,8 +233,9 @@ private:
     ShaderContext* m_normal_shader_context;    // TODO: Mesh has one normal ShaderContext
     ShaderContext* m_wireframe_shader_context; // TODO: Mesh has one wireframe ShaderContext
     ShaderContext* m_ssao_shader_context;      // TODO: Mesh has one ssao ShaderContext
-    int            m_texture_index;
-    int            m_texture2_index;
+    int            m_color_texture_index;
+    int            m_color_texture2_index;
+    int            m_color_texture_source;
     int            m_bump_texture_index;
     int            m_env_map_texture_index;
     int            m_random_texture_index;
@@ -236,7 +248,7 @@ private:
     void update_transform();
 };
 
-MeshBase* alloc_mesh_base(std::string name, size_t num_vertex, size_t num_tri);
+MeshBase* alloc_mesh_base(const std::string& name, size_t num_vertex, size_t num_tri);
 Mesh* cast_mesh(MeshBase* mesh);
 MeshBase* cast_mesh_base(Mesh* mesh);
 

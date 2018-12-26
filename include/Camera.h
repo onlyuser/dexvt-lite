@@ -45,19 +45,19 @@ public:
         PROJECTION_MODE_ORTHO
     };
 
-    Camera(std::string       name            = "",
-           glm::vec3         origin          = glm::vec3(0),
-           glm::vec3         target          = glm::vec3(-1),
-           float             fov             = DEFAULT_FOV,
-           glm::ivec2        offset          = glm::ivec2(0),
-           glm::ivec2        dim             = glm::ivec2(DEFAULT_VIEWPORT_WIDTH,
-                                                          DEFAULT_VIEWPORT_HEIGHT),
-           float             near_plane      = DEFAULT_NEAR_PLANE,
-           float             far_plane       = DEFAULT_FAR_PLANE,
-           glm::vec2         ortho_dim       = glm::vec2(DEFAULT_ORTHO_VIEWPORT_WIDTH,
-                                                         DEFAULT_ORTHO_VIEWPORT_HEIGHT),
-           float             zoom            = DEFAULT_ZOOM,
-           projection_mode_t projection_mode = PROJECTION_MODE_PERSPECTIVE);
+    Camera(const std::string&      name            = "",
+                 glm::vec3         origin          = glm::vec3(0),
+                 glm::vec3         target          = glm::vec3(-1),
+                 float             fov             = DEFAULT_FOV,
+                 glm::ivec2        offset          = glm::ivec2(0),
+                 glm::ivec2        dim             = glm::ivec2(DEFAULT_VIEWPORT_WIDTH,
+                                                                DEFAULT_VIEWPORT_HEIGHT),
+                 float             near_plane      = DEFAULT_NEAR_PLANE,
+                 float             far_plane       = DEFAULT_FAR_PLANE,
+                 glm::vec2         ortho_dim       = glm::vec2(DEFAULT_ORTHO_VIEWPORT_WIDTH,
+                                                               DEFAULT_ORTHO_VIEWPORT_HEIGHT),
+                 float             zoom            = DEFAULT_ZOOM,
+                 projection_mode_t projection_mode = PROJECTION_MODE_PERSPECTIVE);
     virtual ~Camera();
 
     void set_origin(glm::vec3 origin);

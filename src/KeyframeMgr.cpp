@@ -49,7 +49,7 @@ MotionTrack::MotionTrack(motion_type_t motion_type)
 
 MotionTrack::~MotionTrack()
 {
-    for(keyframes_t::iterator p = m_keyframes.begin(); p != m_keyframes.end(); p++) {
+    for(keyframes_t::iterator p = m_keyframes.begin(); p != m_keyframes.end(); ++p) {
         Keyframe* keyframe = (*p).second;
         if(!keyframe) {
             continue;
@@ -97,7 +97,7 @@ bool MotionTrack::export_keyframe_values(std::vector<glm::vec3>* keyframe_values
     if(!keyframe_values) {
         return false;
     }
-    for(keyframes_t::iterator p = m_keyframes.begin(); p != m_keyframes.end(); p++) {
+    for(keyframes_t::iterator p = m_keyframes.begin(); p != m_keyframes.end(); ++p) {
         Keyframe* keyframe = (*p).second;
         if(!keyframe) {
             continue;
@@ -145,7 +145,7 @@ bool MotionTrack::interpolate_frame_value(int frame_number, glm::vec3* value, bo
         // linear interpolation
         glm::vec3 start_frame_value = (*p).second->get_value();
         glm::vec3 end_frame_value   = (*q).second->get_value();
-        *value = LERP(start_frame_value, end_frame_value, alpha);
+        *value = MIX(start_frame_value, end_frame_value, alpha);
     }
     return true;
 }
@@ -157,14 +157,14 @@ bool MotionTrack::get_frame_number_range(int* start_frame_number, int* end_frame
     }
     if(start_frame_number) {
         *start_frame_number = INT_MAX;
-        for(keyframes_t::const_iterator p = m_keyframes.begin(); p != m_keyframes.end(); p++) {
+        for(keyframes_t::const_iterator p = m_keyframes.begin(); p != m_keyframes.end(); ++p) {
             int keyframe_number = (*p).first;
             *start_frame_number = std::min(*start_frame_number, keyframe_number);
         }
     }
     if(end_frame_number) {
         *end_frame_number = INT_MIN;
-        for(keyframes_t::const_iterator p = m_keyframes.begin(); p != m_keyframes.end(); p++) {
+        for(keyframes_t::const_iterator p = m_keyframes.begin(); p != m_keyframes.end(); ++p) {
             int keyframe_number = (*p).first;
             *end_frame_number = std::max(*end_frame_number, keyframe_number);
         }
@@ -178,7 +178,7 @@ bool MotionTrack::update_control_points(float control_point_scale)
         return false;
     }
     bool is_loop = glm::distance((*m_keyframes.begin()).second->get_value(), (*(--m_keyframes.end())).second->get_value()) < EPSILON;
-    for(keyframes_t::iterator p = m_keyframes.begin(); p != m_keyframes.end(); p++) {
+    for(keyframes_t::iterator p = m_keyframes.begin(); p != m_keyframes.end(); ++p) {
         Keyframe* keyframe = (*p).second;
         if(!keyframe) {
             continue;
@@ -189,19 +189,19 @@ bool MotionTrack::update_control_points(float control_point_scale)
             if(p == m_keyframes.begin()) {
                 prev_iter = --(--m_keyframes.end()); // decrement twice to skip the last frame, which is identical to the first
             } else {
-                prev_iter--;
+                --prev_iter;
             }
             if(p == --m_keyframes.end()) {
                 next_iter = ++m_keyframes.begin();
             } else {
-                next_iter++;
+                ++next_iter;
             }
         } else {
             if(p != m_keyframes.begin()) {
-                prev_iter--;
+                --prev_iter;
             }
             if(p != --m_keyframes.end()) {
-                next_iter++;
+                ++next_iter;
             }
         }
         glm::vec3 prev_point = (*prev_iter).second->get_value();
@@ -291,7 +291,7 @@ bool ObjectScript::get_frame_number_range(int* start_frame_number, int* end_fram
     if(end_frame_number) {
         *end_frame_number = INT_MIN;
     }
-    for(motion_tracks_t::const_iterator p = m_motion_tracks.begin(); p != m_motion_tracks.end(); p++) {
+    for(motion_tracks_t::const_iterator p = m_motion_tracks.begin(); p != m_motion_tracks.end(); ++p) {
         MotionTrack* motion_track = (*p).second;
         if(!motion_track) {
             continue;
@@ -313,7 +313,7 @@ bool ObjectScript::get_frame_number_range(int* start_frame_number, int* end_fram
 
 void ObjectScript::update_control_points(float control_point_scale)
 {
-    for(motion_tracks_t::iterator p = m_motion_tracks.begin(); p != m_motion_tracks.end(); p++) {
+    for(motion_tracks_t::iterator p = m_motion_tracks.begin(); p != m_motion_tracks.end(); ++p) {
         MotionTrack* motion_track = (*p).second;
         if(!motion_track) {
             continue;
@@ -455,7 +455,7 @@ bool KeyframeMgr::get_frame_number_range(long object_id, int* start_frame_number
 
 void KeyframeMgr::update_control_points(float control_point_scale)
 {
-    for(script_t::iterator p = m_script.begin(); p != m_script.end(); p++) {
+    for(script_t::iterator p = m_script.begin(); p != m_script.end(); ++p) {
         ObjectScript* object_script = (*p).second;
         if(!object_script) {
             continue;
@@ -500,7 +500,7 @@ bool KeyframeMgr::export_frame_values_for_object(long                    object_
 
 void KeyframeMgr::clear()
 {
-    for(script_t::iterator p = m_script.begin(); p != m_script.end(); p++) {
+    for(script_t::iterator p = m_script.begin(); p != m_script.end(); ++p) {
         ObjectScript* object_script = (*p).second;
         if(!object_script) {
             continue;

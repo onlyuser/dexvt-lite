@@ -34,17 +34,22 @@ public:
         JOINT_TYPE_PRISMATIC
     };
 
+    typedef enum { DEBUG_LINE_P1,
+                   DEBUG_LINE_P2,
+                   DEBUG_LINE_COLOR,
+                   DEBUG_LINE_LINEWIDTH } debug_line_attr_t;
+
     // guide wires (for debug)
     glm::vec3 m_debug_target_dir;
     glm::vec3 m_debug_end_effector_tip_dir;
     glm::vec3 m_debug_local_pivot;
     glm::vec3 m_debug_local_target;
-    std::vector<std::tuple<glm::vec3, glm::vec3, glm::vec3> > m_debug_lines;
+    std::vector<std::tuple<glm::vec3, glm::vec3, glm::vec3, float>> m_debug_lines;
 
-    TransformObject(std::string name,
-                    glm::vec3   origin = glm::vec3(0),
-                    glm::vec3   euler  = glm::vec3(0),
-                    glm::vec3   scale  = glm::vec3(1));
+    TransformObject(const std::string& name,
+                          glm::vec3    origin = glm::vec3(0),
+                          glm::vec3    euler  = glm::vec3(0),
+                          glm::vec3    scale  = glm::vec3(1));
     virtual ~TransformObject();
 
     // basic features
@@ -89,12 +94,12 @@ public:
     void set_joint_constraints_max_deviation(glm::vec3 joint_constraints_max_deviation) { m_joint_constraints_max_deviation = joint_constraints_max_deviation; }
     void set_hinge_type(euler_index_t hinge_type);
     bool is_hinge() const { return m_hinge_type != EULER_INDEX_UNDEF; }
-    void apply_hinge_constraints_perpendicular_to_plane_of_free_rotation();
+    void recalibrate_heading_in_parent_system();
     void apply_hinge_constraints_within_plane_of_free_rotation();
     void apply_joint_constraints();
 
     // advanced features
-    void arcball(glm::vec3* local_arc_pivot_dir,
+    bool arcball(glm::vec3* local_arc_pivot_dir,
                  float*     angle_delta,
                  glm::vec3  abs_target,
                  glm::vec3  abs_reference_point);

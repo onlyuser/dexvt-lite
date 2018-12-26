@@ -20,7 +20,7 @@
 
 namespace vt {
 
-NamedObject::NamedObject(std::string name)
+NamedObject::NamedObject(const std::string& name)
     : m_name(name)
 {
 }

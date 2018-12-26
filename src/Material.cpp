@@ -29,15 +29,17 @@
 
 namespace vt {
 
-Material::Material(std::string name,
-                   std::string vertex_shader_file,
-                   std::string fragment_shader_file,
-                   bool        use_overlay)
+Material::Material(const std::string& name,
+                   const std::string& vertex_shader_file,
+                   const std::string& fragment_shader_file,
+                         bool         use_overlay,
+                         bool         use_ssao)
     : NamedObject(name),
       m_program(NULL),
       m_vertex_shader(NULL),
       m_fragment_shader(NULL),
-      m_use_overlay(use_overlay)
+      m_use_overlay(use_overlay),
+      m_use_ssao(use_ssao)
 {
     m_program         = new Program(name);
     m_vertex_shader   = new Shader(vertex_shader_file,   GL_VERTEX_SHADER);
@@ -84,7 +86,7 @@ int Material::get_texture_index(Texture* texture) const
     return std::distance(m_textures.begin(), p);
 }
 
-Texture* Material::get_texture_by_name(std::string name) const
+Texture* Material::get_texture_by_name(const std::string& name) const
 {
     texture_lookup_table_t::const_iterator p = m_texture_lookup_table.find(name);
     if(p == m_texture_lookup_table.end()) {
@@ -93,7 +95,7 @@ Texture* Material::get_texture_by_name(std::string name) const
     return (*p).second;
 }
 
-int Material::get_texture_index_by_name(std::string name) const
+int Material::get_texture_index_by_name(const std::string& name) const
 {
     return get_texture_index(get_texture_by_name(name));
 }

@@ -60,6 +60,8 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
+#include <cfenv>
+
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define GROUND_THICKNESS             0.125
@@ -76,6 +78,8 @@
 #define IK_SEGMENT_WIDTH             0.25
 #define LOCAL_TARGET_OFFSET_RADIUS   1
 #define PATH_RADIUS                  0.5
+#define PATH_LOW_HEIGHT              -0.25
+#define PATH_HIGH_HEIGHT             0.25
 
 const char* DEFAULT_CAPTION = "";
 
@@ -235,7 +239,7 @@ int init_resources()
     scene->add_light(light3 = new vt::Light("light3", origin + glm::vec3(0, 0, light_distance), glm::vec3(0, 0, 1)));
 
     mesh_skybox->set_material(skybox_material);
-    mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
+    mesh_skybox->set_color_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
     ground = vt::PrimitiveFactory::create_box("ground");
     scene->add_mesh(ground);
@@ -304,7 +308,7 @@ int init_resources()
         ik_meshes[0]->set_origin(glm::vec3(0));
     }
     ik_meshes[0]->link_parent(ik_base);
-    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
@@ -312,6 +316,18 @@ int init_resources()
         (*p)->set_joint_constraints_center(glm::vec3(0, 0, 0));
         (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 120, 0));
     }
+
+    long object_id = 0;
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(glm::vec3( PATH_RADIUS, PATH_LOW_HEIGHT,   PATH_RADIUS), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 25,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, PATH_HIGH_HEIGHT,  PATH_RADIUS), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, PATH_LOW_HEIGHT,  -PATH_RADIUS), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( PATH_RADIUS, PATH_HIGH_HEIGHT, -PATH_RADIUS), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( PATH_RADIUS, PATH_LOW_HEIGHT,   PATH_RADIUS), true));
+    vt::KeyframeMgr::instance()->update_control_points(0.5);
+    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_frame_values;
+    vt::KeyframeMgr::instance()->export_frame_values_for_object(object_id, &origin_frame_values, NULL, NULL, true);
+    std::vector<glm::vec3> &origin_keyframe_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_keyframe_values;
+    vt::KeyframeMgr::instance()->export_keyframe_values_for_object(object_id, &origin_keyframe_values, NULL, NULL, true);
 
     onSpecial(GLUT_KEY_HOME, 0, 0);
 
@@ -355,16 +371,19 @@ void onTick()
     }
     static int angle = 0;
     static glm::vec3 end_effector_dir = glm::vec3(0, 1, 0);
-    if(vt::Scene::instance()->m_debug_targets.size()) {
+    long object_id = 0;
+    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_frame_values;
+    if(origin_frame_values.size()) {
         static int frame_target_index = 0;
         ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_hrail,
                                                       glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-                                                      vt::Scene::instance()->m_debug_targets[frame_target_index],
+                                                      glm::vec3(vt::Scene::instance()->m_debug_object_context[object_id].m_transform *
+                                                                glm::vec4(origin_frame_values[frame_target_index + 1], 1)),
                                                       angle_constraint ? &end_effector_dir : NULL,
                                                       IK_ITERS,
                                                       ACCEPT_END_EFFECTOR_DISTANCE,
                                                       ACCEPT_AVG_ANGLE_DISTANCE);
-        frame_target_index = (frame_target_index + 1) % vt::Scene::instance()->m_debug_targets.size();
+        frame_target_index = (frame_target_index + 1) % (origin_frame_values.size() - 1);
     }
     ik_vrail->set_origin(ik_vrail_dummy->get_origin());
     angle = (angle + angle_delta) % 360;
@@ -381,8 +400,6 @@ void onDisplay()
         onTick();
     }
     vt::Scene* scene = vt::Scene::instance();
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if(wireframe_mode) {
         scene->render(true, false, false, vt::Scene::use_material_type_t::USE_WIREFRAME_MATERIAL);
     } else {
@@ -415,7 +432,7 @@ void onKeyboard(unsigned char key, int x, int y)
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
             if(show_guide_wires) {
-                vt::Scene::instance()->m_debug_target = targets[target_index];
+                vt::Scene::instance()->m_debug_targets[0] = std::make_tuple(targets[target_index], glm::vec3(1, 0, 1), 1, 1);
             }
             break;
         case 'h': // help
@@ -446,7 +463,7 @@ void onKeyboard(unsigned char key, int x, int y)
                 ik_vrail->set_ambient_color(glm::vec3(0, 1, 0));
                 ik_vrail_dummy->set_ambient_color(glm::vec3(1, 0, 0));
                 ik_base->set_ambient_color(glm::vec3(0, 1, 0));
-                for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
                     (*p)->set_ambient_color(glm::vec3(0, 1, 0));
                 }
             } else {
@@ -456,7 +473,7 @@ void onKeyboard(unsigned char key, int x, int y)
                 ik_vrail->set_ambient_color(glm::vec3(0));
                 ik_vrail_dummy->set_ambient_color(glm::vec3(0));
                 ik_base->set_ambient_color(glm::vec3(0));
-                for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
                     (*p)->set_ambient_color(glm::vec3(0));
                 }
             }
@@ -493,26 +510,11 @@ void onSpecial(int key, int x, int y)
                 size_t target_count = sizeof(targets) / sizeof(targets[0]);
                 target_index = (target_index + 1) % target_count;
                 std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
-                vt::Scene::instance()->m_debug_target = targets[target_index];
-
-                vt::KeyframeMgr::instance()->clear();
+                vt::Scene* scene = vt::Scene::instance();
+                scene->m_debug_targets.clear();
+                scene->m_debug_targets.push_back(std::make_tuple(targets[target_index], glm::vec3(1, 0, 1), 1, 1));
                 long object_id = 0;
-                glm::vec3 origin = vt::Scene::instance()->m_debug_target;
-                float low_height  = -0.25;
-                float high_height = 0.25;
-                vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(origin + glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS), true));
-                vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 25,  new vt::Keyframe(origin + glm::vec3(-PATH_RADIUS, high_height,  PATH_RADIUS), true));
-                vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(origin + glm::vec3(-PATH_RADIUS, low_height,  -PATH_RADIUS), true));
-                vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(origin + glm::vec3( PATH_RADIUS, high_height, -PATH_RADIUS), true));
-                vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(origin + glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS), true));
-                vt::KeyframeMgr::instance()->update_control_points(0.5);
-                std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_frame_values;
-                origin_frame_values.clear();
-                vt::KeyframeMgr::instance()->export_frame_values_for_object(object_id, &origin_frame_values, NULL, NULL, true);
-                std::vector<glm::vec3> &origin_keyframe_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_keyframe_values;
-                origin_keyframe_values.clear();
-                vt::KeyframeMgr::instance()->export_keyframe_values_for_object(object_id, &origin_keyframe_values, NULL, NULL, true);
-                vt::Scene::instance()->m_debug_targets = origin_frame_values;
+                vt::Scene::instance()->m_debug_object_context[object_id].m_transform = glm::translate(glm::mat4(1), targets[target_index]);
             }
             break;
         case GLUT_KEY_LEFT:
@@ -577,8 +579,7 @@ void onMouse(int button, int state, int x, int y)
                 prev_zoom = zoom;
             }
         }
-    }
-    else {
+    } else {
         left_mouse_down = right_mouse_down = false;
     }
 }
@@ -611,6 +612,11 @@ void onReshape(int width, int height)
 
 int main(int argc, char* argv[])
 {
+#if 1
+    // https://stackoverflow.com/questions/5393997/stopping-the-debugger-when-a-nan-floating-point-number-is-produced/5394095
+    feenableexcept(FE_INVALID | FE_OVERFLOW);
+#endif
+
     DEFAULT_CAPTION = argv[0];
 
     glutInit(&argc, argv);

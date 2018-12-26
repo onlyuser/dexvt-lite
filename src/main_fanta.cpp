@@ -60,6 +60,8 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
+#include <cfenv>
+
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define BODY_ELEVATION               (0.6 + 0.1)
@@ -292,7 +294,7 @@ int init_resources()
     scene->add_light(light3 = new vt::Light("light3", origin + glm::vec3(0, 0, light_distance), glm::vec3(0, 0, 1)));
 
     mesh_skybox->set_material(skybox_material);
-    mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
+    mesh_skybox->set_color_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
     ik_base = vt::PrimitiveFactory::create_box("base");
     scene->add_mesh(ik_base);
@@ -338,7 +340,7 @@ int init_resources()
         ik_meshes[0]->link_parent(ik_base);
     }
     int leg_segment_index = 0;
-    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         if(!leg_segment_index) {
@@ -366,7 +368,7 @@ int init_resources()
         ik_meshes2[0]->link_parent(ik_base2);
     }
     int leg_segment_index2 = 0;
-    for(std::vector<vt::Mesh*>::iterator p = ik_meshes2.begin(); p != ik_meshes2.end(); p++) {
+    for(std::vector<vt::Mesh*>::iterator p = ik_meshes2.begin(); p != ik_meshes2.end(); ++p) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         if(!leg_segment_index2) {
@@ -394,7 +396,7 @@ int init_resources()
         ik_meshes3[0]->link_parent(ik_base3);
     }
     int leg_segment_index3 = 0;
-    for(std::vector<vt::Mesh*>::iterator p = ik_meshes3.begin(); p != ik_meshes3.end(); p++) {
+    for(std::vector<vt::Mesh*>::iterator p = ik_meshes3.begin(); p != ik_meshes3.end(); ++p) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         if(!leg_segment_index3) {
@@ -412,20 +414,20 @@ int init_resources()
     }
 
     create_tray_meshes(scene, &tray_meshes, &tray_handles, "group1", false);
-    for(std::vector<vt::Mesh*>::iterator p = tray_meshes.begin(); p != tray_meshes.end(); p++) {
+    for(std::vector<vt::Mesh*>::iterator p = tray_meshes.begin(); p != tray_meshes.end(); ++p) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
     }
 
     create_tray_meshes(scene, &tray_meshes2, &tray_handles, "group2", false);
-    for(std::vector<vt::Mesh*>::iterator q = tray_meshes2.begin(); q != tray_meshes2.end(); q++) {
+    for(std::vector<vt::Mesh*>::iterator q = tray_meshes2.begin(); q != tray_meshes2.end(); ++q) {
         (*q)->set_material(phong_material);
         (*q)->set_ambient_color(glm::vec3(0));
     }
     tray_meshes2[0]->link_parent(tray_meshes[0]);
 
     create_tray_meshes(scene, &tray_meshes3, &tray_handles, "group3", true);
-    for(std::vector<vt::Mesh*>::iterator r = tray_meshes3.begin(); r != tray_meshes3.end(); r++) {
+    for(std::vector<vt::Mesh*>::iterator r = tray_meshes3.begin(); r != tray_meshes3.end(); ++r) {
         (*r)->set_material(phong_material);
         (*r)->set_ambient_color(glm::vec3(0));
     }
@@ -593,8 +595,6 @@ void onDisplay()
         onTick();
     }
     vt::Scene* scene = vt::Scene::instance();
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if(wireframe_mode) {
         scene->render(true, false, false, vt::Scene::use_material_type_t::USE_WIREFRAME_MATERIAL);
     } else {
@@ -654,25 +654,25 @@ void onKeyboard(unsigned char key, int x, int y)
                 ik_base->set_ambient_color(glm::vec3(0, 1, 0));
                 ik_base2->set_ambient_color(glm::vec3(0, 1, 0));
                 ik_base3->set_ambient_color(glm::vec3(0, 1, 0));
-                for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
                     (*p)->set_ambient_color(glm::vec3(0, 1, 0));
                 }
-                for(std::vector<vt::Mesh*>::iterator p2 = ik_meshes2.begin(); p2 != ik_meshes2.end(); p2++) {
+                for(std::vector<vt::Mesh*>::iterator p2 = ik_meshes2.begin(); p2 != ik_meshes2.end(); ++p2) {
                     (*p2)->set_ambient_color(glm::vec3(0, 1, 0));
                 }
-                for(std::vector<vt::Mesh*>::iterator p3 = ik_meshes3.begin(); p3 != ik_meshes3.end(); p3++) {
+                for(std::vector<vt::Mesh*>::iterator p3 = ik_meshes3.begin(); p3 != ik_meshes3.end(); ++p3) {
                     (*p3)->set_ambient_color(glm::vec3(0, 1, 0));
                 }
-                for(std::vector<vt::Mesh*>::iterator q = tray_meshes.begin(); q != tray_meshes.end(); q++) {
+                for(std::vector<vt::Mesh*>::iterator q = tray_meshes.begin(); q != tray_meshes.end(); ++q) {
                     (*q)->set_ambient_color(glm::vec3(1));
                 }
-                for(std::vector<vt::Mesh*>::iterator r = tray_meshes2.begin(); r != tray_meshes2.end(); r++) {
+                for(std::vector<vt::Mesh*>::iterator r = tray_meshes2.begin(); r != tray_meshes2.end(); ++r) {
                     (*r)->set_ambient_color(glm::vec3(1));
                 }
-                for(std::vector<vt::Mesh*>::iterator t = tray_meshes3.begin(); t != tray_meshes3.end(); t++) {
+                for(std::vector<vt::Mesh*>::iterator t = tray_meshes3.begin(); t != tray_meshes3.end(); ++t) {
                     (*t)->set_ambient_color(glm::vec3(1));
                 }
-                for(std::vector<vt::Mesh*>::iterator u = tray_handles.begin(); u != tray_handles.end(); u++) {
+                for(std::vector<vt::Mesh*>::iterator u = tray_handles.begin(); u != tray_handles.end(); ++u) {
                     (*u)->set_ambient_color(glm::vec3(1, 0, 0));
                 }
             } else {
@@ -680,25 +680,25 @@ void onKeyboard(unsigned char key, int x, int y)
                 ik_base->set_ambient_color(glm::vec3(0));
                 ik_base2->set_ambient_color(glm::vec3(0));
                 ik_base3->set_ambient_color(glm::vec3(0));
-                for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
                     (*p)->set_ambient_color(glm::vec3(0));
                 }
-                for(std::vector<vt::Mesh*>::iterator p2 = ik_meshes2.begin(); p2 != ik_meshes2.end(); p2++) {
+                for(std::vector<vt::Mesh*>::iterator p2 = ik_meshes2.begin(); p2 != ik_meshes2.end(); ++p2) {
                     (*p2)->set_ambient_color(glm::vec3(0));
                 }
-                for(std::vector<vt::Mesh*>::iterator p3 = ik_meshes3.begin(); p3 != ik_meshes3.end(); p3++) {
+                for(std::vector<vt::Mesh*>::iterator p3 = ik_meshes3.begin(); p3 != ik_meshes3.end(); ++p3) {
                     (*p3)->set_ambient_color(glm::vec3(0));
                 }
-                for(std::vector<vt::Mesh*>::iterator q = tray_meshes.begin(); q != tray_meshes.end(); q++) {
+                for(std::vector<vt::Mesh*>::iterator q = tray_meshes.begin(); q != tray_meshes.end(); ++q) {
                     (*q)->set_ambient_color(glm::vec3(0));
                 }
-                for(std::vector<vt::Mesh*>::iterator r = tray_meshes2.begin(); r != tray_meshes2.end(); r++) {
+                for(std::vector<vt::Mesh*>::iterator r = tray_meshes2.begin(); r != tray_meshes2.end(); ++r) {
                     (*r)->set_ambient_color(glm::vec3(0));
                 }
-                for(std::vector<vt::Mesh*>::iterator t = tray_meshes3.begin(); t != tray_meshes3.end(); t++) {
+                for(std::vector<vt::Mesh*>::iterator t = tray_meshes3.begin(); t != tray_meshes3.end(); ++t) {
                     (*t)->set_ambient_color(glm::vec3(0));
                 }
-                for(std::vector<vt::Mesh*>::iterator u = tray_handles.begin(); u != tray_handles.end(); u++) {
+                for(std::vector<vt::Mesh*>::iterator u = tray_handles.begin(); u != tray_handles.end(); ++u) {
                     (*u)->set_ambient_color(glm::vec3(0));
                 }
             }
@@ -798,8 +798,7 @@ void onMouse(int button, int state, int x, int y)
                 prev_zoom = zoom;
             }
         }
-    }
-    else {
+    } else {
         left_mouse_down = right_mouse_down = false;
     }
 }
@@ -832,6 +831,11 @@ void onReshape(int width, int height)
 
 int main(int argc, char* argv[])
 {
+#if 1
+    // https://stackoverflow.com/questions/5393997/stopping-the-debugger-when-a-nan-floating-point-number-is-produced/5394095
+    feenableexcept(FE_INVALID | FE_OVERFLOW);
+#endif
+
     DEFAULT_CAPTION = argv[0];
 
     glutInit(&argc, argv);

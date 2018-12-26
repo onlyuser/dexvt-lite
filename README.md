@@ -1,20 +1,23 @@
 [![Build Status](https://secure.travis-ci.org/onlyuser/dexvt-lite.png)](http://travis-ci.org/onlyuser/dexvt-lite)
 
-3D Inverse Kinematics (Cyclic Coordinate Descent) with Constraints
-==================================================================
+3D Inverse Kinematics with Constraints and... GPU Ray Tracing!
+==============================================================
 
 Copyright (C) 2011-2017 <mailto:onlyuser@gmail.com>
 
 About
 -----
 
-dexvt-lite is a 3D Inverse Kinematics ([Cyclic Coordinate Descent](http://what-when-how.com/advanced-methods-in-computer-graphics/kinematics-advanced-methods-in-computer-graphics-part-4/)) tech demonstrator.
-It features rovolute joint constraints, prismatic joint constraints, and end-effector orientation constraints.
+dexvt-lite is a 3D inverse kinematics and GPU ray tracing tech demonstrator.
+It features rovolute joint constraints, prismatic joint constraints, end-effector orientation constraints, and... GPU ray tracing!
 
-See sister project demonstrating shader features: [dexvt-test](https://github.com/onlyuser/dexvt-test)
+See sister project demonstrating other engine features: [dexvt-test](https://github.com/onlyuser/dexvt-test)
 
 Algorithm
 ---------
+
+**3D Inverse Kinematics**
+
 Supports rovolute joint constraints, prismatic joint constraints, and end-effector orientation constraints.
 The way each constraint type is handled is described below:
 
@@ -33,12 +36,31 @@ The way each constraint type is handled is described below:
 * End-effector Orientation Constraints
     * In each joint's rotation/translation step, extend the end-effector position by the end-effector orientation offset.
 
+**GPU Ray Tracing**
+
+* Supports 4 material types:
+    * Reflective
+    * Transparent
+    * Diffuse
+    * Glowing
+
+* Supports 3 primitive types:
+    * Spheres
+    * Planes
+    * Boxes
+
 Screenshots
 -----------
 
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_ik_const_thumb.gif?attredirects=0)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_ik_const.gif?attredirects=0)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_ray_tracer_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_ray_tracer.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_ray_tracer2_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_ray_tracer2.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_ray_tracer3_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_ray_tracer3.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_ray_tracer4_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_ray_tracer4.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_ray_tracer_old_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_ray_tracer_old.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_ray_tracer_old2_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_ray_tracer_old2.png)
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_boids_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_boids.png)
-[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_freerot_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_freerot.png)
+[![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_gimbal_lock_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_gimbal_lock.png)
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_hexapod_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_hexapod.png)
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_path_hexapod_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_path_hexapod.png)
 [![Screenshot](https://sites.google.com/site/onlyuser/projects/graphics/thumbs/dexvt-lite_rail_thumb.png)](https://sites.google.com/site/onlyuser/projects/graphics/images/dexvt-lite_rail.png)
@@ -191,9 +213,13 @@ References
     <dd>https://coreykruger.wordpress.com/programming-and-scripting/462-2/</dd>
     <dt>"Anand's blog - GPGPU In Android: Load a texture with floats and read it back"</dt>
     <dd>http://www.anandmuralidhar.com/blog/tag/gpgpu/</dd>
+    <dt>"Ray-Plane and Ray-Disk Intersection"</dt>
+    <dd>https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-plane-and-ray-disk-intersection</dd>
+    <dt>"Ray-Sphere Intersection"</dt>
+    <dd>https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection</dd>
 </dl>
 
 Keywords
 --------
 
-    3D inverse kinematics (cyclic coordinate descent), forward kinematics, rovolute joint constraints, prismatic joint constraints, end-effector orientation constraints
+    3D inverse kinematics (cyclic coordinate descent), forward kinematics, rovolute joint constraints, prismatic joint constraints, end-effector orientation constraints, GPU ray tracing

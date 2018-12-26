@@ -63,6 +63,8 @@
 #include <iomanip> // std::setprecision
 #include <math.h>
 
+#include <cfenv>
+
 #define BOID_NEAREST_NEIGHBOR_RADIUS 10
 
 #define BOID_COUNT            100
@@ -78,6 +80,9 @@
 #define OCTREE_DIM                  glm::vec3(10)
 
 #define GRAVITATIONAL_CONSTANT 0.00001f
+
+#define HEATMAP_NEAR_DIST 0
+#define HEATMAP_FAR_DIST  5
 
 //#define DEBUG 1
 
@@ -146,11 +151,11 @@ static void randomize_boids(std::vector<vt::Mesh*>* meshes,
         glm::vec3 rand_vec(static_cast<float>(rand()) / RAND_MAX,
                            static_cast<float>(rand()) / RAND_MAX,
                            static_cast<float>(rand()) / RAND_MAX);
-        boid_origin[i] = LERP(scatter_min, scatter_max, rand_vec);
+        boid_origin[i] = MIX(scatter_min, scatter_max, rand_vec);
         glm::vec3 rand_vec2(static_cast<float>(rand()) / RAND_MAX,
                             static_cast<float>(rand()) / RAND_MAX,
                             static_cast<float>(rand()) / RAND_MAX);
-        boid_velocity[i] = LERP(glm::vec3(-BOID_FORWARD_SPEED_MAX), glm::vec3(BOID_FORWARD_SPEED_MAX), rand_vec2);
+        boid_velocity[i] = MIX(glm::vec3(-BOID_FORWARD_SPEED_MAX), glm::vec3(BOID_FORWARD_SPEED_MAX), rand_vec2);
     }
 }
 
@@ -181,6 +186,33 @@ static void create_boids(vt::Scene*              scene,
     randomize_boids(boid_meshes,
                     scatter_min,
                     scatter_max);
+}
+
+const float     heatmap_threshold[5] = {1, 0.75, 0.5, 0.25, 0};
+const glm::vec3 heatmap_colors[5]    = {glm::vec3(1, 0, 0),  // red
+                                        glm::vec3(1, 1, 0),  // yellow
+                                        glm::vec3(0, 1, 0),  // green
+                                        glm::vec3(0, 1, 1),  // cyan
+                                        glm::vec3(0, 0, 1)}; // blue
+
+static glm::vec3 lerp_heatmap(float value,
+                              float min_value,
+                              float max_value,
+                              bool  min_is_red)
+{
+    value = CLAMP(value, min_value, max_value);
+    float alpha = (value - min_value) / (max_value - min_value);
+    if(min_is_red) {
+        alpha = 1 - alpha;
+    }
+    for(int i = 0; i < 4; i++) {
+        if(alpha > heatmap_threshold[i + 1]) {
+            float segment_alpha = (alpha - heatmap_threshold[i + 1]) / (heatmap_threshold[i] - heatmap_threshold[i + 1]);
+            return MIX(heatmap_colors[i + 1], heatmap_colors[i], segment_alpha);
+        }
+    }
+    int heatmap_color_last_index = sizeof(heatmap_threshold) / sizeof(heatmap_threshold[0]) - 1;
+    return heatmap_colors[heatmap_color_last_index];
 }
 
 int init_resources()
@@ -239,7 +271,7 @@ int init_resources()
     scene->add_light(light3 = new vt::Light("light3", origin + glm::vec3(0, 0, light_distance), glm::vec3(0, 0, 1)));
 
     mesh_skybox->set_material(skybox_material);
-    mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
+    mesh_skybox->set_color_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
     create_boids(scene,
                  &boid_meshes,
@@ -249,14 +281,14 @@ int init_resources()
                  BOID_DIM,
                  "boid");
     long index = 0;
-    for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
+    for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); ++p) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         octree->insert(index, (*p)->get_origin());
         index++;
     }
 
-    vt::Scene::instance()->m_debug_target = targets[target_index];
+    scene->m_debug_targets.push_back(std::make_tuple(targets[target_index], glm::vec3(1, 0, 1), 1, 1));
 
     return 1;
 }
@@ -301,7 +333,7 @@ void onTick()
     //octree->clear();
 
     long index = 0;
-    for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
+    for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); ++p) {
         vt::Mesh* self_object = *p;
 
         // keep boids in octree
@@ -322,7 +354,7 @@ void onTick()
     octree->rebalance();
 
     long index2 = 0;
-    for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
+    for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); ++p) {
         vt::Mesh* self_object     = *p;
         glm::vec3 self_object_pos = self_object->get_origin();
 
@@ -330,15 +362,13 @@ void onTick()
 
         // flocking behavior
         std::vector<long> nearest_k_indices;
-        bool boid_updated = false;
         if(octree->find(self_object_pos,
                         BOID_NEAREST_NEIGHBOR_COUNT,
                         &nearest_k_indices,
                         BOID_NEAREST_NEIGHBOR_RADIUS))
         {
-            glm::vec3 group_centroid;
-            size_t valid_neighbor_count = 0;
-            for(std::vector<long>::iterator q = nearest_k_indices.begin(); q != nearest_k_indices.end(); q++) {
+            glm::vec3 group_centroid(0);
+            for(std::vector<long>::iterator q = nearest_k_indices.begin(); q != nearest_k_indices.end(); ++q) {
                 if(*q == index2) { // ignore self
                     continue;
                 }
@@ -347,21 +377,26 @@ void onTick()
 
                 // collect stats
                 group_centroid += other_object_pos;
-                valid_neighbor_count++;
-                self_object->m_debug_lines.push_back(std::tuple<glm::vec3, glm::vec3, glm::vec3>(glm::vec3(0, 1, 1), self_object_pos, other_object_pos));
+                float dist = glm::distance(self_object_pos, other_object_pos);
+                glm::vec3 color = lerp_heatmap(dist, HEATMAP_NEAR_DIST, HEATMAP_FAR_DIST, true);
+                self_object->m_debug_lines.push_back(std::make_tuple(self_object_pos, other_object_pos, color, 1));
             }
-            if(nearest_k_indices.size() >= 2) {
-                float contrib_factor = 1.0f / valid_neighbor_count;
-                group_centroid *= contrib_factor;
-                float mass = valid_neighbor_count;
-                float force = GRAVITATIONAL_CONSTANT * mass / pow(glm::distance(group_centroid, self_object_pos), 2);
-                boid_velocity[index2] += glm::normalize(group_centroid - self_object_pos) * force;
-                boid_velocity[index2] = glm::normalize(boid_velocity[index2]) * std::min(glm::length(boid_velocity[index2]), BOID_FORWARD_SPEED_MAX);
+            if(nearest_k_indices.size()) {
+                group_centroid *= (1.0f / nearest_k_indices.size());
+                float mass = nearest_k_indices.size();
+                float dist = glm::distance(group_centroid, self_object_pos);
+                if(dist < EPSILON) {
+                    index2++;
+                    continue;
+                }
+                float force = GRAVITATIONAL_CONSTANT * mass / pow(dist, 2);
+                boid_velocity[index2] += vt::safe_normalize(group_centroid - self_object_pos) * force;
+
+                // apply speed limit
+                boid_velocity[index2] = vt::safe_normalize(boid_velocity[index2]) * std::min(glm::length(boid_velocity[index2]), BOID_FORWARD_SPEED_MAX);
             }
         }
-        if(!boid_updated) {
-            boid_origin[index2] += boid_velocity[index2];
-        }
+        boid_origin[index2] += boid_velocity[index2];
         index2++;
     }
 
@@ -380,8 +415,6 @@ void onDisplay()
         onTick();
     }
     vt::Scene* scene = vt::Scene::instance();
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if(wireframe_mode) {
         scene->render(true, false, false, vt::Scene::use_material_type_t::USE_WIREFRAME_MATERIAL);
     } else {
@@ -411,7 +444,7 @@ void onKeyboard(unsigned char key, int x, int y)
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
             if(show_guide_wires) {
-                vt::Scene::instance()->m_debug_target = targets[target_index];
+                vt::Scene::instance()->m_debug_targets[0] = std::make_tuple(targets[target_index], glm::vec3(1, 0, 1), 1, 1);
             }
             break;
         case 'h': // help
@@ -443,12 +476,12 @@ void onKeyboard(unsigned char key, int x, int y)
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
-                for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
+                for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); ++p) {
                     (*p)->set_ambient_color(glm::vec3(1));
                 }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
-                for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
+                for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); ++p) {
                     (*p)->set_ambient_color(glm::vec3(0));
                 }
             }
@@ -485,7 +518,7 @@ void onSpecial(int key, int x, int y)
                 size_t target_count = sizeof(targets) / sizeof(targets[0]);
                 target_index = (target_index + 1) % target_count;
                 std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
-                vt::Scene::instance()->m_debug_target = targets[target_index];
+                vt::Scene::instance()->m_debug_targets[0] = std::make_tuple(targets[target_index], glm::vec3(1, 0, 1), 1, 1);
             }
             break;
         case GLUT_KEY_LEFT:
@@ -550,8 +583,7 @@ void onMouse(int button, int state, int x, int y)
                 prev_zoom = zoom;
             }
         }
-    }
-    else {
+    } else {
         left_mouse_down = right_mouse_down = false;
     }
 }
@@ -584,6 +616,12 @@ void onReshape(int width, int height)
 
 int main(int argc, char* argv[])
 {
+// NOTE: still something wrong; crashes on startup; only doesn't crash in gdb
+#if 1
+    // https://stackoverflow.com/questions/5393997/stopping-the-debugger-when-a-nan-floating-point-number-is-produced/5394095
+    feenableexcept(FE_INVALID | FE_OVERFLOW);
+#endif
+
     DEFAULT_CAPTION = argv[0];
 
     glutInit(&argc, argv);

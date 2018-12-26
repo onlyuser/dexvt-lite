@@ -60,6 +60,8 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
+#include <cfenv>
+
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define BODY_ANGLE_SPEED             2.0
@@ -227,7 +229,7 @@ int init_resources()
     scene->add_light(light3 = new vt::Light("light3", origin + glm::vec3(0, 0, light_distance), glm::vec3(0, 0, 1)));
 
     mesh_skybox->set_material(skybox_material);
-    mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
+    mesh_skybox->set_color_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
     body = vt::PrimitiveFactory::create_box("body", 1, 0.5, 2);
     //body->center_axis(vt::BBoxObject::ALIGN_CENTER);
@@ -266,7 +268,7 @@ int init_resources()
                 ik_leg->m_target = ik_leg->m_joint->get_origin() + glm::vec3(-0.25, -1.5, 0.1);
                 break;
             case 4: // end-effector
-                ik_leg->m_joint->set_origin(glm::vec3(0, 0, 1)); // FIX-ME! -- IK bug if y-coordinate is any value other than 0
+                ik_leg->m_joint->set_origin(glm::vec3(0, 0, 1));
                 ik_leg->m_target = ik_leg->m_joint->get_origin() + glm::vec3(0, 1, 1);
                 break;
         }
@@ -293,7 +295,7 @@ int init_resources()
                                    0.33);
             ik_meshes[0]->link_parent(ik_leg->m_joint);
             int leg_segment_index = 0;
-            for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+            for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
                 (*p)->set_material(phong_material);
                 (*p)->set_ambient_color(glm::vec3(0));
                 if(!leg_segment_index) {
@@ -335,7 +337,7 @@ int init_resources()
                                    0);
             ik_meshes[0]->link_parent(ik_leg->m_joint);
             int leg_segment_index = 0;
-            for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+            for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
                 (*p)->set_material(phong_material);
                 (*p)->set_ambient_color(glm::vec3(0));
                 if(!leg_segment_index) {
@@ -346,7 +348,7 @@ int init_resources()
                 } else {
                     (*p)->set_hinge_type(vt::EULER_INDEX_PITCH);
                     //(*p)->set_enable_joint_constraints(glm::ivec3(0, 0, 0));
-                    (*p)->set_joint_constraints_center(glm::vec3(0, -90, 0)); // FIX-ME! -- IK bug if pitch is less than or equal to -90 with joint hinge type ROLL
+                    (*p)->set_joint_constraints_center(glm::vec3(0, -90, 0));
                     (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 60, 0));
                 }
                 leg_segment_index++;
@@ -379,9 +381,8 @@ int init_resources()
         std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[i].m_debug_origin_frame_values;
         vt::KeyframeMgr::instance()->export_frame_values_for_object(i, &origin_frame_values, NULL, NULL, true);
         std::vector<glm::vec3> &origin_keyframe_values = vt::Scene::instance()->m_debug_object_context[i].m_debug_origin_keyframe_values;
-        origin_keyframe_values.clear();
         vt::KeyframeMgr::instance()->export_keyframe_values_for_object(i, &origin_keyframe_values, NULL, NULL, true);
-        leg_anim_frame_range[i].first  = vt::Scene::instance()->m_debug_targets.size();
+        leg_anim_frame_range[i].first  = origin_frame_values.size() * i;
         leg_anim_frame_range[i].second = leg_anim_frame_range[i].first + origin_frame_values.size() - 1;
         int phase = 0;
         switch(i) {
@@ -397,9 +398,6 @@ int init_resources()
                 break;
         }
         leg_anim_frame[i] = leg_anim_frame_range[i].first + phase;
-        for(std::vector<glm::vec3>::iterator p = origin_frame_values.begin(); p != origin_frame_values.end(); p++) {
-            vt::Scene::instance()->m_debug_targets.push_back(*p);
-        }
     }
 
     return 1;
@@ -482,7 +480,7 @@ void onTick()
                                    body_origin.z));
         user_input = true;
     }
-    //body->set_origin(vt::Scene::instance()->m_debug_targets[target_index]);
+    //body->set_origin(std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(vt::Scene::instance()->m_debug_targets[target_index]));
     body->get_transform(); // ensure transform is updated
     //target_index = (target_index + 1) % vt::Scene::instance()->m_debug_targets.size();
     if(user_input) {
@@ -491,16 +489,17 @@ void onTick()
             std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
             if(i == 4) { // end-effector
                 ik_meshes[IK_SEGMENT_COUNT + 1 - 1]->solve_ik_ccd(ik_leg->m_joint,
-                                                                  glm::vec3(0, 0, IK_SEGMENT_LENGTH),
+                                                                  glm::vec3(0, 0, IK_SEGMENT_LENGTH * 0.33),
                                                                   ik_leg->m_target,
                                                                   &end_effector_dir,
                                                                   IK_ITERS,
                                                                   ACCEPT_END_EFFECTOR_DISTANCE,
                                                                   ACCEPT_AVG_ANGLE_DISTANCE);
             } else {
+                std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[i].m_debug_origin_frame_values;
                 ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_leg->m_joint,
                                                               glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-                                                              vt::Scene::instance()->m_debug_targets[leg_anim_frame[i]],
+                                                              origin_frame_values[leg_anim_frame[i] % origin_frame_values.size()],
                                                               NULL,
                                                               IK_ITERS,
                                                               ACCEPT_END_EFFECTOR_DISTANCE,
@@ -529,8 +528,6 @@ void onDisplay()
         onTick();
     }
     vt::Scene* scene = vt::Scene::instance();
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if(wireframe_mode) {
         scene->render(true, false, false, vt::Scene::use_material_type_t::USE_WIREFRAME_MATERIAL);
     } else {
@@ -584,20 +581,20 @@ void onKeyboard(unsigned char key, int x, int y)
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
                 body->set_ambient_color(glm::vec3(1));
-                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
+                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); ++q) {
                     (*q)->m_joint->set_ambient_color(glm::vec3(1, 0, 0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
                         (*p)->set_ambient_color(glm::vec3(0, 1, 0));
                     }
                 }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
                 body->set_ambient_color(glm::vec3(0));
-                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
+                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); ++q) {
                     (*q)->m_joint->set_ambient_color(glm::vec3(0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
                         (*p)->set_ambient_color(glm::vec3(0));
                     }
                 }
@@ -699,8 +696,7 @@ void onMouse(int button, int state, int x, int y)
                 prev_zoom = zoom;
             }
         }
-    }
-    else {
+    } else {
         left_mouse_down = right_mouse_down = false;
     }
 }
@@ -733,6 +729,11 @@ void onReshape(int width, int height)
 
 int main(int argc, char* argv[])
 {
+#if 1
+    // https://stackoverflow.com/questions/5393997/stopping-the-debugger-when-a-nan-floating-point-number-is-produced/5394095
+    feenableexcept(FE_INVALID | FE_OVERFLOW);
+#endif
+
     DEFAULT_CAPTION = argv[0];
 
     glutInit(&argc, argv);

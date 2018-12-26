@@ -21,10 +21,10 @@
 
 namespace vt {
 
-bool read_png(std::string png_filename,
-              void**      pixel_data,
-              size_t*     width,
-              size_t*     height)
+bool read_png(const std::string& png_filename,
+                    void**       pixel_data,
+                    size_t*      width,
+                    size_t*      height)
 {
     if(!pixel_data || !width || !height) {
         return false;
@@ -41,9 +41,8 @@ bool read_png(std::string png_filename,
     {
         return false;
     }
-    unsigned char* dest_pixel_data = NULL;
     size_t size_buf = src_width * src_height * sizeof(unsigned char) * 4;
-    dest_pixel_data = new unsigned char[size_buf];
+    unsigned char* dest_pixel_data = new unsigned char[size_buf];
     if(!dest_pixel_data) {
         return false;
     }
@@ -81,11 +80,11 @@ bool read_png(std::string png_filename,
     return true;
 }
 
-bool read_png_impl(std::string png_filename,
-                   void**      pixel_data,
-                   size_t*     width,
-                   size_t*     height,
-                   int*        color_type)
+bool read_png_impl(const std::string& png_filename,
+                         void**       pixel_data,
+                         size_t*      width,
+                         size_t*      height,
+                         int*         color_type)
 {
     if(!pixel_data || !width || !height) {
         return false;

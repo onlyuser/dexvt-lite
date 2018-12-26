@@ -32,17 +32,17 @@
 
 namespace vt {
 
-Camera::Camera(std::string       name,
-               glm::vec3         origin,
-               glm::vec3         target,
-               float             fov,
-               glm::ivec2        offset,
-               glm::ivec2        dim,
-               float             near_plane,
-               float             far_plane,
-               glm::vec2         ortho_dim,
-               float             zoom,
-               projection_mode_t projection_mode)
+Camera::Camera(const std::string&      name,
+                     glm::vec3         origin,
+                     glm::vec3         target,
+                     float             fov,
+                     glm::ivec2        offset,
+                     glm::ivec2        dim,
+                     float             near_plane,
+                     float             far_plane,
+                     glm::vec2         ortho_dim,
+                     float             zoom,
+                     projection_mode_t projection_mode)
     : TransformObject(name, origin),
       FrameObject(offset, dim),
       m_target(target),
@@ -85,7 +85,7 @@ void Camera::set_target(glm::vec3 target)
 
 const glm::vec3 Camera::get_dir() const
 {
-    return glm::normalize(m_target - m_origin);
+    return safe_normalize(m_target - m_origin);
 }
 
 void Camera::move(glm::vec3 origin, glm::vec3 target)
@@ -219,6 +219,9 @@ void Camera::update_transform()
 {
     glm::vec3 up_direction;
     euler_to_offset(m_euler, &up_direction);
+    if(glm::distance(m_origin, m_target) < EPSILON) {
+        return;
+    }
     m_transform = glm::lookAt(m_origin, m_target, up_direction);
 }
 

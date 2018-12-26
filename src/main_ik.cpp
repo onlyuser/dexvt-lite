@@ -59,6 +59,8 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
+#include <cfenv>
+
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define IK_ITERS                     5
@@ -217,7 +219,7 @@ int init_resources()
     scene->add_light(light3 = new vt::Light("light3", origin + glm::vec3(0, 0, light_distance), glm::vec3(0, 0, 1)));
 
     mesh_skybox->set_material(skybox_material);
-    mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
+    mesh_skybox->set_color_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
     create_linked_segments(scene,
                            &ik_meshes,
@@ -229,14 +231,14 @@ int init_resources()
     if(ik_meshes.size()) {
         ik_meshes[0]->set_origin(glm::vec3(0));
     }
-    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
         (*p)->set_material(bump_mapped_material);
-        (*p)->set_texture_index(     (*p)->get_material()->get_texture_index_by_name("chesterfield_color"));
-        (*p)->set_bump_texture_index((*p)->get_material()->get_texture_index_by_name("chesterfield_normal"));
+        (*p)->set_color_texture_index((*p)->get_material()->get_texture_index_by_name("chesterfield_color"));
+        (*p)->set_bump_texture_index( (*p)->get_material()->get_texture_index_by_name("chesterfield_normal"));
         (*p)->set_ambient_color(glm::vec3(0));
     }
 
-    vt::Scene::instance()->m_debug_target = targets[target_index];
+    scene->m_debug_targets.push_back(std::make_tuple(targets[target_index], glm::vec3(1, 0, 1), 1, 1));
 
     return 1;
 }
@@ -333,8 +335,6 @@ void onDisplay()
         onTick();
     }
     vt::Scene* scene = vt::Scene::instance();
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if(wireframe_mode) {
         scene->render(true, false, false, vt::Scene::use_material_type_t::USE_WIREFRAME_MATERIAL);
     } else {
@@ -368,7 +368,7 @@ void onKeyboard(unsigned char key, int x, int y)
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
             if(show_guide_wires) {
-                vt::Scene::instance()->m_debug_target = targets[target_index];
+                vt::Scene::instance()->m_debug_targets[0] = std::make_tuple(targets[target_index], glm::vec3(1, 0, 1), 1, 1);
             }
             break;
         case 'h': // help
@@ -394,12 +394,12 @@ void onKeyboard(unsigned char key, int x, int y)
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
-                for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
                     (*p)->set_ambient_color(glm::vec3(0, 1, 0));
                 }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
-                for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
                     (*p)->set_ambient_color(glm::vec3(0));
                 }
             }
@@ -436,7 +436,7 @@ void onSpecial(int key, int x, int y)
                 size_t target_count = sizeof(targets) / sizeof(targets[0]);
                 target_index = (target_index + 1) % target_count;
                 std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
-                vt::Scene::instance()->m_debug_target = targets[target_index];
+                vt::Scene::instance()->m_debug_targets[0] = std::make_tuple(targets[target_index], glm::vec3(1, 0, 1), 1, 1);
                 user_input = true;
             }
             break;
@@ -502,8 +502,7 @@ void onMouse(int button, int state, int x, int y)
                 prev_zoom = zoom;
             }
         }
-    }
-    else {
+    } else {
         left_mouse_down = right_mouse_down = false;
     }
 }
@@ -536,6 +535,11 @@ void onReshape(int width, int height)
 
 int main(int argc, char* argv[])
 {
+#if 1
+    // https://stackoverflow.com/questions/5393997/stopping-the-debugger-when-a-nan-floating-point-number-is-produced/5394095
+    feenableexcept(FE_INVALID | FE_OVERFLOW);
+#endif
+
     DEFAULT_CAPTION = argv[0];
 
     glutInit(&argc, argv);

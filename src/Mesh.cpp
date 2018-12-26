@@ -26,13 +26,14 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/vector_angle.hpp>
 #include <string>
+#include <cstring>
 #include <iostream>
 
 namespace vt {
 
-Mesh::Mesh(std::string name,
-           size_t      num_vertex,
-           size_t      num_tri)
+Mesh::Mesh(const std::string& name,
+                 size_t       num_vertex,
+                 size_t       num_tri)
     : TransformObject(name),
       m_num_vertex(num_vertex),
       m_num_tri(num_tri),
@@ -49,12 +50,15 @@ Mesh::Mesh(std::string name,
       m_normal_shader_context(NULL),
       m_wireframe_shader_context(NULL),
       m_ssao_shader_context(NULL),
-      m_texture_index(-1),
-      m_texture2_index(-1),
+      m_color_texture_index(-1),
+      m_color_texture2_index(-1),
+      m_color_texture_source(-1),
       m_bump_texture_index(-1),
       m_env_map_texture_index(-1),
       m_random_texture_index(-1),
       m_frontface_depth_overlay_texture_index(-1),
+      m_backface_depth_overlay_texture_index(-1),
+      m_backface_normal_overlay_texture_index(-1),
       m_reflect_to_refract_ratio(1)
 {
     m_vert_coords   = new GLfloat[ num_vertex * 3];
@@ -62,6 +66,11 @@ Mesh::Mesh(std::string name,
     m_vert_tangent  = new GLfloat[ num_vertex * 3];
     m_tex_coords    = new GLfloat[ num_vertex * 2];
     m_tri_indices   = new GLushort[num_tri    * 3];
+    memset(m_vert_coords,  0, sizeof(GLfloat)  * num_vertex * 3);
+    memset(m_vert_normal,  0, sizeof(GLfloat)  * num_vertex * 3);
+    memset(m_vert_tangent, 0, sizeof(GLfloat)  * num_vertex * 3);
+    memset(m_tex_coords,   0, sizeof(GLfloat)  * num_vertex * 2);
+    memset(m_tri_indices,  0, sizeof(GLushort) * num_tri    * 3);
     m_ambient_color = new GLfloat[3];
     m_ambient_color[0] = 1;
     m_ambient_color[1] = 1;
@@ -89,28 +98,28 @@ Mesh::~Mesh()
 
 void Mesh::resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry)
 {
-    glm::vec3*  new_vert_coord   = NULL;
-    glm::vec3*  new_vert_normal  = NULL;
-    glm::vec3*  new_vert_tangent = NULL;
-    glm::vec2*  new_tex_coord    = NULL;
-    glm::ivec3* new_tri_indices  = NULL;
+    glm::vec3*  backup_vert_coord   = NULL;
+    glm::vec3*  backup_vert_normal  = NULL;
+    glm::vec3*  backup_vert_tangent = NULL;
+    glm::vec2*  backup_tex_coord    = NULL;
+    glm::ivec3* backup_tri_indices  = NULL;
     if(preserve_mesh_geometry) {
-        new_vert_coord   = new glm::vec3[num_vertex];
-        new_vert_normal  = new glm::vec3[num_vertex];
-        new_vert_tangent = new glm::vec3[num_vertex];
-        new_tex_coord    = new glm::vec2[num_vertex];
-        new_tri_indices  = new glm::ivec3[num_tri];
-        if(new_vert_coord && new_vert_normal && new_vert_tangent && new_tex_coord) {
+        backup_vert_coord   = new glm::vec3[num_vertex];
+        backup_vert_normal  = new glm::vec3[num_vertex];
+        backup_vert_tangent = new glm::vec3[num_vertex];
+        backup_tex_coord    = new glm::vec2[num_vertex];
+        backup_tri_indices  = new glm::ivec3[num_tri];
+        if(backup_vert_coord && backup_vert_normal && backup_vert_tangent && backup_tex_coord) {
             for(int i = 0; i < static_cast<int>(num_vertex); i++) {
-                new_vert_coord[i]   = get_vert_coord(i);
-                new_vert_normal[i]  = get_vert_normal(i);
-                new_vert_tangent[i] = get_vert_tangent(i);
-                new_tex_coord[i]    = get_tex_coord(i);
+                backup_vert_coord[i]   = get_vert_coord(i);
+                backup_vert_normal[i]  = get_vert_normal(i);
+                backup_vert_tangent[i] = get_vert_tangent(i);
+                backup_tex_coord[i]    = get_tex_coord(i);
             }
         }
-        if(new_tri_indices) {
+        if(backup_tri_indices) {
             for(int i = 0; i < static_cast<int>(num_tri); i++) {
-                new_tri_indices[i] = get_tri_indices(i);
+                backup_tri_indices[i] = get_tri_indices(i);
             }
         }
     }
@@ -128,32 +137,37 @@ void Mesh::resize(size_t num_vertex, size_t num_tri, bool preserve_mesh_geometry
     if(m_normal_shader_context)    { delete m_normal_shader_context;    m_normal_shader_context = NULL; }
     if(m_wireframe_shader_context) { delete m_wireframe_shader_context; m_wireframe_shader_context = NULL; }
     if(m_ssao_shader_context)      { delete m_ssao_shader_context;      m_ssao_shader_context = NULL; }
+    m_num_vertex   = num_vertex;
+    m_num_tri      = num_tri;
     m_vert_coords  = new GLfloat[ num_vertex * 3];
     m_vert_normal  = new GLfloat[ num_vertex * 3];
     m_vert_tangent = new GLfloat[ num_vertex * 3];
     m_tex_coords   = new GLfloat[ num_vertex * 2];
     m_tri_indices  = new GLushort[num_tri    * 3];
-    m_num_vertex   = num_vertex;
-    m_num_tri      = num_tri;
+    memset(m_vert_coords,  0, sizeof(GLfloat)  * num_vertex * 3);
+    memset(m_vert_normal,  0, sizeof(GLfloat)  * num_vertex * 3);
+    memset(m_vert_tangent, 0, sizeof(GLfloat)  * num_vertex * 3);
+    memset(m_tex_coords,   0, sizeof(GLfloat)  * num_vertex * 2);
+    memset(m_tri_indices,  0, sizeof(GLushort) * num_tri    * 3);
     m_buffers_already_init = false;
     if(preserve_mesh_geometry) {
-        if(new_vert_coord && new_vert_normal && new_vert_tangent && new_tex_coord) {
+        if(backup_vert_coord && backup_vert_normal && backup_vert_tangent && backup_tex_coord) {
             for(int i = 0; i < static_cast<int>(num_vertex); i++) {
-                set_vert_coord(i,   new_vert_coord[i]);
-                set_vert_normal(i,  new_vert_normal[i]);
-                set_vert_tangent(i, new_vert_tangent[i]);
-                set_tex_coord(i,    new_tex_coord[i]);
+                set_vert_coord(i,   backup_vert_coord[i]);
+                set_vert_normal(i,  backup_vert_normal[i]);
+                set_vert_tangent(i, backup_vert_tangent[i]);
+                set_tex_coord(i,    backup_tex_coord[i]);
             }
-            delete[] new_vert_coord;
-            delete[] new_vert_normal;
-            delete[] new_vert_tangent;
-            delete[] new_tex_coord;
+            delete[] backup_vert_coord;
+            delete[] backup_vert_normal;
+            delete[] backup_vert_tangent;
+            delete[] backup_tex_coord;
         }
-        if(new_tri_indices) {
+        if(backup_tri_indices) {
             for(int i = 0; i < static_cast<int>(num_tri); i++) {
-                set_tri_indices(i, new_tri_indices[i]);
+                set_tri_indices(i, backup_tri_indices[i]);
             }
-            delete[] new_tri_indices;
+            delete[] backup_tri_indices;
         }
     }
 }
@@ -187,10 +201,9 @@ void Mesh::merge(const MeshBase* other, bool copy_tex_coords)
 glm::vec3 Mesh::get_vert_coord(int index) const
 {
     int offset = index * 3;
-    return glm::vec3(
-            m_vert_coords[offset + 0],
-            m_vert_coords[offset + 1],
-            m_vert_coords[offset + 2]);
+    return glm::vec3(m_vert_coords[offset + 0],
+                     m_vert_coords[offset + 1],
+                     m_vert_coords[offset + 2]);
 }
 
 void Mesh::set_vert_coord(int index, glm::vec3 coord)
@@ -257,10 +270,18 @@ glm::ivec3 Mesh::get_tri_indices(int index) const
 
 void Mesh::set_tri_indices(int index, glm::ivec3 indices)
 {
+    assert(indices[0] >= 0 && indices[0] < static_cast<int>(m_num_vertex));
+    assert(indices[1] >= 0 && indices[1] < static_cast<int>(m_num_vertex));
+    assert(indices[2] >= 0 && indices[2] < static_cast<int>(m_num_vertex));
     int offset = index * 3;
     m_tri_indices[offset + 0] = indices[0];
     m_tri_indices[offset + 1] = indices[1];
     m_tri_indices[offset + 2] = indices[2];
+}
+
+glm::vec3 Mesh::get_vert_bitangent(int index) const
+{
+    return safe_normalize(glm::cross(get_vert_normal(index), get_vert_tangent(index)));
 }
 
 void Mesh::update_bbox()
@@ -294,15 +315,19 @@ void Mesh::update_bbox()
 
 void Mesh::update_normals_and_tangents()
 {
+    for(int i = 0; i < static_cast<int>(m_num_vertex); i++) {
+        set_vert_normal( i, glm::vec3(0));
+        set_vert_tangent(i, glm::vec3(0));
+    }
     if(m_smooth) {
         for(int i = 0; i < static_cast<int>(m_num_tri); i++) {
             glm::ivec3 tri_indices = get_tri_indices(i);
             glm::vec3 p0 = get_vert_coord(tri_indices[0]);
             glm::vec3 p1 = get_vert_coord(tri_indices[1]);
             glm::vec3 p2 = get_vert_coord(tri_indices[2]);
-            glm::vec3 e1 = glm::normalize(p1 - p0);
-            glm::vec3 e2 = glm::normalize(p2 - p0);
-            glm::vec3 n = glm::normalize(glm::cross(e1, e2));
+            glm::vec3 e1 = safe_normalize(p1 - p0);
+            glm::vec3 e2 = safe_normalize(p2 - p0);
+            glm::vec3 n  = safe_normalize(glm::cross(e1, e2));
             for(int j = 0; j < 3; j++) {
                 int vert_index = tri_indices[j];
                 set_vert_normal( vert_index, get_vert_normal(vert_index) + n);
@@ -310,7 +335,7 @@ void Mesh::update_normals_and_tangents()
             }
         }
         for(int k = 0; k < static_cast<int>(m_num_vertex); k++) {
-            set_vert_normal(k, glm::normalize(get_vert_normal(k)));
+            set_vert_normal(k, safe_normalize(get_vert_normal(k)));
         }
         resize(m_num_vertex, m_num_tri, true);
         return;
@@ -320,9 +345,9 @@ void Mesh::update_normals_and_tangents()
         glm::vec3 p0 = get_vert_coord(tri_indices[0]);
         glm::vec3 p1 = get_vert_coord(tri_indices[1]);
         glm::vec3 p2 = get_vert_coord(tri_indices[2]);
-        glm::vec3 e1 = glm::normalize(p1 - p0);
-        glm::vec3 e2 = glm::normalize(p2 - p0);
-        glm::vec3 n = glm::normalize(glm::cross(e1, e2));
+        glm::vec3 e1 = safe_normalize(p1 - p0);
+        glm::vec3 e2 = safe_normalize(p2 - p0);
+        glm::vec3 n  = safe_normalize(glm::cross(e1, e2));
         for(int j = 0; j < 3; j++) {
             int vert_index = tri_indices[j];
             set_vert_normal( vert_index, n);
@@ -406,7 +431,7 @@ void Mesh::set_material(Material* material)
     }
     std::string texture_name;
     if(m_material) {
-        Texture* texture = m_material->get_texture_by_index(m_texture_index);
+        Texture* texture = m_material->get_texture_by_index(m_color_texture_index);
         if(texture) {
             texture_name = texture->get_name();
         }
@@ -416,7 +441,7 @@ void Mesh::set_material(Material* material)
         m_shader_context = NULL;
     }
     m_material = material;
-    m_texture_index = material ? material->get_texture_index_by_name(texture_name) : -1;
+    m_color_texture_index = material ? material->get_texture_index_by_name(texture_name) : -1;
 }
 
 ShaderContext* Mesh::get_shader_context()
@@ -529,7 +554,7 @@ void Mesh::update_transform()
     m_transform = glm::translate(glm::mat4(1), m_origin) * get_local_rotation_transform() * glm::scale(glm::mat4(1), m_scale);
 }
 
-MeshBase* alloc_mesh_base(std::string name, size_t num_vertex, size_t num_tri)
+MeshBase* alloc_mesh_base(const std::string& name, size_t num_vertex, size_t num_tri)
 {
     return new Mesh(name, num_vertex, num_tri);
 }

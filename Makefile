@@ -29,14 +29,16 @@ BIN_PATH = bin
 BIN_STEMS = main_ik \
             main_ik_const \
             main_boids \
+            main_prm \
             main_nbody \
             main_hexapod \
             main_spot_mini \
             main_deltabot \
             main_3dprinter \
             main_terrain \
+            main_ray_tracer \
             main_spider \
-            main_freerot \
+            main_gimbal_lock \
             main_rail \
             main_stewart \
             main_fanta
@@ -54,7 +56,7 @@ LIB_FLAGS = $(patsubst %, -l%, $(LIB_STEMS))
 
 CXX = g++
 DEBUG = -g
-CXXFLAGS = -Wall $(DEBUG) $(INCLUDE_PATH_FLAGS) -std=c++0x
+CXXFLAGS = -Wall $(DEBUG) $(INCLUDE_PATH_FLAGS) -std=c++0x -DGLM_ENABLE_EXPERIMENTAL=1
 LDFLAGS = -Wall $(DEBUG) $(LIB_PATH_FLAGS) $(LIB_FLAGS)
 
 SCRIPT_PATH = scripts
@@ -100,6 +102,7 @@ clean_objects :
 	-rm $(OBJECTS_IK) \
         $(OBJECTS_IK_CONST) \
         $(OBJECTS_BOIDS) \
+        $(OBJECTS_PRM) \
         $(OBJECTS_NBODY) \
         $(OBJECTS_HEXAPOD) \
         $(OBJECTS_SPOT_MINI) \
@@ -107,8 +110,9 @@ clean_objects :
         $(OBJECTS_3DPRINTER) \
         $(OBJECTS_3DPRINTER) \
         $(OBJECTS_TERRAIN) \
+        $(OBJECTS_RAY_TRACER) \
         $(OBJECTS_SPIDER) \
-        $(OBJECTS_FREEROT) \
+        $(OBJECTS_GIMBAL_LOCK) \
         $(OBJECTS_RAIL) \
         $(OBJECTS_STEWART) \
         $(OBJECTS_FANTA)
@@ -131,6 +135,7 @@ SHARED_CPP_STEMS = BBoxObject \
                    Mesh \
                    NamedObject \
                    Octree \
+                   PRM \
                    PrimitiveFactory \
                    Program \
                    Scene \
@@ -142,35 +147,39 @@ SHARED_CPP_STEMS = BBoxObject \
                    VarAttribute \
                    VarUniform \
                    TransformObject
-CPP_STEMS_IK        = $(SHARED_CPP_STEMS) main_ik
-CPP_STEMS_IK_CONST  = $(SHARED_CPP_STEMS) main_ik_const
-CPP_STEMS_BOIDS     = $(SHARED_CPP_STEMS) main_boids
-CPP_STEMS_NBODY     = $(SHARED_CPP_STEMS) main_nbody
-CPP_STEMS_HEXAPOD   = $(SHARED_CPP_STEMS) main_hexapod
-CPP_STEMS_SPOT_MINI = $(SHARED_CPP_STEMS) main_spot_mini
-CPP_STEMS_DELTABOT  = $(SHARED_CPP_STEMS) main_deltabot
-CPP_STEMS_3DPRINTER = $(SHARED_CPP_STEMS) main_3dprinter
-CPP_STEMS_TERRAIN   = $(SHARED_CPP_STEMS) main_terrain
-CPP_STEMS_SPIDER    = $(SHARED_CPP_STEMS) main_spider
-CPP_STEMS_FREEROT   = $(SHARED_CPP_STEMS) main_freerot
-CPP_STEMS_RAIL      = $(SHARED_CPP_STEMS) main_rail
-CPP_STEMS_STEWART   = $(SHARED_CPP_STEMS) main_stewart
-CPP_STEMS_FANTA     = $(SHARED_CPP_STEMS) main_fanta
-OBJECTS_IK        = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK))
-OBJECTS_IK_CONST  = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK_CONST))
-OBJECTS_BOIDS     = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_BOIDS))
-OBJECTS_NBODY     = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_NBODY))
-OBJECTS_HEXAPOD   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_HEXAPOD))
-OBJECTS_SPOT_MINI = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_SPOT_MINI))
-OBJECTS_DELTABOT  = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_DELTABOT))
-OBJECTS_3DPRINTER = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_3DPRINTER))
-OBJECTS_TERRAIN   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_TERRAIN))
-OBJECTS_SPIDER    = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_SPIDER))
-OBJECTS_FREEROT   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_FREEROT))
-OBJECTS_RAIL      = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_RAIL))
-OBJECTS_STEWART   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_STEWART))
-OBJECTS_FANTA     = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_FANTA))
-LINT_FILES        = $(patsubst %, $(BUILD_PATH)/%.lint, $(SHARED_CPP_STEMS))
+CPP_STEMS_IK          = $(SHARED_CPP_STEMS) main_ik
+CPP_STEMS_IK_CONST    = $(SHARED_CPP_STEMS) main_ik_const
+CPP_STEMS_BOIDS       = $(SHARED_CPP_STEMS) main_boids
+CPP_STEMS_PRM         = $(SHARED_CPP_STEMS) main_prm
+CPP_STEMS_NBODY       = $(SHARED_CPP_STEMS) main_nbody
+CPP_STEMS_HEXAPOD     = $(SHARED_CPP_STEMS) main_hexapod
+CPP_STEMS_SPOT_MINI   = $(SHARED_CPP_STEMS) main_spot_mini
+CPP_STEMS_DELTABOT    = $(SHARED_CPP_STEMS) main_deltabot
+CPP_STEMS_3DPRINTER   = $(SHARED_CPP_STEMS) main_3dprinter
+CPP_STEMS_TERRAIN     = $(SHARED_CPP_STEMS) main_terrain
+CPP_STEMS_RAY_TRACER  = $(SHARED_CPP_STEMS) main_ray_tracer
+CPP_STEMS_SPIDER      = $(SHARED_CPP_STEMS) main_spider
+CPP_STEMS_GIMBAL_LOCK = $(SHARED_CPP_STEMS) main_gimbal_lock
+CPP_STEMS_RAIL        = $(SHARED_CPP_STEMS) main_rail
+CPP_STEMS_STEWART     = $(SHARED_CPP_STEMS) main_stewart
+CPP_STEMS_FANTA       = $(SHARED_CPP_STEMS) main_fanta
+OBJECTS_IK          = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK))
+OBJECTS_IK_CONST    = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_IK_CONST))
+OBJECTS_BOIDS       = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_BOIDS))
+OBJECTS_PRM         = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_PRM))
+OBJECTS_NBODY       = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_NBODY))
+OBJECTS_HEXAPOD     = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_HEXAPOD))
+OBJECTS_SPOT_MINI   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_SPOT_MINI))
+OBJECTS_DELTABOT    = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_DELTABOT))
+OBJECTS_3DPRINTER   = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_3DPRINTER))
+OBJECTS_TERRAIN     = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_TERRAIN))
+OBJECTS_RAY_TRACER  = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_RAY_TRACER))
+OBJECTS_SPIDER      = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_SPIDER))
+OBJECTS_GIMBAL_LOCK = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_GIMBAL_LOCK))
+OBJECTS_RAIL        = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_RAIL))
+OBJECTS_STEWART     = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_STEWART))
+OBJECTS_FANTA       = $(patsubst %, $(BUILD_PATH)/%.o, $(CPP_STEMS_FANTA))
+LINT_FILES          = $(patsubst %, $(BUILD_PATH)/%.lint, $(SHARED_CPP_STEMS))
 
 $(BIN_PATH)/main_ik : $(OBJECTS_IK)
 	mkdir -p $(BIN_PATH)
@@ -179,6 +188,9 @@ $(BIN_PATH)/main_ik_const : $(OBJECTS_IK_CONST)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 $(BIN_PATH)/main_boids : $(OBJECTS_BOIDS)
+	mkdir -p $(BIN_PATH)
+	$(CXX) -o $@ $^ $(LDFLAGS)
+$(BIN_PATH)/main_prm : $(OBJECTS_PRM)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 $(BIN_PATH)/main_nbody : $(OBJECTS_NBODY)
@@ -199,10 +211,13 @@ $(BIN_PATH)/main_3dprinter : $(OBJECTS_3DPRINTER)
 $(BIN_PATH)/main_terrain : $(OBJECTS_TERRAIN)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
+$(BIN_PATH)/main_ray_tracer : $(OBJECTS_RAY_TRACER)
+	mkdir -p $(BIN_PATH)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 $(BIN_PATH)/main_spider : $(OBJECTS_SPIDER)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
-$(BIN_PATH)/main_freerot : $(OBJECTS_FREEROT)
+$(BIN_PATH)/main_gimbal_lock : $(OBJECTS_GIMBAL_LOCK)
 	mkdir -p $(BIN_PATH)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 $(BIN_PATH)/main_rail : $(OBJECTS_RAIL)

@@ -62,6 +62,8 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
+#include <cfenv>
+
 #define BOX_ANGLE_SPEED 2.0
 #define BOX_HEIGHT      0.1
 #define BOX_LENGTH      0.5
@@ -132,11 +134,8 @@ vt::Mesh *terrain = NULL,
          *box2    = NULL,
          *sphere  = NULL;
 
-bool is_bbox_collide      = false;
-bool prev_is_bbox_collide = false;
-
-bool is_sphere_collide      = false;
-bool prev_is_sphere_collide = false;
+bool is_bbox_collide   = false;
+bool is_sphere_collide = false;
 
 static vt::Mesh* create_terrain(std::string     name,
                                 std::string     heightmap_png_filename,
@@ -261,9 +260,9 @@ static glm::vec3 lookup_terrain_normal(vt::BBoxObject* bbox_object,
                                           tex_width,
                                           tex_length);
 
-    glm::vec3 x_dir = glm::normalize(point_right - point_left);
-    glm::vec3 z_dir = glm::normalize(point_front - point_back);
-    return glm::normalize(glm::cross(z_dir, x_dir));
+    glm::vec3 x_dir = vt::safe_normalize(point_right - point_left);
+    glm::vec3 z_dir = vt::safe_normalize(point_front - point_back);
+    return vt::safe_normalize(glm::cross(z_dir, x_dir));
 }
 
 int init_resources()
@@ -290,6 +289,11 @@ int init_resources()
                                                     "src/shaders/phong.f.glsl");
     scene->add_material(phong_material);
 
+    vt::Material* env_mapped_material = new vt::Material("env_mapped",
+                                                         "src/shaders/env_mapped.v.glsl",
+                                                         "src/shaders/env_mapped.f.glsl");
+    scene->add_material(env_mapped_material);
+
     texture_skybox = new vt::Texture("skybox_texture",
                                      "data/SaintPetersSquare2/posx.png",
                                      "data/SaintPetersSquare2/negx.png",
@@ -297,8 +301,9 @@ int init_resources()
                                      "data/SaintPetersSquare2/negy.png",
                                      "data/SaintPetersSquare2/posz.png",
                                      "data/SaintPetersSquare2/negz.png");
-    scene->add_texture(          texture_skybox);
-    skybox_material->add_texture(texture_skybox);
+    scene->add_texture(              texture_skybox);
+    skybox_material->add_texture(    texture_skybox);
+    env_mapped_material->add_texture(texture_skybox);
 
     _box = vt::PrimitiveFactory::create_box("octree", TERRAIN_WIDTH, -1, TERRAIN_LENGTH);
     _box->center_axis();
@@ -319,7 +324,7 @@ int init_resources()
     scene->add_light(light3 = new vt::Light("light3", origin + glm::vec3(0, 0, light_distance), glm::vec3(0, 0, 1)));
 
     mesh_skybox->set_material(skybox_material);
-    mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
+    mesh_skybox->set_color_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
     terrain = create_terrain("terrain",
                              "data/heightmap.png",
@@ -332,7 +337,9 @@ int init_resources()
                              &tex_width,
                              &tex_length);
     terrain->set_material(phong_material);
-    terrain->set_ambient_color(glm::vec3(0));
+    //terrain->set_material(env_mapped_material);
+    terrain->set_reflect_to_refract_ratio(1); // 100% reflective
+    terrain->set_ambient_color(glm::vec3(0, 0, 0));
     scene->add_mesh(terrain);
 
     box = vt::PrimitiveFactory::create_box("box", BOX_WIDTH, BOX_LENGTH, BOX_HEIGHT);
@@ -424,6 +431,8 @@ void onTick()
         user_input = true;
     }
     if(user_input) {
+        glm::vec3 ray_origin = box->in_abs_system();
+        glm::vec3 ray_dir    = box->get_abs_up_direction();
         glm::vec3 _pos_within_terrain = _box->limit(box->get_origin());
         glm::vec2 pos_within_terrain = glm::vec2(_pos_within_terrain.x, _pos_within_terrain.z);
         float terrain_height = lookup_terrain_height(_box,
@@ -449,37 +458,49 @@ void onTick()
         float     delta_angle = glm::degrees(glm::angle(terrain_normal, abs_heading));
         box->rotate(-delta_angle, pivot);
 
-        is_bbox_collide = box->is_bbox_collide(box,
-                                               box2,
-                                               box2);
-        float nearest_distance = 10;
-        is_bbox_collide |= box2->is_ray_intersect(box2,
-                                                  box->in_abs_system(),
-                                                  box->get_abs_up_direction(),
-                                                  &nearest_distance);
-        if(is_bbox_collide != prev_is_bbox_collide) {
-            if(is_bbox_collide) {
-                box2->set_ambient_color(glm::vec3(1, 0, 0));
+        bool is_bbox_collide = box->is_bbox_collide(box,
+                                                    box2,
+                                                    box2);
+        float box_intersection_distance = 10;
+        glm::vec3 box_reflected_ray;
+        glm::vec3 box_intersection_normal;
+        bool is_bbox_ray_intersect = box2->is_ray_intersect(box2,
+                                                            ray_origin,
+                                                            ray_dir,
+                                                            &box_intersection_distance,
+                                                            &box_reflected_ray,
+                                                            &box_intersection_normal);
+        if(is_bbox_collide || is_bbox_ray_intersect) {
+            box2->set_ambient_color(glm::vec3(1, 0, 0));
+        } else {
+            if(wireframe_mode) {
+                box2->set_ambient_color(glm::vec3(0, 1, 0));
             } else {
                 box2->set_ambient_color(glm::vec3(0));
             }
         }
-        prev_is_bbox_collide = is_bbox_collide;
 
-        is_sphere_collide = box->is_sphere_collide(box,
-                                                   sphere->in_abs_system(),
-                                                   0.5);
-        is_sphere_collide |= sphere->as_sphere_is_ray_intersect(sphere,
-                                                                box->in_abs_system(),
-                                                                box->get_abs_up_direction());
-        if(is_sphere_collide != prev_is_sphere_collide) {
-            if(is_sphere_collide) {
-                sphere->set_ambient_color(glm::vec3(1, 0, 0));
+        bool is_sphere_collide = box->is_sphere_collide(box,
+                                                        sphere->in_abs_system(),
+                                                        0.5);
+        float sphere_intersection_distance = 10;
+        glm::vec3 sphere_reflected_ray;
+        glm::vec3 sphere_intersection_normal;
+        bool is_sphere_ray_intersect = sphere->as_sphere_is_ray_intersect(sphere,
+                                                                          ray_origin,
+                                                                          ray_dir,
+                                                                          &sphere_intersection_distance,
+                                                                          &sphere_reflected_ray,
+                                                                          &sphere_intersection_normal);
+        if(is_sphere_collide || is_sphere_ray_intersect) {
+            sphere->set_ambient_color(glm::vec3(1, 0, 0));
+        } else {
+            if(wireframe_mode) {
+                sphere->set_ambient_color(glm::vec3(0, 1, 0));
             } else {
                 sphere->set_ambient_color(glm::vec3(0));
             }
         }
-        prev_is_sphere_collide = is_sphere_collide;
 
         // clear
         //octree->clear();
@@ -509,9 +530,31 @@ void onTick()
         octree->rebalance();
 
         box->m_debug_lines.clear();
-        box->m_debug_lines.push_back(std::tuple<glm::vec3, glm::vec3, glm::vec3>(glm::vec3(0, 1, 1),
-                                                                                 box->in_abs_system(),
-                                                                                 box->in_abs_system(glm::vec3(0, nearest_distance, 0))));
+        float nearest_intersection_distance = BIG_NUMBER;
+        if(box_intersection_distance < nearest_intersection_distance) {
+            nearest_intersection_distance = box_intersection_distance;
+        }
+        if(sphere_intersection_distance < nearest_intersection_distance) {
+            nearest_intersection_distance = sphere_intersection_distance;
+        }
+        glm::vec3 intersection = box->in_abs_system(glm::vec3(0, nearest_intersection_distance, 0));
+        box->m_debug_lines.push_back(std::make_tuple(ray_origin,
+                                                     intersection,
+                                                     glm::vec3(1, 0, 0),
+                                                     4));
+        if(is_bbox_ray_intersect || is_sphere_ray_intersect) {
+            glm::vec3 reflected_ray;
+            if(is_bbox_ray_intersect) {
+                reflected_ray = box_reflected_ray;
+            }
+            if(is_sphere_ray_intersect) {
+                reflected_ray = sphere_reflected_ray;
+            }
+            box->m_debug_lines.push_back(std::make_tuple(intersection,
+                                                         intersection + reflected_ray * static_cast<float>(BIG_NUMBER),
+                                                         glm::vec3(1, 0, 0),
+                                                         4));
+        }
 
         // dump octree
         //octree->dump();
@@ -533,8 +576,6 @@ void onDisplay()
         onTick();
     }
     vt::Scene* scene = vt::Scene::instance();
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if(wireframe_mode) {
         scene->render(true, false, false, vt::Scene::use_material_type_t::USE_WIREFRAME_MATERIAL);
     } else {
@@ -708,8 +749,7 @@ void onMouse(int button, int state, int x, int y)
                 prev_zoom = zoom;
             }
         }
-    }
-    else {
+    } else {
         left_mouse_down = right_mouse_down = false;
     }
 }
@@ -742,6 +782,11 @@ void onReshape(int width, int height)
 
 int main(int argc, char* argv[])
 {
+#if 1
+    // https://stackoverflow.com/questions/5393997/stopping-the-debugger-when-a-nan-floating-point-number-is-produced/5394095
+    feenableexcept(FE_INVALID | FE_OVERFLOW);
+#endif
+
     DEFAULT_CAPTION = argv[0];
 
     glutInit(&argc, argv);

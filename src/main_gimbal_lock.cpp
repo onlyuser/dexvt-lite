@@ -41,7 +41,6 @@
 #include <Camera.h>
 #include <File3ds.h>
 #include <FrameBuffer.h>
-#include <KeyframeMgr.h>
 #include <Light.h>
 #include <Material.h>
 #include <Mesh.h>
@@ -59,28 +58,14 @@
 #include <iostream> // std::cout
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
+#include <unistd.h> // access
 
 #include <cfenv>
 
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
-#define BODY_ANGLE_SPEED             2.0
-#define BODY_ELEVATION               2
-#define BODY_HEIGHT                  0.125
-#define BODY_SPEED                   0.05f
-#define IK_FOOTING_RADIUS            1
-#define IK_ITERS                     2
-#define IK_LEG_COUNT                 6
-#define IK_LEG_RADIUS                1
-#define IK_SEGMENT_COUNT             2
-#define IK_SEGMENT_HEIGHT            0.125
-#define IK_SEGMENT_LENGTH            1.5
-#define IK_SEGMENT_WIDTH             0.125
-#define PATH_RADIUS                  0.5
-#define PATH_LOW_HEIGHT              -(BODY_ELEVATION * 0.25)
-#define PATH_HIGH_HEIGHT             0
-#define PUMP_SHRINK_FACTOR           0.5
-#define PUMP_SIDES                   6
+#define IK_ITERS                     1
+#define IK_SEGMENT_COUNT             3
 
 const char* DEFAULT_CAPTION = "";
 
@@ -101,7 +86,7 @@ glm::vec3 prev_euler,
           euler,
           orbit_speed = glm::vec3(0, -0.5, -0.5);
 float prev_orbit_radius = 0,
-      orbit_radius      = 4,
+      orbit_radius      = 8,
       dolly_speed       = 0.1,
       light_distance    = 4;
 bool show_bbox        = false,
@@ -127,59 +112,10 @@ float prev_zoom         = 0,
       zoom              = 1,
       ortho_dolly_speed = 0.1;
 
-int angle_delta = 1;
+int angle_delta = 2;
 
-vt::Mesh *body = NULL,
-         *base = NULL;
-
-struct IK_Leg
-{
-    vt::Mesh*              m_joint;
-    std::vector<vt::Mesh*> m_ik_meshes;
-    glm::vec3              m_target;
-};
-
-std::vector<IK_Leg*> ik_legs;
-
-static void create_linked_segments(vt::Scene*              scene,
-                                   std::vector<vt::Mesh*>* ik_meshes,
-                                   int                     ik_segment_count,
-                                   std::string             name,
-                                   glm::vec3               box_dim)
-{
-    if(!scene || !ik_meshes) {
-        return;
-    }
-    vt::Mesh* prev_mesh = NULL;
-    glm::vec3 box_dim_inner = glm::vec3(box_dim.x * PUMP_SHRINK_FACTOR,
-                                        box_dim.y * PUMP_SHRINK_FACTOR,
-                                        box_dim.z);
-    for(int i = 0; i < ik_segment_count; i++) {
-        std::stringstream ss;
-        ss << name << "_" << i;
-        vt::Mesh* mesh = vt::PrimitiveFactory::create_cylinder(ss.str(), PUMP_SIDES);
-        mesh->center_axis();
-        mesh->set_euler(glm::vec3(0, 90, 0));
-        mesh->flatten();
-        mesh->set_origin(glm::vec3(0, 0, 0));
-        if(!prev_mesh) {
-            mesh->set_scale(box_dim_inner);
-        } else {
-            mesh->set_scale(box_dim);
-        }
-        mesh->flatten();
-        mesh->center_axis(vt::BBoxObject::ALIGN_Z_MIN);
-        if(!prev_mesh) {
-            mesh->set_origin(glm::vec3(0, 0, 0));
-        } else {
-            mesh->link_parent(prev_mesh, true);
-            mesh->set_origin(glm::vec3(0, 0, box_dim.z)); // must go after link_parent
-        }
-        scene->add_mesh(mesh);
-        ik_meshes->push_back(mesh);
-        prev_mesh = mesh;
-    }
-}
+std::vector<vt::Mesh*> meshes_imported;
+vt::Mesh* dummy = NULL;
 
 int init_resources()
 {
@@ -215,7 +151,7 @@ int init_resources()
     scene->add_texture(          texture_skybox);
     skybox_material->add_texture(texture_skybox);
 
-    glm::vec3 origin = glm::vec3(0, -BODY_ELEVATION * 0.5, 0);
+    glm::vec3 origin = glm::vec3(0);
     camera = new vt::Camera("camera", origin + glm::vec3(0, 0, orbit_radius), origin);
     scene->set_camera(camera);
 
@@ -226,80 +162,23 @@ int init_resources()
     mesh_skybox->set_material(skybox_material);
     mesh_skybox->set_color_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    body = vt::PrimitiveFactory::create_cylinder("body", IK_LEG_COUNT * 0.5, IK_LEG_RADIUS, BODY_HEIGHT);
-    //body->center_axis(vt::BBoxObject::ALIGN_CENTER);
-    body->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
-    body->set_material(phong_material);
-    body->set_ambient_color(glm::vec3(0));
-    scene->add_mesh(body);
-
-    base = vt::PrimitiveFactory::create_cylinder("base", IK_LEG_COUNT * 0.5, IK_FOOTING_RADIUS, BODY_HEIGHT);
-    //body->center_axis(vt::BBoxObject::ALIGN_CENTER);
-    base->set_euler(glm::vec3(0, 0, 360 / IK_LEG_COUNT));
-    base->flatten();
-    base->set_axis(glm::vec3(0, BODY_HEIGHT * 0.5, 0));
-    base->set_origin(glm::vec3(0, -BODY_ELEVATION, 0));
-    base->set_material(phong_material);
-    base->set_ambient_color(glm::vec3(0));
-    scene->add_mesh(base);
-
-    int angles[IK_LEG_COUNT];
-    for(int i = 0; i < IK_LEG_COUNT; i++) {
-        angles[i] = i * 360 / IK_LEG_COUNT;
+    dummy = vt::PrimitiveFactory::create_box("dummy");
+    dummy->center_axis();
+    dummy->set_origin(glm::vec3(0));
+    scene->add_mesh(dummy);
+    const char* model_filename = "data/star_wars/TI_Low0.3ds";
+    if(access(model_filename, F_OK) != -1) {
+        vt::File3ds::load3ds(model_filename, -1, &meshes_imported);
     }
-    for(int i = 0; i < IK_LEG_COUNT; i++) {
-        int from_index = ((i + 1) % IK_LEG_COUNT) / 2 * 2;
-        int to_index   = i / 2 * 2 + 1;
-        IK_Leg* ik_leg = new IK_Leg();
-
-        std::stringstream joint_name_ss;
-        joint_name_ss << "joint_type_" << i;
-        ik_leg->m_joint = vt::PrimitiveFactory::create_box(joint_name_ss.str(), IK_SEGMENT_WIDTH,
-                                                                                IK_SEGMENT_WIDTH,
-                                                                                IK_SEGMENT_WIDTH);
-        ik_leg->m_joint->center_axis();
-        ik_leg->m_joint->link_parent(body);
-        ik_leg->m_joint->set_origin(vt::euler_to_offset(glm::vec3(0, 0, angles[from_index])) * static_cast<float>(IK_LEG_RADIUS));
-        scene->add_mesh(ik_leg->m_joint);
-
-        ik_leg->m_target = vt::euler_to_offset(glm::vec3(0, 0, angles[to_index])) * static_cast<float>(IK_FOOTING_RADIUS) +
-                           glm::vec3(0, -BODY_ELEVATION, 0);
-        std::vector<vt::Mesh*> &ik_meshes = ik_leg->m_ik_meshes;
-        std::stringstream ik_segment_name_ss;
-        ik_segment_name_ss << "ik_box_" << i;
-        create_linked_segments(scene,
-                               &ik_meshes,
-                               IK_SEGMENT_COUNT,
-                               ik_segment_name_ss.str(),
-                               glm::vec3(IK_SEGMENT_WIDTH,
-                                         IK_SEGMENT_HEIGHT,
-                                         IK_SEGMENT_LENGTH));
-        int leg_segment_index = 0;
-        for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
-            (*p)->set_material(phong_material);
-            (*p)->set_ambient_color(glm::vec3(0));
-            if(leg_segment_index) {
-                (*p)->set_joint_type(vt::TransformObject::JOINT_TYPE_PRISMATIC);
-                (*p)->set_enable_joint_constraints(glm::ivec3(1, 1, 1));
-                (*p)->set_joint_constraints_center(glm::vec3(0, 0, IK_SEGMENT_LENGTH * 0.5));
-                (*p)->set_joint_constraints_max_deviation(glm::vec3(0, 0, IK_SEGMENT_LENGTH * 0.5));
-            }
-            leg_segment_index++;
-        }
-        ik_legs.push_back(ik_leg);
+    for(std::vector<vt::Mesh*>::iterator p = meshes_imported.begin(); p != meshes_imported.end(); ++p) {
+        (*p)->set_origin(glm::vec3(0));
+        (*p)->set_scale(glm::vec3(0.33, 0.33, 0.33));
+        (*p)->flatten();
+        (*p)->set_material(phong_material);
+        (*p)->set_ambient_color(glm::vec3(0));
+        (*p)->link_parent(dummy);
+        scene->add_mesh(*p);
     }
-
-    long object_id = 0;
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(glm::vec3( PATH_RADIUS, PATH_LOW_HEIGHT,   PATH_RADIUS), true));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 25,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, PATH_HIGH_HEIGHT,  PATH_RADIUS), true));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, PATH_LOW_HEIGHT,  -PATH_RADIUS), true));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( PATH_RADIUS, PATH_HIGH_HEIGHT, -PATH_RADIUS), true));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( PATH_RADIUS, PATH_LOW_HEIGHT,   PATH_RADIUS), true));
-    vt::KeyframeMgr::instance()->update_control_points(0.5);
-    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_frame_values;
-    vt::KeyframeMgr::instance()->export_frame_values_for_object(object_id, &origin_frame_values, NULL, NULL, true);
-    std::vector<glm::vec3> &origin_keyframe_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_keyframe_values;
-    vt::KeyframeMgr::instance()->export_keyframe_values_for_object(object_id, &origin_keyframe_values, NULL, NULL, true);
 
     return 1;
 }
@@ -340,73 +219,37 @@ void onTick()
     //    return;
     //}
     if(left_key) {
-        glm::vec3 body_euler = body->get_euler();
-        body->set_euler(glm::vec3(EULER_ROLL(body_euler),
-                                  EULER_PITCH(body_euler),
-                                  EULER_YAW(body_euler) - BODY_ANGLE_SPEED));
+        dummy->rotate(angle_delta, dummy->get_abs_heading());
         user_input = true;
     }
     if(right_key) {
-        glm::vec3 body_euler = body->get_euler();
-        body->set_euler(glm::vec3(EULER_ROLL(body_euler),
-                                  EULER_PITCH(body_euler),
-                                  EULER_YAW(body_euler) + BODY_ANGLE_SPEED));
+        dummy->rotate(-angle_delta, dummy->get_abs_heading());
         user_input = true;
     }
     if(up_key) {
-        glm::vec3 body_euler = body->get_euler();
-        body->set_euler(glm::vec3(EULER_ROLL(body_euler),
-                                  EULER_PITCH(body_euler) - BODY_ANGLE_SPEED,
-                                  EULER_YAW(body_euler)));
+        dummy->rotate(-angle_delta, dummy->get_abs_left_direction());
         user_input = true;
     }
     if(down_key) {
-        glm::vec3 body_euler = body->get_euler();
-        body->set_euler(glm::vec3(EULER_ROLL(body_euler),
-                                  EULER_PITCH(body_euler) + BODY_ANGLE_SPEED,
-                                  EULER_YAW(body_euler)));
+        dummy->rotate(angle_delta, dummy->get_abs_left_direction());
         user_input = true;
     }
     if(page_up_key) {
-        glm::vec3 body_origin = body->get_origin();
-        body->set_origin(glm::vec3(body_origin.x,
-                                   body_origin.y + BODY_SPEED,
-                                   body_origin.z));
+        dummy->rotate(angle_delta, dummy->get_abs_up_direction());
         user_input = true;
     }
     if(page_down_key) {
-        glm::vec3 body_origin = body->get_origin();
-        body->set_origin(glm::vec3(body_origin.x,
-                                   body_origin.y - BODY_SPEED,
-                                   body_origin.z));
+        dummy->rotate(-angle_delta, dummy->get_abs_up_direction());
         user_input = true;
     }
-    static int target_index = 0;
-    long object_id = 0;
-    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_frame_values;
-    body->set_origin(origin_frame_values[target_index]);
-    body->get_transform(); // ensure transform is updated
-    target_index = (target_index + 1) % origin_frame_values.size();
     if(user_input) {
-        for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); ++q) {
-            std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-            ik_meshes[0]->set_origin((*q)->m_joint->in_abs_system());
-        }
-        for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); ++r) {
-            std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
-            ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd(ik_meshes[0],
-                                                          glm::vec3(0, 0, IK_SEGMENT_LENGTH),
-                                                          (*r)->m_target,
-                                                          NULL,
-                                                          IK_ITERS,
-                                                          ACCEPT_END_EFFECTOR_DISTANCE,
-                                                          ACCEPT_AVG_ANGLE_DISTANCE);
-        }
+        std::stringstream ss;
+        ss << "Roll=" << EULER_ROLL(dummy->get_euler()) << ", Pitch=" << EULER_PITCH(dummy->get_euler()) << ", Yaw=" << EULER_YAW(dummy->get_euler());
+        std::cout << "\r" << std::setw(80) << std::left << ss.str() << std::flush;
         user_input = false;
     }
     static int angle = 0;
     angle = (angle + angle_delta) % 360;
-    user_input = true;
 }
 
 char* get_help_string()
@@ -472,25 +315,15 @@ void onKeyboard(unsigned char key, int x, int y)
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
-                body->set_ambient_color(glm::vec3(1));
-                base->set_ambient_color(glm::vec3(1));
-                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); ++q) {
-                    (*q)->m_joint->set_ambient_color(glm::vec3(1, 0, 0));
-                    std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
-                        (*p)->set_ambient_color(glm::vec3(0, 1, 0));
-                    }
+                dummy->set_ambient_color(glm::vec3(1, 0, 0));
+                for(std::vector<vt::Mesh*>::iterator p = meshes_imported.begin(); p != meshes_imported.end(); ++p) {
+                    (*p)->set_ambient_color(glm::vec3(1));
                 }
             } else {
+                dummy->set_ambient_color(glm::vec3(0));
                 glPolygonMode(GL_FRONT, GL_FILL);
-                body->set_ambient_color(glm::vec3(0));
-                base->set_ambient_color(glm::vec3(0));
-                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); ++q) {
-                    (*q)->m_joint->set_ambient_color(glm::vec3(0));
-                    std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
-                        (*p)->set_ambient_color(glm::vec3(0));
-                    }
+                for(std::vector<vt::Mesh*>::iterator p = meshes_imported.begin(); p != meshes_imported.end(); ++p) {
+                    (*p)->set_ambient_color(glm::vec3(0));
                 }
             }
             break;
@@ -521,12 +354,10 @@ void onSpecial(int key, int x, int y)
         case GLUT_KEY_F3:
             light3->set_enabled(!light3->is_enabled());
             break;
-        case GLUT_KEY_HOME: // target
-            {
-                body->set_origin(glm::vec3(0));
-                body->set_euler(glm::vec3(0));
-                user_input = true;
-            }
+        case GLUT_KEY_HOME:
+            dummy->set_euler(glm::vec3(0));
+            dummy->get_transform(true); // TODO: why is this necessary?
+            user_input = true;
             break;
         case GLUT_KEY_LEFT:
             left_key = true;
@@ -623,6 +454,7 @@ void onReshape(int width, int height)
 
 int main(int argc, char* argv[])
 {
+// NOTE: still something wrong with 3ds file loading; crashes on Mesh.cpp:502 in vt::Mesh::transform_vertices
 #if 1
     // https://stackoverflow.com/questions/5393997/stopping-the-debugger-when-a-nan-floating-point-number-is-produced/5394095
     feenableexcept(FE_INVALID | FE_OVERFLOW);

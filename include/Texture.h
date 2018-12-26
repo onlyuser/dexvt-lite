@@ -39,23 +39,23 @@ class Texture : public NamedObject,
 public:
     typedef enum { RGBA, RGB, RED, DEPTH } format_t;
 
-    Texture(std::string          name            = "",
-            format_t             internal_format = Texture::RGBA,
-            glm::ivec2           dim             = glm::ivec2(DEFAULT_TEXTURE_WIDTH,
-                                                              DEFAULT_TEXTURE_HEIGHT),
-            bool                 smooth          = true,
-            format_t             format          = Texture::RGBA,
-            const unsigned char* pixels      = NULL);
-    Texture(std::string name,
-            std::string png_filename,
-            bool        smooth = true);
-    Texture(std::string name,
-            std::string png_filename_pos_x,
-            std::string png_filename_neg_x,
-            std::string png_filename_pos_y,
-            std::string png_filename_neg_y,
-            std::string png_filename_pos_z,
-            std::string png_filename_neg_z);
+    Texture(const std::string&         name            = "",
+                  format_t             internal_format = Texture::RGBA,
+                  glm::ivec2           dim             = glm::ivec2(DEFAULT_TEXTURE_WIDTH,
+                                                                    DEFAULT_TEXTURE_HEIGHT),
+                  bool                 smooth          = true,
+                  format_t             format          = Texture::RGBA,
+                  const unsigned char* pixels          = NULL);
+    Texture(const std::string& name,
+            const std::string& png_filename,
+                  bool         smooth = true);
+    Texture(const std::string& name,
+            const std::string& png_filename_pos_x,
+            const std::string& png_filename_neg_x,
+            const std::string& png_filename_pos_y,
+            const std::string& png_filename_neg_y,
+            const std::string& png_filename_pos_z,
+            const std::string& png_filename_neg_z);
     virtual ~Texture();
     void bind();
 
@@ -79,7 +79,10 @@ private:
 
 public:
     size_t size() const;
+// NOTE: (warning) The class 'Texture' has 'operator=' but lack of 'copy constructor'.
+#if 1
     Texture& operator=(Texture& other);
+#endif
 
     // basic modifiers
     void randomize(bool binary = false);

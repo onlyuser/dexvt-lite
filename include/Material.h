@@ -36,10 +36,11 @@ class Material : public NamedObject
 public:
     typedef std::vector<Texture*> textures_t;
 
-    Material(std::string name                 = "",
-             std::string vertex_shader_file   = "",
-             std::string fragment_shader_file = "",
-             bool        use_overlay          = false);
+    Material(const std::string& name                 = "",
+             const std::string& vertex_shader_file   = "",
+             const std::string& fragment_shader_file = "",
+                   bool         use_overlay          = false,
+                   bool         use_ssao             = false);
     virtual ~Material();
     Program* get_program() const
     {
@@ -63,8 +64,8 @@ public:
 
     Texture* get_texture_by_index(int index) const;
     int get_texture_index(Texture* texture) const;
-    Texture* get_texture_by_name(std::string name) const;
-    int get_texture_index_by_name(std::string name) const;
+    Texture* get_texture_by_name(const std::string& name) const;
+    int get_texture_index_by_name(const std::string& name) const;
 
     bool use_overlay() const
     {

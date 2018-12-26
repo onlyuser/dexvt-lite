@@ -60,6 +60,8 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
+#include <cfenv>
+
 #define ACCEPT_AVG_ANGLE_DISTANCE    0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE 0.001
 #define BODY_ANGLE_SPEED             2.0
@@ -75,6 +77,8 @@
 #define IK_SEGMENT_LENGTH            1
 #define IK_SEGMENT_WIDTH             0.25
 #define PATH_RADIUS                  0.5
+#define PATH_LOW_HEIGHT              (-BODY_ELEVATION * 0.25)
+#define PATH_HIGH_HEIGHT             0
 
 const char* DEFAULT_CAPTION = "";
 
@@ -208,7 +212,7 @@ int init_resources()
     scene->add_light(light3 = new vt::Light("light3", origin + glm::vec3(0, 0, light_distance), glm::vec3(0, 0, 1)));
 
     mesh_skybox->set_material(skybox_material);
-    mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
+    mesh_skybox->set_color_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
     body = vt::PrimitiveFactory::create_cylinder("body", IK_LEG_COUNT, IK_LEG_RADIUS, BODY_HEIGHT);
     //body->center_axis(vt::BBoxObject::ALIGN_CENTER);
@@ -246,7 +250,7 @@ int init_resources()
                                          IK_SEGMENT_LENGTH));
         ik_meshes[0]->link_parent(ik_leg->m_joint);
         int leg_segment_index = 0;
-        for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+        for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
             (*p)->set_material(phong_material);
             (*p)->set_ambient_color(glm::vec3(0));
             if(!leg_segment_index) {
@@ -267,19 +271,16 @@ int init_resources()
     }
 
     long object_id = 0;
-    float low_height  = -BODY_ELEVATION * 0.25;
-    float high_height = 0;
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS), true));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 25,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, high_height,  PATH_RADIUS), true));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, low_height,  -PATH_RADIUS), true));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( PATH_RADIUS, high_height, -PATH_RADIUS), true));
-    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( PATH_RADIUS, low_height,   PATH_RADIUS), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 0,   new vt::Keyframe(glm::vec3( PATH_RADIUS, PATH_LOW_HEIGHT,   PATH_RADIUS), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 25,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, PATH_HIGH_HEIGHT,  PATH_RADIUS), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 50,  new vt::Keyframe(glm::vec3(-PATH_RADIUS, PATH_LOW_HEIGHT,  -PATH_RADIUS), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 75,  new vt::Keyframe(glm::vec3( PATH_RADIUS, PATH_HIGH_HEIGHT, -PATH_RADIUS), true));
+    vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, 100, new vt::Keyframe(glm::vec3( PATH_RADIUS, PATH_LOW_HEIGHT,   PATH_RADIUS), true));
     vt::KeyframeMgr::instance()->update_control_points(0.5);
     std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_frame_values;
     vt::KeyframeMgr::instance()->export_frame_values_for_object(object_id, &origin_frame_values, NULL, NULL, true);
     std::vector<glm::vec3> &origin_keyframe_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_keyframe_values;
     vt::KeyframeMgr::instance()->export_keyframe_values_for_object(object_id, &origin_keyframe_values, NULL, NULL, true);
-    vt::Scene::instance()->m_debug_targets = origin_frame_values;
 
     return 1;
 }
@@ -362,11 +363,13 @@ void onTick()
         user_input = true;
     }
     static int target_index = 0;
-    body->set_origin(vt::Scene::instance()->m_debug_targets[target_index]);
+    long object_id = 0;
+    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_frame_values;
+    body->set_origin(origin_frame_values[target_index]);
     body->get_transform(); // ensure transform is updated
-    target_index = (target_index + 1) % vt::Scene::instance()->m_debug_targets.size();
+    target_index = (target_index + 1) % origin_frame_values.size();
     if(user_input) {
-        for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
+        for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); ++r) {
             std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
             ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd((*r)->m_joint,
                                                           glm::vec3(0, 0, IK_SEGMENT_LENGTH),
@@ -394,8 +397,6 @@ void onDisplay()
         onTick();
     }
     vt::Scene* scene = vt::Scene::instance();
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if(wireframe_mode) {
         scene->render(true, false, false, vt::Scene::use_material_type_t::USE_WIREFRAME_MATERIAL);
     } else {
@@ -449,20 +450,20 @@ void onKeyboard(unsigned char key, int x, int y)
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
                 body->set_ambient_color(glm::vec3(1));
-                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
+                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); ++q) {
                     (*q)->m_joint->set_ambient_color(glm::vec3(1, 0, 0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
                         (*p)->set_ambient_color(glm::vec3(0, 1, 0));
                     }
                 }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
                 body->set_ambient_color(glm::vec3(0));
-                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
+                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); ++q) {
                     (*q)->m_joint->set_ambient_color(glm::vec3(0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
                         (*p)->set_ambient_color(glm::vec3(0));
                     }
                 }
@@ -564,8 +565,7 @@ void onMouse(int button, int state, int x, int y)
                 prev_zoom = zoom;
             }
         }
-    }
-    else {
+    } else {
         left_mouse_down = right_mouse_down = false;
     }
 }
@@ -598,6 +598,11 @@ void onReshape(int width, int height)
 
 int main(int argc, char* argv[])
 {
+#if 1
+    // https://stackoverflow.com/questions/5393997/stopping-the-debugger-when-a-nan-floating-point-number-is-produced/5394095
+    feenableexcept(FE_INVALID | FE_OVERFLOW);
+#endif
+
     DEFAULT_CAPTION = argv[0];
 
     glutInit(&argc, argv);

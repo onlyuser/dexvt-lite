@@ -29,7 +29,7 @@ public:
     {
         return m_name;
     }
-    void set_name(std::string name)
+    void set_name(const std::string& name)
     {
         m_name = name;
     }
@@ -37,16 +37,16 @@ public:
 protected:
     std::string m_name;
 
-    NamedObject(std::string name);
+    explicit NamedObject(const std::string& name);
 };
 
 struct FindByName : std::unary_function<NamedObject*, std::string>
 {
     std::string m_key;
 
-    FindByName(std::string key)
+    explicit FindByName(const std::string& key)
+        : m_key(key)
     {
-        m_key = key;
     }
 
     bool operator()(const NamedObject* x) const

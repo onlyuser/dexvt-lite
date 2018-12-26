@@ -41,6 +41,7 @@ public:
     BBoxObject(glm::vec3 min, glm::vec3 max);
     void set_min_max(glm::vec3 min, glm::vec3 max);
     void get_min_max(glm::vec3* min, glm::vec3* max) const;
+    glm::vec3 get_dim() const;
     glm::vec3 get_center(align_t align = ALIGN_CENTER) const;
     bool is_within(glm::vec3 pos) const;
     glm::vec3 limit(glm::vec3 pos) const;
@@ -54,10 +55,15 @@ public:
     bool is_ray_intersect(TransformObject* self_transform_object,
                           glm::vec3        ray_origin,
                           glm::vec3        ray_dir,
-                          float*           alpha);
+                          float*           dist           = NULL,
+                          glm::vec3*       next_ray       = NULL,
+                          glm::vec3*       surface_normal = NULL);
     bool as_sphere_is_ray_intersect(TransformObject* self_transform_object,
                                     glm::vec3        ray_origin,
-                                    glm::vec3        ray_dir);
+                                    glm::vec3        ray_dir,
+                                    float*           dist           = NULL,
+                                    glm::vec3*       next_ray       = NULL,
+                                    glm::vec3*       surface_normal = NULL);
 
 protected:
     glm::vec3 m_min;

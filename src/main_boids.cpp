@@ -63,13 +63,15 @@
 #include <iomanip> // std::setprecision
 #include <math.h>
 
+#include <cfenv>
+
 #define BOID_AVOID_RADIUS            0.25f
 #define BOID_FLOCKING_RADIUS         4
 #define BOID_NEAREST_NEIGHBOR_RADIUS 2
 #define BOID_OBSTACLE_AVOID_RADIUS   2
 #define BOID_OBSTACLE_REVERSE_RADIUS 1
 
-#define BOID_COUNT            40 //100
+#define BOID_COUNT            80
 #define BOID_DIM              glm::vec3(0.0625, 0.0625, 0.25)
 #define BOID_INIT_SCATTER_MAX glm::vec3(5)
 #define BOID_INIT_SCATTER_MIN glm::vec3(-5)
@@ -155,11 +157,11 @@ static void randomize_meshes(std::vector<vt::Mesh*>* meshes,
                              glm::vec3               scatter_min,
                              glm::vec3               scatter_max)
 {
-    for(std::vector<vt::Mesh*>::iterator p = meshes->begin(); p != meshes->end(); p++) {
+    for(std::vector<vt::Mesh*>::iterator p = meshes->begin(); p != meshes->end(); ++p) {
         glm::vec3 rand_vec(static_cast<float>(rand()) / RAND_MAX,
                            static_cast<float>(rand()) / RAND_MAX,
                            static_cast<float>(rand()) / RAND_MAX);
-        (*p)->set_origin(LERP(scatter_min, scatter_max, rand_vec));
+        (*p)->set_origin(MIX(scatter_min, scatter_max, rand_vec));
         (*p)->set_euler(glm::vec3(-180 + static_cast<float>(rand()) / RAND_MAX * 360,
                                   -90  + static_cast<float>(rand()) / RAND_MAX * 90,
                                   -180 + static_cast<float>(rand()) / RAND_MAX * 360));
@@ -230,7 +232,7 @@ static void create_obstacles(vt::Scene*              scene,
         glm::vec3 rand_vec(static_cast<float>(rand()) / RAND_MAX,
                            static_cast<float>(rand()) / RAND_MAX,
                            static_cast<float>(rand()) / RAND_MAX);
-        mesh->set_scale(LERP(dim_min, dim_max, rand_vec));
+        mesh->set_scale(MIX(dim_min, dim_max, rand_vec));
         mesh->flatten();
         mesh->center_axis();
         scene->add_mesh(mesh);
@@ -297,7 +299,7 @@ int init_resources()
     scene->add_light(light3 = new vt::Light("light3", origin + glm::vec3(0, 0, light_distance), glm::vec3(0, 0, 1)));
 
     mesh_skybox->set_material(skybox_material);
-    mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
+    mesh_skybox->set_color_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
     create_boids(scene,
                  &boid_meshes,
@@ -307,7 +309,7 @@ int init_resources()
                  BOID_DIM,
                  "boid");
     long index = 0;
-    for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
+    for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); ++p) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
         octree->insert(index, (*p)->get_origin());
@@ -322,7 +324,7 @@ int init_resources()
                      OBSTACLE_DIM_MIN,
                      OBSTACLE_DIM_MAX,
                      "box");
-    for(std::vector<vt::Mesh*>::iterator p = obstacle_meshes.begin(); p != obstacle_meshes.end(); p++) {
+    for(std::vector<vt::Mesh*>::iterator p = obstacle_meshes.begin(); p != obstacle_meshes.end(); ++p) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
     }
@@ -330,7 +332,7 @@ int init_resources()
     // NOTE: must add last!
     obstacle_meshes.push_back(box);
 
-    vt::Scene::instance()->m_debug_target = targets[target_index];
+    scene->m_debug_targets.push_back(std::make_tuple(targets[target_index], glm::vec3(1, 0, 1), 1, 1));
 
     return 1;
 }
@@ -375,7 +377,7 @@ void onTick()
     //octree->clear();
 
     long index = 0;
-    for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
+    for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); ++p) {
         vt::Mesh* self_object = *p;
 
         // keep boids in octree
@@ -395,7 +397,7 @@ void onTick()
     octree->rebalance();
 
     long index2 = 0;
-    for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
+    for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); ++p) {
         vt::Mesh* self_object         = *p;
         glm::vec3 self_object_pos     = self_object->get_origin();
         glm::vec3 self_object_heading = self_object->get_abs_heading();
@@ -410,17 +412,17 @@ void onTick()
         float min_nearest_distance_left  = BIG_NUMBER;
         float min_nearest_distance_right = BIG_NUMBER;
 
-        glm::vec3 nearest_dir_up = glm::normalize(self_object->in_abs_system(glm::vec3(0,
-                                                                                       lateral_offset,
-                                                                                       BIG_NUMBER)) - self_object->in_abs_system());
-        glm::vec3 nearest_dir_left = glm::normalize(self_object->in_abs_system(glm::vec3(lateral_offset * cos(glm::radians(210.0f)),
-                                                                                         lateral_offset * sin(glm::radians(210.0f)),
-                                                                                         BIG_NUMBER)) - self_object->in_abs_system());
-        glm::vec3 nearest_dir_right = glm::normalize(self_object->in_abs_system(glm::vec3(lateral_offset * cos(glm::radians(330.0f)),
-                                                                                          lateral_offset * sin(glm::radians(330.0f)),
-                                                                                          BIG_NUMBER)) - self_object->in_abs_system());
+        glm::vec3 nearest_dir_up = vt::safe_normalize(self_object->in_abs_system(glm::vec3(0,
+                                                                                           lateral_offset,
+                                                                                           BIG_NUMBER)) - self_object->in_abs_system());
+        glm::vec3 nearest_dir_left = vt::safe_normalize(self_object->in_abs_system(glm::vec3(lateral_offset * cos(glm::radians(210.0f)),
+                                                                                             lateral_offset * sin(glm::radians(210.0f)),
+                                                                                             BIG_NUMBER)) - self_object->in_abs_system());
+        glm::vec3 nearest_dir_right = vt::safe_normalize(self_object->in_abs_system(glm::vec3(lateral_offset * cos(glm::radians(330.0f)),
+                                                                                              lateral_offset * sin(glm::radians(330.0f)),
+                                                                                              BIG_NUMBER)) - self_object->in_abs_system());
 
-        for(std::vector<vt::Mesh*>::iterator q = obstacle_meshes.begin(); q != obstacle_meshes.end(); q++) {
+        for(std::vector<vt::Mesh*>::iterator q = obstacle_meshes.begin(); q != obstacle_meshes.end(); ++q) {
             vt::Mesh* obstacle_mesh = *q;
 
             float nearest_distance       = BIG_NUMBER;
@@ -474,19 +476,22 @@ void onTick()
         float lateral_offset_left  = min_nearest_distance_left  * tan(glm::radians(BOID_LIDAR_FOV));
         float lateral_offset_right = min_nearest_distance_right * tan(glm::radians(BOID_LIDAR_FOV));
 
-        self_object->m_debug_lines.push_back(std::tuple<glm::vec3, glm::vec3, glm::vec3>(glm::vec3(0, 1, 1),
-                                                                                         self_object->in_abs_system(),
-                                                                                         self_object->in_abs_system(glm::vec3(0, lateral_offset_up, min_nearest_distance_up))));
-        self_object->m_debug_lines.push_back(std::tuple<glm::vec3, glm::vec3, glm::vec3>(glm::vec3(0, 1, 1),
-                                                                                         self_object->in_abs_system(),
-                                                                                         self_object->in_abs_system(glm::vec3(lateral_offset_left * cos(glm::radians(210.0f)),
-                                                                                                                                lateral_offset_left * sin(glm::radians(210.0f)),
-                                                                                                                                min_nearest_distance_left))));
-        self_object->m_debug_lines.push_back(std::tuple<glm::vec3, glm::vec3, glm::vec3>(glm::vec3(0, 1, 1),
-                                                                                         self_object->in_abs_system(),
-                                                                                         self_object->in_abs_system(glm::vec3(lateral_offset_right * cos(glm::radians(330.0f)),
-                                                                                                                              lateral_offset_right * sin(glm::radians(330.0f)),
-                                                                                                                              min_nearest_distance_right))));
+        self_object->m_debug_lines.push_back(std::make_tuple(self_object->in_abs_system(),
+                                                             self_object->in_abs_system(glm::vec3(0, lateral_offset_up, min_nearest_distance_up)),
+                                                             glm::vec3(0, 1, 1),
+                                                             1));
+        self_object->m_debug_lines.push_back(std::make_tuple(self_object->in_abs_system(),
+                                                             self_object->in_abs_system(glm::vec3(lateral_offset_left * cos(glm::radians(210.0f)),
+                                                                                                  lateral_offset_left * sin(glm::radians(210.0f)),
+                                                                                                  min_nearest_distance_left)),
+                                                             glm::vec3(0, 1, 1),
+                                                             1));
+        self_object->m_debug_lines.push_back(std::make_tuple(self_object->in_abs_system(),
+                                                             self_object->in_abs_system(glm::vec3(lateral_offset_right * cos(glm::radians(330.0f)),
+                                                                                                  lateral_offset_right * sin(glm::radians(330.0f)),
+                                                                                                  min_nearest_distance_right)),
+                                                             glm::vec3(0, 1, 1),
+                                                             1));
 #endif
 
         // obstacle normal
@@ -494,7 +499,7 @@ void onTick()
         glm::vec3 nearest_obstacle_up     = self_object->in_abs_system() + nearest_dir_up                 * min_nearest_distance_up;
         glm::vec3 nearest_obstacle_left   = self_object->in_abs_system() + nearest_dir_left               * min_nearest_distance_left;
         glm::vec3 nearest_obstacle_right  = self_object->in_abs_system() + nearest_dir_right              * min_nearest_distance_right;
-        glm::vec3 nearest_obstacle_normal = glm::normalize(glm::cross(nearest_obstacle_right - nearest_obstacle_up, nearest_obstacle_left - nearest_obstacle_up));
+        glm::vec3 nearest_obstacle_normal = vt::safe_normalize(glm::cross(nearest_obstacle_right - nearest_obstacle_up, nearest_obstacle_left - nearest_obstacle_up));
         //self_object->m_debug_lines.push_back(std::pair<glm::vec3, glm::vec3>(nearest_obstacle,
         //                                                                     nearest_obstacle + nearest_obstacle_normal));
 
@@ -525,10 +530,10 @@ void onTick()
                             &nearest_k_indices,
                             BOID_NEAREST_NEIGHBOR_RADIUS))
             {
-                glm::vec3 group_centroid;
-                glm::vec3 average_heading;
+                glm::vec3 group_centroid(0);
+                glm::vec3 average_heading(0);
                 size_t valid_neighbor_count = 0;
-                for(std::vector<long>::iterator q = nearest_k_indices.begin(); q != nearest_k_indices.end(); q++) {
+                for(std::vector<long>::iterator q = nearest_k_indices.begin(); q != nearest_k_indices.end(); ++q) {
                     if(*q == index2) { // ignore self
                         continue;
                     }
@@ -537,13 +542,13 @@ void onTick()
                     glm::vec3 other_object_heading = other_object->get_abs_heading();
 
                     // collect stats
-                    if(glm::degrees(glm::angle(self_object_heading, other_object_heading))                               < BOID_MAX_HEADING_DEVIATION &&
-                       glm::degrees(glm::angle(self_object_heading, glm::normalize(other_object_pos - self_object_pos))) < BOID_MAX_FOV_DEVIATION)
+                    if(glm::degrees(glm::angle(self_object_heading, other_object_heading))                                   < BOID_MAX_HEADING_DEVIATION &&
+                       glm::degrees(glm::angle(self_object_heading, vt::safe_normalize(other_object_pos - self_object_pos))) < BOID_MAX_FOV_DEVIATION)
                     {
                         group_centroid  += other_object_pos;
                         average_heading += other_object_heading;
+                        self_object->m_debug_lines.push_back(std::make_tuple(self_object_pos, other_object_pos, glm::vec3(1, 1, 0), 1));
                         valid_neighbor_count++;
-                        self_object->m_debug_lines.push_back(std::tuple<glm::vec3, glm::vec3, glm::vec3>(glm::vec3(1, 1, 0), self_object_pos, other_object_pos));
                     }
                 }
                 if(nearest_k_indices.size() >= 2) {
@@ -563,7 +568,7 @@ void onTick()
                         float contrib_factor = 1.0f / valid_neighbor_count;
                         group_centroid *= contrib_factor;
                         average_heading = self_object_pos + average_heading * contrib_factor;
-                        glm::vec3 weighted_average_target = LERP(group_centroid, average_heading, BOID_FLOCKING_COHESION_TO_ALIGNMENT_RATIO);
+                        glm::vec3 weighted_average_target = MIX(group_centroid, average_heading, BOID_FLOCKING_COHESION_TO_ALIGNMENT_RATIO);
                         self_object->update_boid(weighted_average_target,
                                                  boid_speed,
                                                  BOID_ANGLE_DELTA,
@@ -610,8 +615,6 @@ void onDisplay()
         onTick();
     }
     vt::Scene* scene = vt::Scene::instance();
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if(wireframe_mode) {
         scene->render(true, false, false, vt::Scene::use_material_type_t::USE_WIREFRAME_MATERIAL);
     } else {
@@ -641,7 +644,7 @@ void onKeyboard(unsigned char key, int x, int y)
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
             if(show_guide_wires) {
-                vt::Scene::instance()->m_debug_target = targets[target_index];
+                vt::Scene::instance()->m_debug_targets[0] = std::make_tuple(targets[target_index], glm::vec3(1, 0, 1), 1, 1);
             }
             break;
         case 'h': // help
@@ -661,9 +664,11 @@ void onKeyboard(unsigned char key, int x, int y)
             }
             break;
         case 'r': // reset
+            obstacle_meshes.pop_back();
             randomize_meshes(&obstacle_meshes,
                              OBSTACLE_INIT_SCATTER_MIN,
                              OBSTACLE_INIT_SCATTER_MAX);
+            obstacle_meshes.push_back(box);
             randomize_boids(&boid_meshes,
                             BOID_INIT_SCATTER_MIN,
                             BOID_INIT_SCATTER_MAX);
@@ -676,18 +681,18 @@ void onKeyboard(unsigned char key, int x, int y)
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
-                for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
+                for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); ++p) {
                     (*p)->set_ambient_color(glm::vec3(1));
                 }
-                for(std::vector<vt::Mesh*>::iterator p = obstacle_meshes.begin(); p != obstacle_meshes.end(); p++) {
+                for(std::vector<vt::Mesh*>::iterator p = obstacle_meshes.begin(); p != obstacle_meshes.end(); ++p) {
                     (*p)->set_ambient_color(glm::vec3(1));
                 }
             } else {
                 glPolygonMode(GL_FRONT, GL_FILL);
-                for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); p++) {
+                for(std::vector<vt::Mesh*>::iterator p = boid_meshes.begin(); p != boid_meshes.end(); ++p) {
                     (*p)->set_ambient_color(glm::vec3(0));
                 }
-                for(std::vector<vt::Mesh*>::iterator p = obstacle_meshes.begin(); p != obstacle_meshes.end(); p++) {
+                for(std::vector<vt::Mesh*>::iterator p = obstacle_meshes.begin(); p != obstacle_meshes.end(); ++p) {
                     (*p)->set_ambient_color(glm::vec3(0));
                 }
             }
@@ -724,7 +729,7 @@ void onSpecial(int key, int x, int y)
                 size_t target_count = sizeof(targets) / sizeof(targets[0]);
                 target_index = (target_index + 1) % target_count;
                 std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
-                vt::Scene::instance()->m_debug_target = targets[target_index];
+                vt::Scene::instance()->m_debug_targets[0] = std::make_tuple(targets[target_index], glm::vec3(1, 0, 1), 1, 1);
             }
             break;
         case GLUT_KEY_LEFT:
@@ -789,8 +794,7 @@ void onMouse(int button, int state, int x, int y)
                 prev_zoom = zoom;
             }
         }
-    }
-    else {
+    } else {
         left_mouse_down = right_mouse_down = false;
     }
 }
@@ -823,6 +827,12 @@ void onReshape(int width, int height)
 
 int main(int argc, char* argv[])
 {
+// NOTE: still something wrong; crashes on startup; only doesn't crash in gdb
+#if 1
+    // https://stackoverflow.com/questions/5393997/stopping-the-debugger-when-a-nan-floating-point-number-is-produced/5394095
+    feenableexcept(FE_INVALID | FE_OVERFLOW);
+#endif
+
     DEFAULT_CAPTION = argv[0];
 
     glutInit(&argc, argv);

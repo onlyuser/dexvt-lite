@@ -58,6 +58,7 @@ public:
         var_uniform_type_camera_pos,
         var_uniform_type_color_texture,
         var_uniform_type_color_texture2,
+        var_uniform_type_color_texture_source,
         var_uniform_type_env_map_texture,
         var_uniform_type_frontface_depth_overlay_texture,
         var_uniform_type_glow_cutoff_threshold,
@@ -73,14 +74,48 @@ public:
         var_uniform_type_mvp_transform,
         var_uniform_type_normal_transform,
         var_uniform_type_random_texture,
+        var_uniform_type_ray_tracer_render_mode,
+        var_uniform_type_ray_tracer_bounce_count,
+        var_uniform_type_ray_tracer_box_color,
+        var_uniform_type_ray_tracer_box_count,
+        var_uniform_type_ray_tracer_box_diffuse_fuzz,
+        var_uniform_type_ray_tracer_box_eta,
+        var_uniform_type_ray_tracer_box_inverse_transform,
+        var_uniform_type_ray_tracer_box_luminosity,
+        var_uniform_type_ray_tracer_box_max,
+        var_uniform_type_ray_tracer_box_min,
+        var_uniform_type_ray_tracer_box_reflectance,
+        var_uniform_type_ray_tracer_box_transform,
+        var_uniform_type_ray_tracer_box_transparency,
+        var_uniform_type_ray_tracer_plane_color,
+        var_uniform_type_ray_tracer_plane_count,
+        var_uniform_type_ray_tracer_plane_diffuse_fuzz,
+        var_uniform_type_ray_tracer_plane_eta,
+        var_uniform_type_ray_tracer_plane_luminosity,
+        var_uniform_type_ray_tracer_plane_normal,
+        var_uniform_type_ray_tracer_plane_point,
+        var_uniform_type_ray_tracer_plane_reflectance,
+        var_uniform_type_ray_tracer_plane_transparency,
+        var_uniform_type_ray_tracer_random_point_count,
+        var_uniform_type_ray_tracer_random_points,
+        var_uniform_type_ray_tracer_random_seed,
+        var_uniform_type_ray_tracer_sphere_color,
+        var_uniform_type_ray_tracer_sphere_count,
+        var_uniform_type_ray_tracer_sphere_diffuse_fuzz,
+        var_uniform_type_ray_tracer_sphere_eta,
+        var_uniform_type_ray_tracer_sphere_luminosity,
+        var_uniform_type_ray_tracer_sphere_origin,
+        var_uniform_type_ray_tracer_sphere_radius,
+        var_uniform_type_ray_tracer_sphere_reflectance,
+        var_uniform_type_ray_tracer_sphere_transparency,
         var_uniform_type_reflect_to_refract_ratio,
         var_uniform_type_ssao_sample_kernel_pos,
-        var_uniform_type_viewport_dim,
         var_uniform_type_view_proj_transform,
+        var_uniform_type_viewport_dim,
         var_uniform_type_count
     };
 
-    Program(std::string name);
+    explicit Program(const std::string& name);
     virtual ~Program();
     void attach_shader(Shader* shader);
     Shader* get_vertex_shader() const
@@ -101,7 +136,7 @@ public:
             GLint* params) const;
     static std::string get_var_attribute_name(int id);
     static std::string get_var_uniform_name(int id);
-    bool check_var_exists_in_shader(var_type_t var_type, std::string name) const;
+    bool check_var_exists_in_shader(var_type_t var_type, const std::string& name) const;
     bool add_var(var_type_t var_type, std::string name);
     bool has_var(var_type_t var_type, std::string name) const;
     bool has_var(var_type_t var_type, int id) const;

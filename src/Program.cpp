@@ -40,40 +40,75 @@ Program::var_attribute_type_to_name_table_t Program::m_var_attribute_type_to_nam
         };
 
 Program::var_uniform_type_to_name_table_t Program::m_var_uniform_type_to_name_table[] = {
-        {Program::var_uniform_type_ambient_color,                   "ambient_color"},
-        {Program::var_uniform_type_backface_depth_overlay_texture,  "backface_depth_overlay_texture"},
-        {Program::var_uniform_type_backface_normal_overlay_texture, "backface_normal_overlay_texture"},
-        {Program::var_uniform_type_bloom_kernel,                    "bloom_kernel"},
-        {Program::var_uniform_type_bump_texture,                    "bump_texture"},
-        {Program::var_uniform_type_camera_dir,                      "camera_dir"},
-        {Program::var_uniform_type_camera_far,                      "camera_far"},
-        {Program::var_uniform_type_camera_near,                     "camera_near"},
-        {Program::var_uniform_type_camera_pos,                      "camera_pos"},
-        {Program::var_uniform_type_color_texture,                   "color_texture"},
-        {Program::var_uniform_type_color_texture2,                  "color_texture2"},
-        {Program::var_uniform_type_env_map_texture,                 "env_map_texture"},
-        {Program::var_uniform_type_frontface_depth_overlay_texture, "frontface_depth_overlay_texture"},
-        {Program::var_uniform_type_glow_cutoff_threshold,           "glow_cutoff_threshold"},
-        {Program::var_uniform_type_image_res,                       "image_res"},
-        {Program::var_uniform_type_inv_normal_transform,            "inv_normal_transform"},
-        {Program::var_uniform_type_inv_projection_transform,        "inv_projection_transform"},
-        {Program::var_uniform_type_inv_view_proj_transform,         "inv_view_proj_transform"},
-        {Program::var_uniform_type_light_color,                     "light_color"},
-        {Program::var_uniform_type_light_count,                     "light_count"},
-        {Program::var_uniform_type_light_enabled,                   "light_enabled"},
-        {Program::var_uniform_type_light_pos,                       "light_pos"},
-        {Program::var_uniform_type_model_transform,                 "model_transform"},
-        {Program::var_uniform_type_mvp_transform,                   "mvp_transform"},
-        {Program::var_uniform_type_normal_transform,                "normal_transform"},
-        {Program::var_uniform_type_random_texture,                  "random_texture"},
-        {Program::var_uniform_type_reflect_to_refract_ratio,        "reflect_to_refract_ratio"},
-        {Program::var_uniform_type_ssao_sample_kernel_pos,          "ssao_sample_kernel_pos"},
-        {Program::var_uniform_type_viewport_dim,                    "viewport_dim"},
-        {Program::var_uniform_type_view_proj_transform,             "view_proj_transform"},
-        {Program::var_uniform_type_count,                           ""}
+        {Program::var_uniform_type_ambient_color,                    "ambient_color"},
+        {Program::var_uniform_type_backface_depth_overlay_texture,   "backface_depth_overlay_texture"},
+        {Program::var_uniform_type_backface_normal_overlay_texture,  "backface_normal_overlay_texture"},
+        {Program::var_uniform_type_bloom_kernel,                     "bloom_kernel"},
+        {Program::var_uniform_type_bump_texture,                     "bump_texture"},
+        {Program::var_uniform_type_camera_dir,                       "camera_dir"},
+        {Program::var_uniform_type_camera_far,                       "camera_far"},
+        {Program::var_uniform_type_camera_near,                      "camera_near"},
+        {Program::var_uniform_type_camera_pos,                       "camera_pos"},
+        {Program::var_uniform_type_color_texture,                    "color_texture"},
+        {Program::var_uniform_type_color_texture2,                   "color_texture2"},
+        {Program::var_uniform_type_color_texture_source,             "color_texture_source"},
+        {Program::var_uniform_type_env_map_texture,                  "env_map_texture"},
+        {Program::var_uniform_type_frontface_depth_overlay_texture,  "frontface_depth_overlay_texture"},
+        {Program::var_uniform_type_glow_cutoff_threshold,            "glow_cutoff_threshold"},
+        {Program::var_uniform_type_image_res,                        "image_res"},
+        {Program::var_uniform_type_inv_normal_transform,             "inv_normal_transform"},
+        {Program::var_uniform_type_inv_projection_transform,         "inv_projection_transform"},
+        {Program::var_uniform_type_inv_view_proj_transform,          "inv_view_proj_transform"},
+        {Program::var_uniform_type_light_color,                      "light_color"},
+        {Program::var_uniform_type_light_count,                      "light_count"},
+        {Program::var_uniform_type_light_enabled,                    "light_enabled"},
+        {Program::var_uniform_type_light_pos,                        "light_pos"},
+        {Program::var_uniform_type_model_transform,                  "model_transform"},
+        {Program::var_uniform_type_mvp_transform,                    "mvp_transform"},
+        {Program::var_uniform_type_normal_transform,                 "normal_transform"},
+        {Program::var_uniform_type_random_texture,                   "random_texture"},
+        {Program::var_uniform_type_ray_tracer_render_mode,           "ray_tracer_render_mode"},
+        {Program::var_uniform_type_ray_tracer_bounce_count,          "ray_tracer_bounce_count"},
+        {Program::var_uniform_type_ray_tracer_box_color,             "ray_tracer_box_color"},
+        {Program::var_uniform_type_ray_tracer_box_count,             "ray_tracer_box_count"},
+        {Program::var_uniform_type_ray_tracer_box_diffuse_fuzz,      "ray_tracer_box_diffuse_fuzz"},
+        {Program::var_uniform_type_ray_tracer_box_eta,               "ray_tracer_box_eta"},
+        {Program::var_uniform_type_ray_tracer_box_inverse_transform, "ray_tracer_box_inverse_transform"},
+        {Program::var_uniform_type_ray_tracer_box_luminosity,        "ray_tracer_box_luminosity"},
+        {Program::var_uniform_type_ray_tracer_box_max,               "ray_tracer_box_max"},
+        {Program::var_uniform_type_ray_tracer_box_min,               "ray_tracer_box_min"},
+        {Program::var_uniform_type_ray_tracer_box_reflectance,       "ray_tracer_box_reflectance"},
+        {Program::var_uniform_type_ray_tracer_box_transform,         "ray_tracer_box_transform"},
+        {Program::var_uniform_type_ray_tracer_box_transparency,      "ray_tracer_box_transparency"},
+        {Program::var_uniform_type_ray_tracer_plane_color,           "ray_tracer_plane_color"},
+        {Program::var_uniform_type_ray_tracer_plane_count,           "ray_tracer_plane_count"},
+        {Program::var_uniform_type_ray_tracer_plane_diffuse_fuzz,    "ray_tracer_plane_diffuse_fuzz"},
+        {Program::var_uniform_type_ray_tracer_plane_eta,             "ray_tracer_plane_eta"},
+        {Program::var_uniform_type_ray_tracer_plane_luminosity,      "ray_tracer_plane_luminosity"},
+        {Program::var_uniform_type_ray_tracer_plane_normal,          "ray_tracer_plane_normal"},
+        {Program::var_uniform_type_ray_tracer_plane_point,           "ray_tracer_plane_point"},
+        {Program::var_uniform_type_ray_tracer_plane_reflectance,     "ray_tracer_plane_reflectance"},
+        {Program::var_uniform_type_ray_tracer_plane_transparency,    "ray_tracer_plane_transparency"},
+        {Program::var_uniform_type_ray_tracer_random_point_count,    "ray_tracer_random_point_count"},
+        {Program::var_uniform_type_ray_tracer_random_points,         "ray_tracer_random_points"},
+        {Program::var_uniform_type_ray_tracer_random_seed,           "ray_tracer_random_seed"},
+        {Program::var_uniform_type_ray_tracer_sphere_color,          "ray_tracer_sphere_color"},
+        {Program::var_uniform_type_ray_tracer_sphere_count,          "ray_tracer_sphere_count"},
+        {Program::var_uniform_type_ray_tracer_sphere_diffuse_fuzz,   "ray_tracer_sphere_diffuse_fuzz"},
+        {Program::var_uniform_type_ray_tracer_sphere_eta,            "ray_tracer_sphere_eta"},
+        {Program::var_uniform_type_ray_tracer_sphere_luminosity,     "ray_tracer_sphere_luminosity"},
+        {Program::var_uniform_type_ray_tracer_sphere_origin,         "ray_tracer_sphere_origin"},
+        {Program::var_uniform_type_ray_tracer_sphere_radius,         "ray_tracer_sphere_radius"},
+        {Program::var_uniform_type_ray_tracer_sphere_reflectance,    "ray_tracer_sphere_reflectance"},
+        {Program::var_uniform_type_ray_tracer_sphere_transparency,   "ray_tracer_sphere_transparency"},
+        {Program::var_uniform_type_reflect_to_refract_ratio,         "reflect_to_refract_ratio"},
+        {Program::var_uniform_type_ssao_sample_kernel_pos,           "ssao_sample_kernel_pos"},
+        {Program::var_uniform_type_view_proj_transform,              "view_proj_transform"},
+        {Program::var_uniform_type_viewport_dim,                     "viewport_dim"},
+        {Program::var_uniform_type_count,                            ""}
     };
 
-Program::Program(std::string name)
+Program::Program(const std::string& name)
     : NamedObject(name),
       m_vertex_shader(NULL),
       m_fragment_shader(NULL)
@@ -116,8 +151,8 @@ bool Program::auto_add_shader_vars()
             //std::cout << "LINE: " << line << std::endl;
             std::string type_name;
             std::string var_name;
-            if(regexp(line, "attribute[ ]+([^ ]+)[ ]+([^ ;\[]+)[;\[]", 3,
-                      NULL,
+            if(regexp(line, "^attribute[ ]+([^ ]+)[ ]+([^ ;\[]+)[;\[]", 3,
+                      reinterpret_cast<char*>(NULL),
                       &type_name,
                       &var_name))
             {
@@ -125,8 +160,8 @@ bool Program::auto_add_shader_vars()
                 //std::cout << "VAR ATTRIBUTE NAME: " << var_name << std::endl;
                 add_var(Program::VAR_TYPE_ATTRIBUTE, var_name);
             }
-            if(regexp(line, "uniform[ ]+([^ ]+)[ ]+([^ ;\[]+)[;\[]", 3,
-                      NULL,
+            if(regexp(line, "^uniform[ ]+([^ ]+)[ ]+([^ ;\[]+)[;\[]", 3,
+                      reinterpret_cast<char*>(NULL),
                       &type_name,
                       &var_name))
             {
@@ -194,7 +229,7 @@ std::string Program::get_var_uniform_name(int id)
     return m_var_uniform_type_to_name_table[id].second;
 }
 
-bool Program::check_var_exists_in_shader(var_type_t var_type, std::string name) const
+bool Program::check_var_exists_in_shader(var_type_t var_type, const std::string& name) const
 {
     if(!m_vertex_shader || !m_fragment_shader) {
         return false;

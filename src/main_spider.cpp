@@ -61,6 +61,8 @@
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
 
+#include <cfenv>
+
 #define ACCEPT_AVG_ANGLE_DISTANCE      0.001
 #define ACCEPT_END_EFFECTOR_DISTANCE   0.001
 #define ANIM_ALPHA_STEP                0.1
@@ -307,9 +309,9 @@ static glm::vec3 lookup_terrain_normal(glm::vec2      pos,
                                           tex_width,
                                           tex_length);
 
-    glm::vec3 x_dir = glm::normalize(point_right - point_left);
-    glm::vec3 z_dir = glm::normalize(point_front - point_back);
-    return glm::normalize(glm::cross(z_dir, x_dir));
+    glm::vec3 x_dir = vt::safe_normalize(point_right - point_left);
+    glm::vec3 z_dir = vt::safe_normalize(point_front - point_back);
+    return vt::safe_normalize(glm::cross(z_dir, x_dir));
 }
 
 static bool is_invalid_target(glm::vec3 target)
@@ -331,25 +333,10 @@ static void update_leg_targets(glm::vec2               center,
     if(!leg_targets) {
         return;
     }
-    glm::vec2 avg_offset;
-    size_t valid_target_count = 0;
-    for(std::vector<glm::vec3>::iterator p = leg_targets->begin(); p != leg_targets->end(); p++) {
-        if(is_invalid_target(*p)) {
-            continue;
-        }
-        avg_offset += (glm::vec2((*p).x, (*p).z) - center);
-        valid_target_count++;
-    }
-    avg_offset *= (valid_target_count ? (1.0f / valid_target_count) : 1.0f);
-    glm::vec2 correction_dir = ((glm::length(avg_offset) > 0) ? -glm::normalize(avg_offset) : glm::vec2(0));
-    for(std::vector<glm::vec3>::iterator q = leg_targets->begin(); q != leg_targets->end(); q++) {
+    for(std::vector<glm::vec3>::iterator q = leg_targets->begin(); q != leg_targets->end(); ++q) {
         if(is_invalid_target(*q)) { // only update illegal targets
-            glm::vec2 rand_dir;
-            do {
-                float rand_angle = (static_cast<float>(rand()) / RAND_MAX) * (2 * PI);
-                rand_dir = glm::normalize(glm::vec2(cos(rand_angle), sin(rand_angle)));
-            } while(glm::length(correction_dir) > 0 &&
-                    glm::angle(rand_dir, correction_dir) > MAX_LEG_CORRECTION_SPREAD);
+            float rand_angle = (static_cast<float>(rand()) / RAND_MAX) * (2 * PI);
+            glm::vec2 rand_dir = vt::safe_normalize(glm::vec2(cos(rand_angle), sin(rand_angle)));
             float rand_radius = inner_radius + (static_cast<float>(rand()) / RAND_MAX) * (outer_radius - inner_radius);
             glm::vec2 leg_target = center + rand_dir * rand_radius;
             leg_target = limit_to_within_terrain(leg_target, width, length);
@@ -378,7 +365,7 @@ static int find_nearest_target_for_leg(std::vector<glm::vec3> &leg_targets,
     std::vector<vt::Mesh*> &ik_meshes = ik_leg.m_ik_meshes;
     float best_distance = LEG_OUTER_RADIUS;
     int   best_index    = -1;
-    for(std::set<int>::iterator p = available_target_indices.begin(); p != available_target_indices.end(); p++) {
+    for(std::set<int>::iterator p = available_target_indices.begin(); p != available_target_indices.end(); ++p) {
         float distance = glm::distance(leg_targets[*p], ik_meshes[0]->in_abs_system());
         //float distance = glm::distance(leg_targets[*p], ik_meshes[IK_SEGMENT_COUNT - 1]->in_abs_system(glm::vec3(0, 0, IK_SEGMENT_LENGTH)));
         if(distance < best_distance) {
@@ -432,7 +419,7 @@ int init_resources()
     scene->add_light(light3 = new vt::Light("light3", origin + glm::vec3(0, 0, light_distance), glm::vec3(0, 0, 1)));
 
     mesh_skybox->set_material(skybox_material);
-    mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
+    mesh_skybox->set_color_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
     terrain = create_terrain("terrain",
                              "data/heightmap.png",
@@ -453,7 +440,6 @@ int init_resources()
                                                   BOX_HEIGHT);
     box->center_axis(vt::BBoxObject::ALIGN_CENTER);
     box->set_origin(glm::vec3(0));
-    vt::Scene::instance()->m_debug_target = box->get_origin();
     box->set_material(phong_material);
     box->set_ambient_color(glm::vec3(0));
     scene->add_mesh(box);
@@ -493,7 +479,7 @@ int init_resources()
                                          IK_SEGMENT_LENGTH));
         ik_meshes[0]->link_parent(ik_leg->m_joint);
         int leg_segment_index = 0;
-        for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+        for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
             (*p)->set_material(phong_material);
             (*p)->set_ambient_color(glm::vec3(0));
             if(!leg_segment_index) {
@@ -513,7 +499,10 @@ int init_resources()
         angle += (360 / IK_LEG_COUNT);
     }
 
-    vt::Scene::instance()->m_debug_targets.resize(IK_LEG_COUNT);
+    scene->m_debug_targets.resize(IK_LEG_COUNT + 1);
+    std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(   scene->m_debug_targets[0]) = box->get_origin();
+    std::get<vt::Scene::DEBUG_TARGET_COLOR>(    scene->m_debug_targets[0]) = glm::vec3(1, 0, 0);
+    std::get<vt::Scene::DEBUG_TARGET_LINEWIDTH>(scene->m_debug_targets[0]) = 1;
 
     return 1;
 }
@@ -600,56 +589,75 @@ void onTick()
                                                          tex_length,
                                                          BOX_WIDTH * 0.5);
         box->set_origin(glm::vec3(pos_within_terrain.x, terrain_height + BOX_ELEVATION, pos_within_terrain.y));
-        vt::Scene::instance()->m_debug_target = box->get_origin();
+        vt::Scene* scene = vt::Scene::instance();
+        std::vector<glm::vec3> targets;
+        for(std::vector<std::tuple<glm::vec3, glm::vec3, float, float>>::iterator t = scene->m_debug_targets.begin() + 1; t != scene->m_debug_targets.end(); ++t) {
+            targets.push_back(std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(*t));
+        }
         update_leg_targets(pos_within_terrain,
                            LEG_INNER_RADIUS,
                            LEG_OUTER_RADIUS,
-                           &vt::Scene::instance()->m_debug_targets,
+                           &targets,
                            TERRAIN_WIDTH,
                            TERRAIN_LENGTH,
                            TERRAIN_HEIGHT,
                            height_map_pixel_data,
                            tex_width,
                            tex_length);
+        scene->m_debug_targets.clear();
+        scene->m_debug_targets.push_back(std::make_tuple(box->get_origin(), glm::vec3(1, 0, 0), 1, 1));
+        for(std::vector<glm::vec3>::iterator u = targets.begin(); u != targets.end(); ++u) {
+            scene->m_debug_targets.push_back(std::make_tuple(*u, glm::vec3(1, 0, 0), 1, 1));
+        }
         glm::vec3 abs_heading = box->get_abs_heading();
-        glm::vec3 pivot       = glm::cross(terrain_normal, abs_heading);
-        float     delta_angle = glm::degrees(glm::angle(terrain_normal, abs_heading));
+        if((terrain_normal - abs_heading).length() < EPSILON) {
+            return;
+        }
+        glm::vec3 pivot = glm::cross(terrain_normal, abs_heading);
+        if(pivot.length() < EPSILON) {
+            return;
+        }
+        float delta_angle = glm::degrees(glm::angle(terrain_normal, abs_heading));
         box->rotate(-delta_angle, pivot);
         std::set<int> available_target_indices;
-        for(int i = 0; i < static_cast<int>(vt::Scene::instance()->m_debug_targets.size()); i++) {
-            if(is_invalid_target(vt::Scene::instance()->m_debug_targets[i])) {
+        for(int i = 0; i < static_cast<int>(scene->m_debug_targets.size()) - 1; i++) {
+            if(is_invalid_target(std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(scene->m_debug_targets[i + 1]))) {
                 continue;
             }
             available_target_indices.insert(i); // populate all targets
         }
-        for(std::vector<IK_Leg*>::iterator p = ik_legs.begin(); p != ik_legs.end(); p++) {
+        for(std::vector<IK_Leg*>::iterator p = ik_legs.begin(); p != ik_legs.end(); ++p) {
             if((*p)->m_target_index == -1) {
                 continue;
             }
             available_target_indices.erase((*p)->m_target_index); // remove currently used targets
         }
-        for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
+        for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); ++q) {
             std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-            if((*q)->m_target_index == -1 ||                                                    // current leg has no target
-               is_invalid_target(vt::Scene::instance()->m_debug_targets[(*q)->m_target_index])) // current leg has illegal target
+            if((*q)->m_target_index == -1 ||                                                     // current leg has no target
+               is_invalid_target(std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(scene->m_debug_targets[(*q)->m_target_index + 1]))) // current leg has illegal target
             {
                 (*q)->m_from_point = (*q)->m_to_point = ik_meshes[IK_SEGMENT_COUNT - 1]->in_abs_system(glm::vec3(0, 0, IK_SEGMENT_LENGTH));
                 (*q)->m_alpha = 0;
-                (*q)->m_target_index = find_nearest_target_for_leg(vt::Scene::instance()->m_debug_targets,
+                std::vector<glm::vec3> targets;
+                for(std::vector<std::tuple<glm::vec3, glm::vec3, float, float>>::iterator t = scene->m_debug_targets.begin() + 1; t != scene->m_debug_targets.end(); ++t) {
+                    targets.push_back(std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(*t));
+                }
+                (*q)->m_target_index = find_nearest_target_for_leg(targets,
                                                                    available_target_indices,
                                                                    *(*q));
                 if((*q)->m_target_index == -1) { // can't find legal target for current leg
                     continue;                    // skip this leg (hold posture)
                 }
-                (*q)->m_to_point = vt::Scene::instance()->m_debug_targets[(*q)->m_target_index];
+                (*q)->m_to_point = std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(scene->m_debug_targets[(*q)->m_target_index + 1]);
                 available_target_indices.erase((*q)->m_target_index); // remove newly chosen targets
             }
         }
         user_input = false;
     }
-    for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); r++) {
+    for(std::vector<IK_Leg*>::iterator r = ik_legs.begin(); r != ik_legs.end(); ++r) {
         std::vector<vt::Mesh*> &ik_meshes = (*r)->m_ik_meshes;
-        glm::vec3 interp_point = LERP((*r)->m_from_point, (*r)->m_to_point, (*r)->m_alpha);
+        glm::vec3 interp_point = MIX((*r)->m_from_point, (*r)->m_to_point, (*r)->m_alpha);
         float leg_lift_height = LERP_PARABOLIC_DOWN_ARC((*r)->m_alpha) * IK_LEG_MAX_LIFT_HEIGHT; // parabolic leg-lift path
         ik_meshes[IK_SEGMENT_COUNT - 1]->solve_ik_ccd((*r)->m_joint,
                                                       glm::vec3(0, 0, IK_SEGMENT_LENGTH),
@@ -677,8 +685,6 @@ void onDisplay()
         onTick();
     }
     vt::Scene* scene = vt::Scene::instance();
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if(wireframe_mode) {
         scene->render(true, false, false, vt::Scene::use_material_type_t::USE_WIREFRAME_MATERIAL);
     } else {
@@ -734,10 +740,10 @@ void onKeyboard(unsigned char key, int x, int y)
                 terrain->set_ambient_color(glm::vec3(1));
                 box->set_ambient_color(    glm::vec3(1));
                 dummy->set_ambient_color(  glm::vec3(1, 0, 0));
-                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
+                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); ++q) {
                     (*q)->m_joint->set_ambient_color(glm::vec3(1, 0, 0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
                         (*p)->set_ambient_color(glm::vec3(0, 1, 0));
                     }
                 }
@@ -746,10 +752,10 @@ void onKeyboard(unsigned char key, int x, int y)
                 terrain->set_ambient_color(glm::vec3(0));
                 box->set_ambient_color(    glm::vec3(0));
                 dummy->set_ambient_color(  glm::vec3(0));
-                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); q++) {
+                for(std::vector<IK_Leg*>::iterator q = ik_legs.begin(); q != ik_legs.end(); ++q) {
                     (*q)->m_joint->set_ambient_color(glm::vec3(0));
                     std::vector<vt::Mesh*> &ik_meshes = (*q)->m_ik_meshes;
-                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); p++) {
+                    for(std::vector<vt::Mesh*>::iterator p = ik_meshes.begin(); p != ik_meshes.end(); ++p) {
                         (*p)->set_ambient_color(glm::vec3(0));
                     }
                 }
@@ -884,6 +890,11 @@ void onReshape(int width, int height)
 
 int main(int argc, char* argv[])
 {
+#if 1
+    // https://stackoverflow.com/questions/5393997/stopping-the-debugger-when-a-nan-floating-point-number-is-produced/5394095
+    feenableexcept(FE_INVALID | FE_OVERFLOW);
+#endif
+
     DEFAULT_CAPTION = argv[0];
 
     glutInit(&argc, argv);

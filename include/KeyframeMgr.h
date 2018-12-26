@@ -57,7 +57,7 @@ public:
 
     typedef std::map<int, Keyframe*> keyframes_t;
 
-    MotionTrack(motion_type_t motion_type);
+    explicit MotionTrack(motion_type_t motion_type);
     ~MotionTrack();
 
     // get members

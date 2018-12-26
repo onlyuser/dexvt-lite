@@ -47,6 +47,11 @@ void BBoxObject::get_min_max(glm::vec3* min, glm::vec3* max) const
     *max = m_max;
 }
 
+glm::vec3 BBoxObject::get_dim() const
+{
+    return m_max - m_min;
+}
+
 glm::vec3 BBoxObject::get_center(align_t align) const
 {
     glm::vec3 center = (m_min + m_max) * 0.5f;
@@ -209,7 +214,7 @@ bool BBoxObject::is_bbox_collide(TransformObject* self_transform_object,
         for(int j = 0; j < 3; j++) {
             glm::vec3 self_axis  = self_transform_object->get_abs_direction(static_cast<euler_index_t>(i));
             glm::vec3 other_axis = other_transform_object->get_abs_direction(static_cast<euler_index_t>(j));
-            principle_axes[k] = glm::normalize(glm::cross(self_axis, other_axis));
+            principle_axes[k] = safe_normalize(glm::cross(self_axis, other_axis));
             k++;
         }
     }
@@ -227,8 +232,8 @@ bool BBoxObject::is_bbox_collide(TransformObject* self_transform_object,
         float self_projected_vert_max = -FLT_MAX;
         for(int j = 0; j < 8; j++) {
             float self_projected_vert_value = glm::dot(separation_axis, self_abs_points[j]);
-            self_projected_vert_min = std::min(self_projected_vert_value, self_projected_vert_min);
-            self_projected_vert_max = std::max(self_projected_vert_value, self_projected_vert_max);
+            self_projected_vert_min         = std::min(self_projected_vert_value, self_projected_vert_min);
+            self_projected_vert_max         = std::max(self_projected_vert_value, self_projected_vert_max);
         }
 
         // calculate other bbox maximum extents along axis
@@ -236,8 +241,8 @@ bool BBoxObject::is_bbox_collide(TransformObject* self_transform_object,
         float other_projected_vert_max = -FLT_MAX;
         for(int j = 0; j < 8; j++) {
             float other_projected_vert_value = glm::dot(separation_axis, other_abs_points[j]);
-            other_projected_vert_min = std::min(other_projected_vert_value, other_projected_vert_min);
-            other_projected_vert_max = std::max(other_projected_vert_value, other_projected_vert_max);
+            other_projected_vert_min         = std::min(other_projected_vert_value, other_projected_vert_min);
+            other_projected_vert_max         = std::max(other_projected_vert_value, other_projected_vert_max);
         }
 
         // test if ranges don't overlap
@@ -256,7 +261,7 @@ bool BBoxObject::is_sphere_collide(TransformObject* self_transform_object,
                                    float            other_sphere_radius)
 {
     // test if bbox radii touch
-    glm::vec3 self_bbox_center = self_transform_object->in_abs_system((m_max + m_min) * 0.5f);
+    glm::vec3 self_bbox_center = self_transform_object->in_abs_system(get_center(ALIGN_CENTER));
     float     self_bbox_radius = glm::distance(m_min, m_max) * 0.5f;
     if(glm::distance(self_bbox_center, other_abs_point) > self_bbox_radius + other_sphere_radius) {
         return false; // if not, no point in testing OOB collision
@@ -336,8 +341,8 @@ bool BBoxObject::is_sphere_collide(TransformObject* self_transform_object,
         float self_projected_vert_max = -FLT_MAX;
         for(int j = 0; j < 8; j++) {
             float self_projected_vert_value = glm::dot(separation_axis, self_abs_points[j]);
-            self_projected_vert_min = std::min(self_projected_vert_value, self_projected_vert_min);
-            self_projected_vert_max = std::max(self_projected_vert_value, self_projected_vert_max);
+            self_projected_vert_min         = std::min(self_projected_vert_value, self_projected_vert_min);
+            self_projected_vert_max         = std::max(self_projected_vert_value, self_projected_vert_max);
         }
 
         // calculate other sphere maximum extents along axis
@@ -354,98 +359,93 @@ bool BBoxObject::is_sphere_collide(TransformObject* self_transform_object,
     return true;
 }
 
-static bool in_range(float x, float a, float b)
-{
-    return (a < x && x < b) ||
-           (a > x && x > b);
-}
-
-static bool ranges_overlap(float a1, float a2, float b1, float b2)
-{
-    // cap open-ended range (ray origin must be between two hyperplanes of the box)
-    if(a1 == BIG_NUMBER && a2 != BIG_NUMBER) { a1 = 0; }
-    if(a1 != BIG_NUMBER && a2 == BIG_NUMBER) { a2 = 0; }
-    if(b1 == BIG_NUMBER && b2 != BIG_NUMBER) { b1 = 0; }
-    if(b1 != BIG_NUMBER && b2 == BIG_NUMBER) { b2 = 0; }
-
-    // check if ranges overlap
-    return in_range(a1, b1, b2) || in_range(a2, b1, b2);
-}
-
 // http://www.opengl-tutorial.org/miscellaneous/clicking-on-objects/picking-with-custom-ray-obb-function/
 bool BBoxObject::is_ray_intersect(TransformObject* self_transform_object,
                                   glm::vec3        ray_origin,
                                   glm::vec3        ray_dir,
-                                  float*           alpha)
+                                  float*           dist,
+                                  glm::vec3*       next_ray,
+                                  glm::vec3*       surface_normal)
 {
-    // ==================================
-    // generate potential separation axes
-    // ==================================
-
-    glm::vec3 range_axes[3];
-
-    // generate potential face-to-vertex collision axes
-    for(int i = 0; i < 3; i++) {
-        range_axes[i] = self_transform_object->get_abs_direction(static_cast<euler_index_t>(i));
+    glm::mat4 self_transform  = self_transform_object->get_transform();
+    glm::vec3 _surface_point  = glm::vec3(0);
+    glm::vec3 _surface_normal = glm::vec3(0);
+    float _dist = ray_box_intersect(self_transform,
+                                    glm::inverse(self_transform),
+                                    m_min,
+                                    m_max,
+                                    ray_origin,
+                                    ray_dir,
+                                    &_surface_point,
+                                    &_surface_normal);
+    if(_dist == BIG_NUMBER) {
+        return false;
     }
-
-    // ==========================================
-    // test ray intersection with bbox's 6 planes
-    // ==========================================
-
-    float intersections[6];
-    glm::vec3 plane_origin_min = self_transform_object->in_abs_system(m_min);
-    glm::vec3 plane_origin_max = self_transform_object->in_abs_system(m_max);
-
-    // for each potential separation axis
-    float nearest_distance = BIG_NUMBER;
-    int k = 0;
-    for(int i = 0; i < 3; i++) {
-        glm::vec3 plane_normal = range_axes[i];
-        for(int j = 0; j < 2; j++) {
-            glm::vec3 plane_origin = (j == 0 ? plane_origin_min : plane_origin_max);
-            intersections[k] = ray_plane_intersection(plane_origin, plane_normal, ray_origin, ray_dir);
-            glm::vec3 point = ray_origin + ray_dir * intersections[k];
-            glm::vec3 local_point = glm::vec3(glm::inverse(self_transform_object->get_transform()) * glm::vec4(point, 1)); // expensive inverse call!
-            if(is_within(local_point)) {
-                if(intersections[k] < nearest_distance) {
-                    nearest_distance = intersections[k];
-                }
-            }
-            k++;
-        }
+    if(surface_normal) {
+        *surface_normal = _surface_normal;
     }
-
-#if 0
-    for(int i = 0; i < 6; i++) {
-        std::cout << intersections[i] << std::endl;
+    float     plane_eta          = BIG_NUMBER;
+    float     plane_diffuse_fuzz = 0;
+    glm::vec3 _next_ray          = glm::vec3(0);
+    _dist = ray_plane_next_ray(ray_origin,
+                               ray_dir,
+                               _dist,
+                               _surface_point,
+                               _surface_normal,
+                               plane_eta,
+                               plane_diffuse_fuzz,
+                               &_next_ray);
+    if(dist) {
+        *dist = _dist;
     }
-    std::cout << std::endl;
-#endif
-
-    // ray intersects box (need this in case ray is parallel to one of box's axes)
-    if(nearest_distance != BIG_NUMBER) {
-        if(alpha) {
-            *alpha = nearest_distance;
-        }
-        return true;
+    if(next_ray) {
+        *next_ray = _next_ray;
     }
-
-    // all three ranges must overlap (NOTE: fails if ray is parallel to one of box's axes)
-    return ranges_overlap(intersections[0], intersections[1], intersections[2], intersections[3]) &&
-           ranges_overlap(intersections[2], intersections[3], intersections[4], intersections[5]) &&
-           ranges_overlap(intersections[4], intersections[5], intersections[0], intersections[1]);
+    return true;
 }
 
 bool BBoxObject::as_sphere_is_ray_intersect(TransformObject* self_transform_object,
                                             glm::vec3        ray_origin,
-                                            glm::vec3        ray_dir)
+                                            glm::vec3        ray_dir,
+                                            float*           dist,
+                                            glm::vec3*       next_ray,
+                                            glm::vec3*       surface_normal)
 {
-    float radius = fabs(m_max.x - m_min.x) * 0.5f;
-    return is_ray_sphere_intersection(self_transform_object->in_abs_system(),
-                                      radius,
-                                      ray_origin,
-                                      ray_dir);
+    glm::vec3 sphere_origin            = self_transform_object->in_abs_system(get_center(ALIGN_CENTER));
+    glm::vec3 dim                      = m_max - m_min;
+    float     sphere_radius            = std::min(dim.x, std::min(dim.y, dim.z)) * 0.5f;
+    glm::vec3 _surface_normal          = glm::vec3(0);
+    bool      ray_starts_inside_sphere = false;
+    float _dist = ray_sphere_intersection(sphere_origin,
+                                          sphere_radius,
+                                          ray_origin,
+                                          ray_dir,
+                                          &_surface_normal,
+                                          &ray_starts_inside_sphere);
+    if(_dist == BIG_NUMBER) {
+        return false;
+    }
+    if(surface_normal) {
+        *surface_normal = _surface_normal;
+    }
+    float     sphere_eta          = BIG_NUMBER;
+    float     sphere_diffuse_fuzz = 0;
+    glm::vec3 _next_ray           = glm::vec3(0);
+    _dist = ray_sphere_next_ray(ray_origin,
+                                ray_dir,
+                                _dist,
+                                _surface_normal,
+                                ray_starts_inside_sphere,
+                                sphere_eta,
+                                sphere_diffuse_fuzz,
+                                &_next_ray);
+    if(dist) {
+        *dist = _dist;
+    }
+    if(next_ray) {
+        *next_ray = _next_ray;
+    }
+    return true;
 }
 
 }

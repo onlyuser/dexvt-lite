@@ -41,14 +41,27 @@ char* file_read(const char* filename)
     if (nb_read_total + BUFSIZ > res_size) {
       if (res_size > 10*1024*1024) break;
       res_size = res_size * 2;
-      res = (char*)realloc(res, res_size);
+      char* tmp = (char*)realloc(res, res_size);
+      if(tmp) {
+          res = tmp;
+      } else {
+          free(res);
+          fclose(in);
+          return NULL;
+      }
     }
     char* p_res = res + nb_read_total;
     nb_read_total += fread(p_res, 1, BUFSIZ, in);
   }
 
   fclose(in);
-  res = (char*)realloc(res, nb_read_total + 1);
+  char* tmp = (char*)realloc(res, nb_read_total + 1);
+  if(tmp) {
+      res = tmp;
+  } else {
+      free(res);
+      return NULL;
+  }
   res[nb_read_total] = '\0';
   return res;
 }

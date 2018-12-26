@@ -23,16 +23,16 @@
 
 namespace vt {
 
-bool read_png(std::string png_filename,
-              void**      pixel_data,
-              size_t*     width,
-              size_t*     height);
+bool read_png(const std::string& png_filename,
+                    void**       pixel_data,
+                    size_t*      width,
+                    size_t*      height);
 
-bool read_png_impl(std::string png_filename,
-                   void**      pixel_data,
-                   size_t*     width,
-                   size_t*     height,
-                   int*        color_type);
+bool read_png_impl(const std::string& png_filename,
+                         void**       pixel_data,
+                         size_t*      width,
+                         size_t*      height,
+                         int*         color_type);
 
 }
 

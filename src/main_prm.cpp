@@ -35,16 +35,21 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/vector_angle.hpp>
 #include <shader_utils.h>
 
 #include <Buffer.h>
 #include <Camera.h>
+#include <Octree.h>
 #include <File3ds.h>
 #include <FrameBuffer.h>
+#include <KeyframeMgr.h>
 #include <Light.h>
 #include <Material.h>
 #include <Mesh.h>
 #include <Modifiers.h>
+#include <Octree.h>
+#include <PRM.h>
 #include <PrimitiveFactory.h>
 #include <Program.h>
 #include <Scene.h>
@@ -55,22 +60,46 @@
 #include <VarAttribute.h>
 #include <VarUniform.h>
 #include <vector>
+#include <tuple>
 #include <iostream> // std::cout
 #include <sstream> // std::stringstream
 #include <iomanip> // std::setprecision
-#include <unistd.h> // access
+#include <math.h>
 
-#define ACCEPT_AVG_ANGLE_DISTANCE    0.001
-#define ACCEPT_END_EFFECTOR_DISTANCE 0.001
-#define IK_ITERS                     1
-#define IK_SEGMENT_COUNT             3
+#include <cfenv>
+
+#define TARGET_SPEED 0.05f
+
+#define OBSTACLE_COUNT            4
+#define OBSTACLE_DIM_MAX          glm::vec3(10, 0.1, 10)
+#define OBSTACLE_DIM_MIN          glm::vec3(5, 0.1, 5)
+#define OBSTACLE_INIT_SCATTER_MAX glm::vec3(5)
+#define OBSTACLE_INIT_SCATTER_MIN glm::vec3(-5)
+
+#define OCTREE_ORIGIN glm::vec3(-5)
+#define OCTREE_DIM    glm::vec3(10)
+
+#define WAYPOINT_COUNT                   200
+#define WAYPOINT_NEAREST_NEIGHBOR_COUNT  10
+#define WAYPOINT_NEAREST_NEIGHBOR_RADIUS 5
+
+#define FRAMES_PER_SEGMENT 40
+
+//#define DEBUG 1
 
 const char* DEFAULT_CAPTION = "";
 
 int init_screen_width  = 800,
     init_screen_height = 600;
 vt::Camera  *camera         = NULL;
-vt::Mesh    *mesh_skybox    = NULL;
+vt::Octree  *octree         = NULL;
+vt::PRM     *prm            = NULL;
+vt::Mesh    *mesh_skybox    = NULL,
+            *sphere         = NULL;
+// NOTE: not needed
+#if 0
+vt::Mesh    *box            = NULL;
+#endif
 vt::Light   *light          = NULL,
             *light2         = NULL,
             *light3         = NULL;
@@ -93,7 +122,7 @@ bool show_bbox        = false,
      show_lights      = false,
      show_normals     = false,
      wireframe_mode   = false,
-     show_guide_wires = false,
+     show_guide_wires = true,
      show_paths       = true,
      show_axis        = false,
      show_axis_labels = false,
@@ -110,17 +139,164 @@ float prev_zoom         = 0,
       zoom              = 1,
       ortho_dolly_speed = 0.1;
 
-int angle_delta = 2;
+int angle_delta = 1;
 
-std::vector<vt::Mesh*> meshes_imported;
-vt::Mesh* dummy = NULL;
+int target_index = 7;
+glm::vec3 targets[8];
+
+std::vector<vt::Mesh*> obstacle_meshes;
+
+static void randomize_meshes(std::vector<vt::Mesh*>* meshes,
+                             glm::vec3               scatter_min,
+                             glm::vec3               scatter_max)
+{
+    for(std::vector<vt::Mesh*>::iterator p = meshes->begin(); p != meshes->end(); ++p) {
+        glm::vec3 rand_vec(static_cast<float>(rand()) / RAND_MAX,
+                           static_cast<float>(rand()) / RAND_MAX,
+                           static_cast<float>(rand()) / RAND_MAX);
+        (*p)->set_origin(MIX(scatter_min, scatter_max, rand_vec));
+        (*p)->set_euler(glm::vec3(-180 + static_cast<float>(rand()) / RAND_MAX * 360,
+                                  -90  + static_cast<float>(rand()) / RAND_MAX * 90,
+                                  -180 + static_cast<float>(rand()) / RAND_MAX * 360));
+    }
+}
+
+static void create_obstacles(vt::Scene*              scene,
+                             std::vector<vt::Mesh*>* obstacle_meshes,
+                             int                     obstacle_count,
+                             glm::vec3               scatter_min,
+                             glm::vec3               scatter_max,
+                             glm::vec3               dim_min,
+                             glm::vec3               dim_max,
+                             std::string             name)
+{
+    if(!scene || !obstacle_meshes) {
+        return;
+    }
+    srand(time(NULL));
+    for(int i = 0; i < obstacle_count; i++) {
+        std::stringstream ss;
+        ss << name << "_" << i;
+        vt::Mesh* mesh = vt::PrimitiveFactory::create_box(ss.str());
+        mesh->center_axis();
+        glm::vec3 rand_vec(static_cast<float>(rand()) / RAND_MAX,
+                           static_cast<float>(rand()) / RAND_MAX,
+                           static_cast<float>(rand()) / RAND_MAX);
+        mesh->set_scale(MIX(dim_min, dim_max, rand_vec));
+        mesh->flatten();
+        mesh->center_axis();
+        scene->add_mesh(mesh);
+        obstacle_meshes->push_back(mesh);
+    }
+    randomize_meshes(obstacle_meshes,
+                     scatter_min,
+                     scatter_max);
+}
+
+static void randomize_prm(vt::Scene*              scene,
+                          vt::PRM*                prm,
+                          int                     n,
+                          int                     k,
+                          float                   radius,
+                          std::vector<vt::Mesh*>* obstacle_meshes)
+{
+    prm->clear();
+    prm->randomize_waypoints(n);
+    prm->connect_waypoints(k, radius);
+    for(std::vector<vt::Mesh*>::iterator t = obstacle_meshes->begin(); t != obstacle_meshes->end(); ++t) {
+        prm->add_obstacle(*t);
+    }
+    prm->prune_edges();
+
+    scene->m_debug_targets.clear();
+    scene->m_debug_targets.push_back(std::make_tuple(targets[target_index], glm::vec3(1, 0, 1), 4, 2));
+    scene->m_debug_targets.push_back(std::make_tuple(glm::vec3(0),          glm::vec3(1, 1, 0), 4, 2));
+
+    std::vector<glm::vec3> waypoints;
+    prm->export_waypoints(&waypoints);
+    for(std::vector<glm::vec3>::iterator q = waypoints.begin(); q != waypoints.end(); ++q) {
+        scene->m_debug_targets.push_back(std::make_tuple(*q, glm::vec3(1, 0, 0), 1, 1));
+    }
+
+    std::vector<std::tuple<int, int, float>> edges;
+    prm->export_edges(&edges);
+    scene->m_debug_lines.clear();
+    for(std::vector<std::tuple<int, int, float>>::iterator r = edges.begin(); r != edges.end(); ++r) {
+        glm::vec3 color = glm::vec3(0, 1, 1);
+        glm::vec3 p1    = waypoints[std::get<vt::PRM::EXPORT_EDGE_P1>(*r)];
+        glm::vec3 p2    = waypoints[std::get<vt::PRM::EXPORT_EDGE_P2>(*r)];
+        scene->m_debug_lines.push_back(std::make_tuple(p1, p2, color, 1));
+    }
+}
+
+static void update_target(glm::vec3 target)
+{
+    int nearest_waypoint_index = prm->find_nearest_waypoint(target);
+    if(nearest_waypoint_index == -1) {
+        return;
+    }
+    vt::PRM_Waypoint* nearest_waypoint = prm->at(nearest_waypoint_index);
+    if(!nearest_waypoint) {
+        return;
+    }
+    vt::Scene* scene = vt::Scene::instance();
+    std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(scene->m_debug_targets[1]) = nearest_waypoint->get_origin();
+    std::set<int> path_indices;
+    std::vector<int> path;
+    if(prm->find_shortest_path(glm::vec3(0), nearest_waypoint->get_origin(), &path) && path.size() > 1) {
+        vt::KeyframeMgr::instance()->clear();
+        long object_id = 0;
+        int frame = 0;
+        for(std::vector<int>::iterator p = path.begin(); p != path.end(); ++p) {
+            path_indices.insert(*p);
+            vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, frame, new vt::Keyframe(prm->at(*p)->get_origin(), true));
+            frame += FRAMES_PER_SEGMENT;
+        }
+        vt::KeyframeMgr::instance()->insert_keyframe(object_id, vt::MotionTrack::MOTION_TYPE_ORIGIN, frame, new vt::Keyframe(targets[target_index], true));
+        vt::KeyframeMgr::instance()->update_control_points(0.5);
+        std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_frame_values;
+        origin_frame_values.clear();
+        vt::KeyframeMgr::instance()->export_frame_values_for_object(object_id, &origin_frame_values, NULL, NULL, true);
+        std::vector<glm::vec3> &origin_keyframe_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_keyframe_values;
+        origin_keyframe_values.clear();
+        vt::KeyframeMgr::instance()->export_keyframe_values_for_object(object_id, &origin_keyframe_values, NULL, NULL, true);
+    }
+    std::vector<std::tuple<int, int, float>> edges;
+    prm->export_edges(&edges);
+    scene->m_debug_lines.clear();
+    for(std::vector<std::tuple<int, int, float>>::iterator r = edges.begin(); r != edges.end(); ++r) {
+        int p1_index = std::get<vt::PRM::EXPORT_EDGE_P1>(*r);
+        int p2_index = std::get<vt::PRM::EXPORT_EDGE_P2>(*r);
+        glm::vec3 color;
+        float     linewidth = 0;
+        if((path_indices.find(p1_index) != path_indices.end()) &&
+           (path_indices.find(p2_index) != path_indices.end()))
+        {
+            color     = glm::vec3(1, 0, 0);
+            linewidth = 4;
+        } else {
+            color     = glm::vec3(0, 1, 1);
+            linewidth = 1;
+        }
+        glm::vec3 p1 = prm->at(p1_index)->get_origin();
+        glm::vec3 p2 = prm->at(p2_index)->get_origin();
+        scene->m_debug_lines.push_back(std::make_tuple(p1, p2, color, linewidth));
+    }
+}
 
 int init_resources()
 {
+    glm::vec3 target_origin(-2.5, -2.5, -2.5);
+    glm::vec3 target_dim(5, 5, 5);
+    vt::PrimitiveFactory::get_box_corners(targets, &target_origin, &target_dim);
+
     vt::Scene* scene = vt::Scene::instance();
 
     mesh_skybox = vt::PrimitiveFactory::create_viewport_quad("grid");
     scene->set_skybox(mesh_skybox);
+
+    sphere = vt::PrimitiveFactory::create_sphere("sphere", 16, 16,  0.5);
+    scene->add_mesh(sphere);
 
     vt::Material* ambient_material = new vt::Material("ambient",
                                                       "src/shaders/ambient.v.glsl",
@@ -152,31 +328,55 @@ int init_resources()
     glm::vec3 origin = glm::vec3(0);
     camera = new vt::Camera("camera", origin + glm::vec3(0, 0, orbit_radius), origin);
     scene->set_camera(camera);
+    octree = new vt::Octree(OCTREE_ORIGIN, OCTREE_DIM);
+    scene->set_octree(octree);
+// NOTE: not needed
+#if 0
+    box = vt::PrimitiveFactory::create_box("octree", OCTREE_DIM.x, OCTREE_DIM.y, OCTREE_DIM.z);
+    box->center_axis();
+    box->set_origin(glm::vec3(0));
+    //box->set_material(phong_material);
+    box->set_ambient_color(glm::vec3(1));
+    box->set_visible(false);
+    scene->add_mesh(box);
+#endif
 
     scene->add_light(light  = new vt::Light("light1", origin + glm::vec3(light_distance, 0, 0), glm::vec3(1, 0, 0)));
     scene->add_light(light2 = new vt::Light("light2", origin + glm::vec3(0, light_distance, 0), glm::vec3(0, 1, 0)));
     scene->add_light(light3 = new vt::Light("light3", origin + glm::vec3(0, 0, light_distance), glm::vec3(0, 0, 1)));
 
     mesh_skybox->set_material(skybox_material);
-    mesh_skybox->set_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
+    mesh_skybox->set_color_texture_index(mesh_skybox->get_material()->get_texture_index_by_name("skybox_texture"));
 
-    dummy = vt::PrimitiveFactory::create_box("dummy");
-    dummy->center_axis();
-    dummy->set_origin(glm::vec3(0));
-    scene->add_mesh(dummy);
-    const char* model_filename = "data/star_wars/TI_Low0.3ds";
-    if(access(model_filename, F_OK) != -1) {
-        vt::File3ds::load3ds(model_filename, -1, &meshes_imported);
-    }
-    for(std::vector<vt::Mesh*>::iterator p = meshes_imported.begin(); p != meshes_imported.end(); p++) {
-        (*p)->set_origin(glm::vec3(0));
-        (*p)->set_scale(glm::vec3(0.33, 0.33, 0.33));
-        (*p)->flatten();
+    create_obstacles(scene,
+                     &obstacle_meshes,
+                     OBSTACLE_COUNT,
+                     OBSTACLE_INIT_SCATTER_MIN,
+                     OBSTACLE_INIT_SCATTER_MAX,
+                     OBSTACLE_DIM_MIN,
+                     OBSTACLE_DIM_MAX,
+                     "box");
+    for(std::vector<vt::Mesh*>::iterator p = obstacle_meshes.begin(); p != obstacle_meshes.end(); ++p) {
         (*p)->set_material(phong_material);
         (*p)->set_ambient_color(glm::vec3(0));
-        (*p)->link_parent(dummy);
-        scene->add_mesh(*p);
     }
+
+    sphere->set_material(phong_material);
+    sphere->set_ambient_color(glm::vec3(0));
+
+// NOTE: don't include octree box in obstacle meshes
+#if 0
+    // NOTE: must add last!
+    obstacle_meshes.push_back(box);
+#endif
+
+    prm = new vt::PRM(octree);
+    randomize_prm(scene,
+                  prm,
+                  WAYPOINT_COUNT,
+                  WAYPOINT_NEAREST_NEIGHBOR_COUNT,
+                  WAYPOINT_NEAREST_NEIGHBOR_RADIUS,
+                  &obstacle_meshes);
 
     return 1;
 }
@@ -217,35 +417,65 @@ void onTick()
     //    return;
     //}
     if(left_key) {
-        dummy->rotate(angle_delta, dummy->get_abs_heading());
+        targets[target_index] -= VEC_LEFT * TARGET_SPEED;
         user_input = true;
     }
     if(right_key) {
-        dummy->rotate(-angle_delta, dummy->get_abs_heading());
+        targets[target_index] += VEC_LEFT * TARGET_SPEED;
         user_input = true;
     }
     if(up_key) {
-        dummy->rotate(-angle_delta, dummy->get_abs_left_direction());
+        targets[target_index] -= VEC_FORWARD * TARGET_SPEED;
         user_input = true;
     }
     if(down_key) {
-        dummy->rotate(angle_delta, dummy->get_abs_left_direction());
+        targets[target_index] += VEC_FORWARD * TARGET_SPEED;
         user_input = true;
     }
     if(page_up_key) {
-        dummy->rotate(angle_delta, dummy->get_abs_up_direction());
+        targets[target_index] += VEC_UP * TARGET_SPEED;
         user_input = true;
     }
     if(page_down_key) {
-        dummy->rotate(-angle_delta, dummy->get_abs_up_direction());
+        targets[target_index] -= VEC_UP * TARGET_SPEED;
         user_input = true;
     }
     if(user_input) {
-        std::stringstream ss;
-        ss << "Roll=" << EULER_ROLL(dummy->get_euler()) << ", Pitch=" << EULER_PITCH(dummy->get_euler()) << ", Yaw=" << EULER_YAW(dummy->get_euler());
-        std::cout << "\r" << std::setw(80) << std::left << ss.str() << std::flush;
+        vt::Scene* scene = vt::Scene::instance();
+        std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(scene->m_debug_targets[0]) = targets[target_index];
+        update_target(targets[target_index]);
         user_input = false;
     }
+
+    // clear
+    //octree->clear();
+
+    // rebalance
+    octree->rebalance();
+
+    static int frame = 0;
+    long object_id = 0;
+    std::vector<glm::vec3> &origin_frame_values = vt::Scene::instance()->m_debug_object_context[object_id].m_debug_origin_frame_values;
+    if(origin_frame_values.empty()) {
+        std::cout << "Error: Empty frame values!" << std::endl;
+        return;
+    }
+    sphere->set_origin(origin_frame_values[frame]);
+    static bool forward = true;
+    if(forward) {
+        frame++;
+        if(frame >= static_cast<int>(origin_frame_values.size()) - 1) {
+            frame   = static_cast<int>(origin_frame_values.size()) - 1;
+            forward = false;
+        }
+    } else {
+        frame--;
+        if(frame <= 0) {
+            frame   = 0;
+            forward = true;
+        }
+    }
+
     static int angle = 0;
     angle = (angle + angle_delta) % 360;
 }
@@ -261,8 +491,6 @@ void onDisplay()
         onTick();
     }
     vt::Scene* scene = vt::Scene::instance();
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if(wireframe_mode) {
         scene->render(true, false, false, vt::Scene::use_material_type_t::USE_WIREFRAME_MATERIAL);
     } else {
@@ -291,6 +519,11 @@ void onKeyboard(unsigned char key, int x, int y)
             break;
         case 'g': // guide wires
             show_guide_wires = !show_guide_wires;
+            if(show_guide_wires) {
+                vt::Scene* scene = vt::Scene::instance();
+                std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(scene->m_debug_targets[0]) = targets[target_index];
+                std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(scene->m_debug_targets[1]) = glm::vec3(0);
+            }
             break;
         case 'h': // help
             show_help = !show_help;
@@ -308,6 +541,39 @@ void onKeyboard(unsigned char key, int x, int y)
                 camera->set_projection_mode(vt::Camera::PROJECTION_MODE_PERSPECTIVE);
             }
             break;
+        case 'r': // reset
+            {
+// NOTE: don't include octree box in obstacle meshes
+#if 0
+                obstacle_meshes.pop_back();
+#endif
+                randomize_meshes(&obstacle_meshes,
+                                 OBSTACLE_INIT_SCATTER_MIN,
+                                 OBSTACLE_INIT_SCATTER_MAX);
+// NOTE: don't include octree box in obstacle meshes
+#if 0
+                obstacle_meshes.push_back(box);
+#endif
+                octree->clear();
+
+                vt::Scene* scene = vt::Scene::instance();
+                randomize_prm(scene,
+                              prm,
+                              WAYPOINT_COUNT,
+                              WAYPOINT_NEAREST_NEIGHBOR_COUNT,
+                              WAYPOINT_NEAREST_NEIGHBOR_RADIUS,
+                              &obstacle_meshes);
+
+                std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(scene->m_debug_targets[0]) = targets[target_index];
+                int nearest_waypoint_index = prm->find_nearest_waypoint(targets[target_index]);
+                if(nearest_waypoint_index != -1) {
+                    vt::PRM_Waypoint* nearest_waypoint = prm->at(nearest_waypoint_index);
+                    if(nearest_waypoint) {
+                        std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(scene->m_debug_targets[1]) = nearest_waypoint->get_origin();
+                    }
+                }
+            }
+            break;
         case 's': // paths
             show_paths = !show_paths;
             break;
@@ -315,16 +581,16 @@ void onKeyboard(unsigned char key, int x, int y)
             wireframe_mode = !wireframe_mode;
             if(wireframe_mode) {
                 glPolygonMode(GL_FRONT, GL_LINE);
-                dummy->set_ambient_color(glm::vec3(1, 0, 0));
-                for(std::vector<vt::Mesh*>::iterator p = meshes_imported.begin(); p != meshes_imported.end(); p++) {
+                for(std::vector<vt::Mesh*>::iterator p = obstacle_meshes.begin(); p != obstacle_meshes.end(); ++p) {
                     (*p)->set_ambient_color(glm::vec3(1));
                 }
+                sphere->set_ambient_color(glm::vec3(1));
             } else {
-                dummy->set_ambient_color(glm::vec3(0));
                 glPolygonMode(GL_FRONT, GL_FILL);
-                for(std::vector<vt::Mesh*>::iterator p = meshes_imported.begin(); p != meshes_imported.end(); p++) {
+                for(std::vector<vt::Mesh*>::iterator p = obstacle_meshes.begin(); p != obstacle_meshes.end(); ++p) {
                     (*p)->set_ambient_color(glm::vec3(0));
                 }
+                sphere->set_ambient_color(glm::vec3(0));
             }
             break;
         case 'x': // axis
@@ -354,10 +620,16 @@ void onSpecial(int key, int x, int y)
         case GLUT_KEY_F3:
             light3->set_enabled(!light3->is_enabled());
             break;
-        case GLUT_KEY_HOME:
-            dummy->set_euler(glm::vec3(0));
-            dummy->get_transform(true); // TODO: why is this necessary?
-            user_input = true;
+        case GLUT_KEY_HOME: // target
+            {
+                size_t target_count = sizeof(targets) / sizeof(targets[0]);
+                target_index = (target_index + 1) % target_count;
+                std::cout << "Target #" << target_index << ": " << glm::to_string(targets[target_index]) << std::endl;
+                vt::Scene* scene = vt::Scene::instance();
+                std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(scene->m_debug_targets[0]) = targets[target_index];
+                std::get<vt::Scene::DEBUG_TARGET_ORIGIN>(scene->m_debug_targets[1]) = glm::vec3(0);
+                update_target(targets[target_index]);
+            }
             break;
         case GLUT_KEY_LEFT:
             left_key = true;
@@ -421,8 +693,7 @@ void onMouse(int button, int state, int x, int y)
                 prev_zoom = zoom;
             }
         }
-    }
-    else {
+    } else {
         left_mouse_down = right_mouse_down = false;
     }
 }
@@ -455,6 +726,12 @@ void onReshape(int width, int height)
 
 int main(int argc, char* argv[])
 {
+// NOTE: still something wrong; crashes on startup; only doesn't crash in gdb
+#if 1
+    // https://stackoverflow.com/questions/5393997/stopping-the-debugger-when-a-nan-floating-point-number-is-produced/5394095
+    feenableexcept(FE_INVALID | FE_OVERFLOW);
+#endif
+
     DEFAULT_CAPTION = argv[0];
 
     glutInit(&argc, argv);

@@ -22,9 +22,9 @@
 
 namespace vt {
 
-Light::Light(std::string name,
-             glm::vec3   origin,
-             glm::vec3   color)
+Light::Light(const std::string& name,
+                   glm::vec3    origin,
+                   glm::vec3    color)
     : TransformObject(name, origin),
       m_color(color),
       m_enabled(true)
